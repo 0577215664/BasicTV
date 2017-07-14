@@ -191,5 +191,8 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 			export_rules_tmp);
 		data_vector[trans_i].set_peer_rules(
 			peer_rules_tmp);
+		print("trans_i:" + std::to_string(trans_i) + " " +
+		      "trans_size: " + std::to_string(trans_size) + " " +
+		      "data_vector[trans_i].get_flags(): " + std::to_string(data_vector[trans_i].get_flags()), P_DEBUG);
 	}
 }

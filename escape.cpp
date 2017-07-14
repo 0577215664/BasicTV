@@ -82,7 +82,8 @@ std::pair<std::vector<uint8_t>, std::vector<uint8_t> > unescape_vector(
 	for(uint64_t i = 0;i < payload.size();i++){
 		if(payload[i] == escape_char){
 			payload.erase(payload.begin()+i);
-			while(payload[i] == escape_char){
+			while(i < payload.size() &&
+			      payload[i] == escape_char){
 				i++;
 			}
 		}

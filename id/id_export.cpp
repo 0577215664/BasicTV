@@ -152,8 +152,6 @@ std::vector<uint8_t> data_id_t::export_data(
 			data_vector[i].get_export_rules();
 		uint8_t peer_rules_tmp =
 			data_vector[i].get_peer_rules();
-		// P_V(trans_i, P_SPAM);
-		// P_V(trans_size, P_SPAM);
 		ID_EXPORT(trans_i, retval);
 		// splitting this up into three simplifes NBO too
 		ID_EXPORT(network_rules_tmp, retval);
@@ -161,6 +159,9 @@ std::vector<uint8_t> data_id_t::export_data(
 		ID_EXPORT(peer_rules_tmp, retval);
 		ID_EXPORT(trans_size, retval);
 		id_export_raw(data_to_export, &retval);
+		print("trans_i:" + std::to_string(trans_i) + " " +
+		      "trans_size: " + std::to_string(trans_size) + " " +
+		      "data_vector[trans_i].get_flags(): " + std::to_string(data_vector[trans_i].get_flags()), P_DEBUG);
 	}
 	ASSERT((0b11111100 & extra) == 0, P_ERR);
 	P_V(extra, P_SPAM);

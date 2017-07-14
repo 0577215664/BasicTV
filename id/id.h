@@ -250,6 +250,8 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 #define TYPE_NET_INTERFACE_HARDWARE_DEV_T		30
 #define TYPE_NET_INTERFACE_SOFTWARE_DEV_T		31
 
+#define TYPE_COUNT 32
+
 #define ID_MAKE_TMP(x)						\
 	if(true){						\
 		data_id_t *tmp = PTR_ID(x, );			\

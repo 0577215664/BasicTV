@@ -154,7 +154,7 @@ std::vector<uint8_t> id_api::cache::get_id(
 		}
 	}
 	if(retval.size() == 0){
-		print("ID isn't in cache, or the state is incompatiable", P_NOTE);
+		print("ID isn't in cache, or the state is incompatiable", P_SPAM);
 	}
 	return retval;
 }

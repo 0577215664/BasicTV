@@ -30,7 +30,7 @@
 #include "id/id_disk.h"
 #include "id/id_api.h"
 
-#include "test.h" // includes benchmarking code too
+#include "test/test.h" // includes benchmarking code too
 #include "init.h"
 #include "loop.h"
 #include "close.h"
@@ -52,12 +52,22 @@ int main(int argc_, char **argv_){
 	argv = argv_;
 	init();
 	if(settings::get_setting("run_tests") == "true"){
-		const uint64_t old_id_count =
-			id_api::array::get_id_count();
-		test();
-		if(old_id_count != id_api::array::get_id_count()){
-			P_V(id_api::array::get_id_count()-old_id_count, P_WARN);
-			print("tests are leaking possibly invalid data, fix this", P_CRIT);
+		const uint64_t test_run_count =
+			settings::get_setting_unsigned_def(
+				"test_run_count", 1);
+		for(uint64_t i = 0;i < test_run_count;i++){
+			if(settings::get_setting(
+				   "test_catch_all") == "true"){
+				/*
+				  Useful for random() or any situation where
+				  memory errors only show up after a long time
+				 */
+				try{
+					test_suite();
+				}catch(...){}
+			}else{
+				test_suite();
+			}
 		}
 	}
 	try{

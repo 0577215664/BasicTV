@@ -128,14 +128,14 @@ void net_socket_t::connect(){
 	IPaddress tmp_ip;
 	int16_t res_host_retval = 0;
 	if(get_net_ip_str() == ""){
-		print("opening a listening socket", P_NOTE);
+		print("opening a listening socket", P_DEBUG);
 		res_host_retval = SDLNet_ResolveHost(
 			&tmp_ip,
 			nullptr,
 			get_net_port());
 	}else{
 		print("opening a standard socket to " +
-		      get_net_ip_str() + ":" + std::to_string(get_net_port()), P_NOTE);
+		      get_net_ip_str() + ":" + std::to_string(get_net_port()), P_DEBUG);
 		res_host_retval =
 			SDLNet_ResolveHost(
 				&tmp_ip,

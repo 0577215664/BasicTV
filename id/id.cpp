@@ -277,9 +277,14 @@ void data_id_t::get_highest_global_flag_level(uint8_t *network_rules,
 }
 
 std::string id_breakdown(id_t_ id_){
+	std::string type = "BADTYPE";
+	try{
+		type =
+			convert::type::from(
+				get_id_type(id_));
+	}catch(...){}
 	return " (" + convert::array::id::to_hex(id_) +
-		" of type " +
-		(id_ == ID_BLANK_ID ? "NOTYPE" : convert::type::from(get_id_type(id_))) + ") ";
+		" of type " + type + ") ";
 }
 
 std::pair<std::vector<id_t_>, std::vector<id_t_> > data_id_t::get_linked_list(){

@@ -79,14 +79,17 @@ void net_proto_request_set_t::list_set_virtual_data(data_id_t *id){
 void net_proto_request_set_t::set_ids(std::vector<id_t_> ids_){
 	mod_inc.clear();
 	for(uint64_t i = 0;i < ids_.size();i++){
-		data_id_t *id_ptr =
-			PTR_ID_FAST(ids_[i], );
-		if(likely(id_ptr == nullptr)){
-			mod_inc.push_back(0);
-		}else{
-			mod_inc.push_back(
-				id_ptr->get_mod_inc());
-		}
+		try{
+			ASSERT_VALID_ID(ids_[i]);
+			data_id_t *id_ptr =
+				PTR_ID_FAST(ids_[i], );
+			if(likely(id_ptr == nullptr)){
+				mod_inc.push_back(0);
+			}else{
+				mod_inc.push_back(
+					id_ptr->get_mod_inc());
+			}
+		}catch(...){}
 	}
 	ids = compact_id_set(ids_);
 }

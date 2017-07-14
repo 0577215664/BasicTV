@@ -193,10 +193,16 @@ static void net_proto_fill_id_requests(){
 			try{
 				const std::vector<id_t_> id_vector =
 					proto_id_request->get_ids();
+				ASSERT_VALID_ID(id_vector);
 				const id_t_ origin_peer_id =
 					proto_id_request->get_origin_peer_id();
+				ASSERT_VALID_ID(id_vector);
 				for(uint64_t c = 0;c < id_vector.size();c++){
-					print("ID request contains " + id_breakdown(id_vector[i]), P_SPAM);
+					try{
+						print("ID request contains " + id_breakdown(id_vector[i]), P_SPAM);
+					}catch(...){
+						print("ID is invalid", P_SPAM);
+					}
 				}
 				try{
 					net_proto_send_logic(

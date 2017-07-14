@@ -28,23 +28,23 @@
 
 #define ID_LOOKUP_DISK 4
 
-// #define PTR_DATA_PRE(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_PRE))
-// #define PTR_ID_PRE(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_PRE))
+/*
+  Restricts lookups to certain areas to prevent deadlocks, false positives,
+  and efficiency in using this for optimization stuff
 
-// #define PTR_DATA_MEM(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_MEM))
-// #define PTR_ID_MEM(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_MEM))
+  One of the reasons why I brough this back so that it can be redefined and
+  exposed to the PTR_DATA()/PTR_ID() calls as the highest tier that data
+  can be pulled from (0 is mem, 1 is cache, 2 is HDD, 3 is network (?))
+ */
 
-// #define PTR_DATA_FAST(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_FAST))
-// #define PTR_ID_FAST(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_FAST))
+#define PTR_DATA_PRE(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_PRE))
+#define PTR_ID_PRE(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_PRE))
 
-// legacy
+#define PTR_DATA_MEM(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_MEM))
+#define PTR_ID_MEM(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_MEM))
 
 #define PTR_DATA_FAST(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_FAST))
-#define PTR_ID_FAST(id, type) id_api::array::ptr_id(id, #type, ID_LOOKUP_FAST)
-#define PTR_DATA_MEM PTR_DATA
-#define PTR_ID_MEM PTR_ID
-#define PTR_DATA_PRE PTR_DATA
-#define PTR_ID_PRE PTR_ID
+#define PTR_ID_FAST(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_FAST))
 
 #define PTR_DATA(id, type) ((type*)id_api::array::ptr_data(id, #type))
 #define PTR_ID(id, type) (id_api::array::ptr_id(id, #type))
@@ -55,6 +55,8 @@
 #define ID_API_IMPORT_FROM_NET (1 << 1)
 
 #define SIMPLE_ADD(x) id.add_data_raw(&x, sizeof(x));
+
+#define ASSERT_VALID_ID(id) id_api::assert_valid_id(id)
 
 /*
   TODO: drastically simplify and clarify this section
@@ -154,6 +156,8 @@ namespace id_api{
 	void destroy(id_t_ id);
 	void destroy_all_data();
 	void print_id_vector(std::vector<id_t_> vector, uint32_t p_l);
+	void assert_valid_id(id_t_ id);
+	void assert_valid_id(std::vector<id_t_> id);
 	namespace raw{
 		// encryption ID is pulled from ID hash
 		std::vector<uint8_t> encrypt(std::vector<uint8_t>);

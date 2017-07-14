@@ -106,13 +106,17 @@ data_id_t *id_api::array::ptr_id(id_t_ id,
 	id_lookup.push_back(id);
 	data_id_t *retval = nullptr;
 	LOOKUP_AND_RETURN();
-	id_lookup.push_back(id);
-	id_api::cache::load_id(id);
-	LOOKUP_AND_RETURN();
-	id_lookup.push_back(id);
-	id_disk_api::load(id);
-	LOOKUP_AND_RETURN();
-	if(!(flags & ID_LOOKUP_FAST)){
+	if(!(flags & ID_LOOKUP_PRE)){ // PREloaded isn't set
+		id_lookup.push_back(id);
+		id_api::cache::load_id(id);
+		LOOKUP_AND_RETURN();
+	}
+	if(!(flags & ID_LOOKUP_MEM)){ // doesn't need to be in MEMory ATM
+		id_lookup.push_back(id);
+		id_disk_api::load(id);
+		LOOKUP_AND_RETURN();
+	}
+	if(!(flags & ID_LOOKUP_FAST)){ // not internal, should trigger some request
 		net_proto::request::add_id(id);
 	}
 	return retval;
@@ -450,7 +454,7 @@ std::vector<id_t_> id_api::get_all(){
 
 // make this less stupid
 
-#define DELETE_TYPE_2(a) if(ptr->get_type() == #a){print("deleting " + (std::string)(#a), P_DEBUG);delete (a*)ptr->get_ptr();ptr = nullptr;return;}
+#define DELETE_TYPE_2(a) if(ptr->get_type() == #a){print("deleting " + (std::string)(#a) + id_breakdown(ptr->get_id()), P_DEBUG);delete (a*)ptr->get_ptr();ptr = nullptr;return;}
 
 // refactor
 
@@ -470,8 +474,7 @@ std::vector<id_t_> id_api::get_all(){
   very nice for cluster computing, but that's not a high priority.
  */
 
-static bool id_api_should_write_to_disk_mod_inc(id_t_ id_){
-	P_V_S(convert::array::id::to_hex(id_), P_VAR);
+static bool id_api_should_write_to_disk_mod_inc(data_id_t *id_ptr){
 	// std::string directory =
 	// 	id_disk_api::get_filename(id_);
 	// directory =
@@ -525,41 +528,35 @@ static bool id_api_should_write_to_disk_mod_inc(id_t_ id_){
 
 // TODO: should probably keep this more updated
 
-static bool id_api_should_write_to_disk_export_flags(id_t_ id){
-	data_id_t *id_ptr =
-		PTR_ID(id, );
-	if(id_ptr != nullptr){
-		uint8_t export_rules = 0;
-		id_ptr->get_highest_global_flag_level(
-			nullptr,
-			&export_rules,
-			nullptr);
-		return export_rules > ID_DATA_EXPORT_RULE_NEVER;
-	}
-	// can't export to disk if we can't access it now anyways...
-	return false;
+static bool id_api_should_write_to_disk_export_flags(
+	data_id_t *id_ptr){
+	uint8_t export_rules = 0;
+	id_ptr->get_highest_global_flag_level(
+		nullptr,
+		&export_rules,
+		nullptr);
+	return export_rules > ID_DATA_EXPORT_RULE_NEVER;
 }
 
 // TODO: would make more sense to pass by pointer here
 
-static bool id_api_should_write_to_disk(id_t_ id){
-	return id_api_should_write_to_disk_mod_inc(id) &&
-		id_api_should_write_to_disk_export_flags(id);
+static bool id_api_should_write_to_disk(data_id_t *id_ptr){
+	return id_api_should_write_to_disk_mod_inc(id_ptr) &&
+		id_api_should_write_to_disk_export_flags(id_ptr);
 }
 
-void id_api::destroy(id_t_ id){	
-	if(id_api_should_write_to_disk_mod_inc(id) &&
-	   id_api_should_write_to_disk_export_flags(id) &&
+void id_api::destroy(id_t_ id){
+	data_id_t *ptr =
+		PTR_ID_PRE(id, );
+	if(ptr == nullptr){
+		print("already destroying a destroyed type " + id_breakdown(id), P_SPAM);
+		return;
+	}
+	if(id_api_should_write_to_disk(ptr) && 
 	   settings::get_setting("export_data") == "true"){
 		id_disk_api::save(id);
 	}
 	// TV subsystem
-	data_id_t *ptr =
-		PTR_ID(id, );
-	if(ptr == nullptr){
-		print("already destroying a destroyed type " + id_breakdown(id), P_WARN);
-		return;
-	}
 	DELETE_TYPE_2(tv_frame_video_t);
 	DELETE_TYPE_2(tv_frame_audio_t);
 	DELETE_TYPE_2(tv_frame_caption_t);
@@ -1091,7 +1088,7 @@ std::vector<uint8_t> id_api::export_id(
 			id_,
 			cache_extra);
 	if(retval.size() == 0){
-		print("ID not found in cache, loading from disk" + id_breakdown(id_), P_NOTE);
+		print("ID not found in cache, loading from disk" + id_breakdown(id_), P_SPAM);
 		id_disk_api::load(id_);
 		retval =
 			id_api::cache::get_id(
@@ -1099,7 +1096,7 @@ std::vector<uint8_t> id_api::export_id(
 				cache_extra);
 	} // assuming faster reads than encryption, should be accurate
 	if(retval.size() == 0 && get_id_hash(id_) == get_id_hash(production_priv_key_id)){
-		print("id isn't in cache, exporting whole" + id_breakdown(id_), P_WARN);
+		print("id isn't in cache, exporting whole" + id_breakdown(id_), P_SPAM);
 		data_id_t *id =
 			PTR_ID(id_, );
 		if(id != nullptr){
@@ -1204,5 +1201,33 @@ std::vector<uint8_t> id_api::raw::strip_to_lowest_rules(
 void id_api::print_id_vector(std::vector<id_t_> id_vector, uint32_t p_l){
 	for(uint64_t i = 0;i < id_vector.size();i++){
 		print(id_breakdown(id_vector[i]), p_l);
+	}
+}
+
+void id_api::assert_valid_id(id_t_ id){
+	type_t_ type =
+		get_id_type(id);
+	if(type > 0 && type < TYPE_COUNT){ // update this to match the type count
+		ASSERT(get_id_uuid(id) != 0 ||
+		       get_id_hash(id) != blank_hash, P_ERR);
+	}else if(type == 0){
+		ASSERT(get_id_uuid(id) == 0 ||
+		       get_id_hash(id) == blank_hash, P_ERR);
+	}else{
+		ASSERT(type >= TYPE_COUNT, P_ERR);
+	}
+}
+
+void id_api::assert_valid_id(std::vector<id_t_> id){
+	for(uint64_t i = 0;i < id.size();i++){
+		const hash_t_ hash =
+			get_id_hash(id[i]);
+		P_V(get_id_uuid(id[i]), P_VAR);
+		P_V_S(convert::number::to_hex(
+			    std::vector<uint8_t>(
+				    hash.begin(),
+				    hash.end())), P_VAR);
+		P_V(get_id_type(id[i]), P_VAR);
+		assert_valid_id(id[i]);
 	}
 }
