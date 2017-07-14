@@ -110,6 +110,9 @@
   also throw an error (somebody/Windows/FAT-32/etc. destroyed the naming scheme)
  */
 
+#define ID_TIER_INIT_STATE(medium) void id_tier_##medium##_init_state(id_t_ state_id)
+#define ID_TIER_DEL_STATE(medium) void id_tier_##medium##_del_state(id_t_ state_id)
+
 #define ID_TIER_ADD_DATA(medium) void id_tier_##medium##_add_data(id_t_ state_id, std::vector<uint8_t> data)
 #define ID_TIER_DEL_ID(medium) void id_tier_##medium##_del_id(id_t_ state_id, id_t_ id)
 #define ID_TIER_GET_ID(medium) std::vector<uint8_t> id_tier_##medium##_get_id(id_t_ state_id, id_t_ id)
@@ -166,10 +169,16 @@ private:
 
 	uint64_t last_state_refresh_micro_s = 0;
 	uint64_t refresh_interval_micro_s = 0;
+
+	/*
+	  Each medium has a custom defined struct that this pointer references,
+	  that isn't registered with the ID subsystem
+	 */
+	void *payload = nullptr;
 public:
+	data_id_t id;
 	id_tier_state_t();
 	~id_tier_state_t();
-	void list_state_data(data_id_t* id);
 
 	GET_SET(medium, uint8_t);
 	GET_SET(tier_major, uint8_t);
@@ -187,6 +196,9 @@ public:
 
 struct id_tier_medium_t{
 public:
+	void (*init_state)(id_t_ state_id) = nullptr;
+	void (*del_state)(id_t_ state_id) = nullptr;
+	
 	void (*add_data)(id_t_ state_id, std::vector<uint8_t> data) = nullptr;
 	void (*del_id)(id_t_ state_id, id_t_ id) = nullptr;
 	std::vector<uint8_t> (*get_id)(id_t_ state_id, id_t_ id) = nullptr;
@@ -196,12 +208,16 @@ public:
 	void (*update_id_buffer)(id_t_ state_id) = nullptr;
 
 	id_tier_medium_t(
+		void (*init_state_)(id_t_ state_id),
+		void (*del_state_)(id_t_ state_id),
 		void (*add_data_)(id_t_, std::vector<uint8_t>),
 		void (*del_id_)(id_t_, id_t_),
 		std::vector<uint8_t> (*get_id_)(id_t_, id_t_),
 		mod_inc_t_ (*get_id_mod_inc_)(id_t_, id_t_),
 		std::vector<std::pair<id_t_, mod_inc_t_> > (*get_id_buffer_)(id_t_),
 		void (*update_id_buffer_)(id_t_)){
+		init_state = init_state_;
+		del_state = del_state_;
 		add_data = add_data_;
 		del_id = del_id_;
 		get_id = get_id_;
@@ -224,14 +240,21 @@ namespace id_tier{
 	namespace operation{
 		/*
 		  In most cases (especially with memory and cache), we can
-		  refernce only_state_of_tier, and that should work fine
-		 */
-		void add_id_to_state(
-			id_t state_id,
-			id_t_ id);
-		void del_id_from_state(
+		  refernce only_state_of_tier for state_id, and that should
+		  work fine
+		 */	
+		uint8_t fix_extra_flags_for_state(
 			id_t_ state_id,
-			id_t_ id);
+			uint8_t data_extra);
+		void add_data_to_state(
+			std::vector<id_t_> state_id,
+			std::vector<std::vector<uint8_t> > data);
+		void del_id_from_state(
+			std::vector<id_t_> state_id,
+			std::vector<std::vector<uint8_t> > data);
+		std::vector<uint8_t> get_data_from_state(
+			std::vector<id_t_> state_id,
+			std::vector<std::vector<uint8_t> > data);
 	};
 
 	namespace mem{
@@ -252,6 +275,10 @@ namespace id_tier{
 			id_t_ id);
 	};
 };
+
+extern void id_tier_init();
+extern void id_tier_loop();
+extern void id_tier_close();
 
 extern std::vector<id_tier_medium_t> id_tier_mediums;	
 	

@@ -77,6 +77,20 @@ static void id_tier_mem_add_ptr(id_t_ state_id, data_id_t *ptr){
 	mem_add_id(ptr);
 }
 
+/*
+  TODO: it probably makes way more sense to just lookup the ID in a second,
+  safer, and more restrictive function so we don't have Catch-22s, ID_BLANK_ID
+  is guaranteed to be invalid at that point
+ */
+
+ID_TIER_INIT_STATE(mem){
+	ASSERT(state_id == ID_BLANK_ID, P_ERR);
+}
+
+ID_TIER_DEL_STATE(mem){
+	ASSERT(state_id == ID_BLANK_ID, P_ERR);
+}
+
 #define CHECK_TYPE(a)					\
 	if(convert::type::from(type) == #a){		\
 		print("importing data", P_SPAM);	\
@@ -139,6 +153,8 @@ ID_TIER_DEL_ID(mem){
 		print("already destroying a destroyed type " + id_breakdown(id), P_SPAM);
 		return;
 	}
+	// TODO: convert this over into a jump table with type_t_
+	
 	// TV subsystem
 	DELETE_TYPE_2(tv_frame_video_t);
 	DELETE_TYPE_2(tv_frame_audio_t);
@@ -157,7 +173,7 @@ ID_TIER_DEL_ID(mem){
 	DELETE_TYPE_2(net_proto_id_request_t);
 	DELETE_TYPE_2(net_proto_linked_list_request_t);
 	DELETE_TYPE_2(net_proto_con_req_t);
-	DELETE_TYPE_2(net_cache_t); // ?
+	DELETE_TYPE_2(net_cache_t);
 
 	// IR
 	DELETE_TYPE_2(ir_remote_t);
@@ -169,9 +185,8 @@ ID_TIER_DEL_ID(mem){
 	DELETE_TYPE_2(encrypt_priv_key_t);
 	DELETE_TYPE_2(encrypt_pub_key_t);
 
-	 DELETE_TYPE_2(id_disk_index_t);
+	DELETE_TYPE_2(id_disk_index_t);
 	
-	// Count de Monet
        	DELETE_TYPE_2(wallet_set_t);
 
 	// Math
@@ -188,10 +203,28 @@ ID_TIER_DEL_ID(mem){
 
 ID_TIER_GET_ID(mem){
 	ASSERT(state_id == ID_BLANK_ID, P_ERR);
+	if(get_id_hash(id) !=
+	   get_id_hash(production_priv_key_id)){
+		// Technically we CAN, but anything we have in memory should
+		// be stored encrypted on the cache
+		print("cannot/shouldn't supply data I do not own directly from memory, refer to tier 1 or higher", P_ERR);
+	}
+	for(uint64_t i = 0;i < id_vector.size();i++){
+		if(id_vector[i]->get_id() == id){
+			return id_vector[i]->export_data(
+				0, 0, 0, 0, 0);
+		}
+	}
+	return std::vector<uint8_t>({});
 }
 
 ID_TIER_GET_ID_MOD_INC(mem){
 	ASSERT(state_id == ID_BLANK_ID, P_ERR);
+	for(uint64_t i = 0;i < id_buffer.size();i++){
+		if(id_buffer[i].first == id){
+			return id_buffer[i].second;
+		}
+	}
 	return 0;
 }
 
