@@ -44,7 +44,7 @@ static std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
 
 // special status, called by ID constructors ONLY
 
-static void mem_add_id(data_id_t *ptr){
+void mem_add_id(data_id_t *ptr){
 	id_vector.push_back(ptr);
 	id_buffer.push_back(
 		std::make_pair(
@@ -52,7 +52,7 @@ static void mem_add_id(data_id_t *ptr){
 			ptr->get_mod_inc()));
 }
 
-static void mem_del_id(data_id_t *ptr){
+void mem_del_id(data_id_t *ptr){
 	auto id_pos =
 		std::find(
 			id_vector.begin(),
@@ -71,8 +71,16 @@ static void mem_del_id(data_id_t *ptr){
 	}
 }
 
+static data_id_t *mem_lookup(id_t_ id){
+	for(uint64_t i = 0;i < id_vector.size();i++){
+		if(unlikely(id_vector[i]->get_id() == id)){
+			return id_vector[i];
+		}
+	}
+	return nullptr;
+}
+
 static void id_tier_mem_add_ptr(id_t_ state_id, data_id_t *ptr){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 	ASSERT(ptr != nullptr, P_ERR);
 	mem_add_id(ptr);
 }
@@ -84,11 +92,9 @@ static void id_tier_mem_add_ptr(id_t_ state_id, data_id_t *ptr){
  */
 
 ID_TIER_INIT_STATE(mem){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 }
 
 ID_TIER_DEL_STATE(mem){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 }
 
 #define CHECK_TYPE(a)					\
@@ -108,7 +114,6 @@ ID_TIER_DEL_STATE(mem){
 
 // TODO: make this search for valid data first
 ID_TIER_ADD_DATA(mem){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 	id_t_ id = ID_BLANK_ID;
 	type_t_ type = 0;
 	try{
@@ -145,7 +150,6 @@ ID_TIER_ADD_DATA(mem){
 
 
 ID_TIER_DEL_ID(mem){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 	// Again, data_id_t destructors call mem_del_id
 	data_id_t *ptr =
 		PTR_ID_PRE(id, );
@@ -202,7 +206,6 @@ ID_TIER_DEL_ID(mem){
 #undef DELETE_TYPE_2
 
 ID_TIER_GET_ID(mem){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 	if(get_id_hash(id) !=
 	   get_id_hash(production_priv_key_id)){
 		// Technically we CAN, but anything we have in memory should
@@ -219,7 +222,6 @@ ID_TIER_GET_ID(mem){
 }
 
 ID_TIER_GET_ID_MOD_INC(mem){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 	for(uint64_t i = 0;i < id_buffer.size();i++){
 		if(id_buffer[i].first == id){
 			return id_buffer[i].second;
@@ -229,21 +231,76 @@ ID_TIER_GET_ID_MOD_INC(mem){
 }
 
 ID_TIER_GET_ID_BUFFER(mem){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 	return id_buffer;
 }
 
 ID_TIER_UPDATE_ID_BUFFER(mem){
-	ASSERT(state_id == ID_BLANK_ID, P_ERR);
 	// Buffer is guaranteed to be up-to-date
 }
 
-data_id_t *id_tier::mem::get_id_ptr(id_t_ id){
-	for(uint64_t i = 0;i < id_vector.size();i++){
-		if(id_vector[i]->get_id() == id){
-			return id_vector[i];
+/*
+  This isn't beholden to calling rules that id_tier_mem_* does, since
+  this is globally callable anywhere in the program, whereas the upper
+  cannot call id_tier (out of fear of an infinite loop)
+ */
+
+data_id_t *id_tier::mem::get_id_ptr(
+	id_t_ id,
+	type_t_ type,
+	uint8_t high_major,
+	uint8_t high_minor){
+	ASSERT(high_minor == 0, P_ERR); // actually write this in later
+	if(id == ID_BLANK_ID){
+		return nullptr;
+	}
+	ASSERT(get_id_type(id) == type, P_ERR);
+	data_id_t *retval =
+		mem_lookup(id);
+	if(retval != nullptr){
+		std::vector<std::tuple<id_t_, uint8_t, uint8_t> > tier_data =
+			id_tier::operation::valid_state_with_id(
+				id);
+		const id_t_ mem_state_id =
+			id_tier::only_state_of_tier(
+				0, 0);
+		for(uint64_t i = 0;i < tier_data.size();i++){
+			const uint8_t tier_major =
+				std::get<1>(tier_data[i]);
+			const uint8_t tier_minor =
+				std::get<2>(tier_data[i]);
+			const bool lower_major =
+				tier_major <= high_major;
+			const bool lower_minor =
+				tier_minor <= high_minor;
+			if(likely((lower_major && lower_minor))){
+				try{
+					id_tier::operation::shift_data_to_state(
+						std::get<0>(tier_data[i]),
+						mem_state_id,
+						{id});
+					if((retval = mem_lookup(id)) != nullptr){
+						break;
+					}
+				}catch(...){
+					P_V(high_major, P_WARN);
+					P_V(high_minor, P_WARN);
+					print("reading error", P_ERR);
+				}
+			}
 		}
 	}
-	return nullptr;
+	return retval;
 }
 
+
+data_id_t *id_tier::mem::get_id_ptr(
+	id_t_ id,
+	std::string type,
+	uint8_t high_major,
+	uint8_t high_minor){
+	return id_tier::mem::get_id_ptr(
+		id,
+		convert::type::to(type),
+		high_major,
+		high_minor);
+}

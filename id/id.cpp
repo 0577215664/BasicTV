@@ -1,5 +1,6 @@
 #include "id.h"
 #include "id_api.h"
+#include "tier/id_tier_memory.h"
 #include "../main.h"
 #include "../util.h"
 #include "../lock.h"
@@ -100,16 +101,11 @@ data_id_t::data_id_t(void *ptr_, type_t_ type_){
 	ptr = ptr_;
 	init_gen_id(type_);
 	init_list_all_data();
-	id_api::array::add(this);
-	id_api::cache::add(id, type_);
-	// id_tier_mem_list_id(this);
+	mem_add_id(this);
 }
 
 data_id_t::~data_id_t(){
-	try{
-		id_api::cache::del(id, get_id_type(id));
-	}catch(...){}
-	id_api::array::del(id);
+	mem_del_id(this);
 }
 
 id_t_ data_id_t::get_id(bool skip){

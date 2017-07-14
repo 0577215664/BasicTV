@@ -56,9 +56,27 @@
   well as any other stuff needed to use the information. 
  */
 
+/*
+  MEM: anything in memory
+  CACHE: anything loaded into the program as a string to import, minor tiers
+  segregate that into encryption states and that jazz
+  DISK: reads and writes from any disk
+  LIBRARY: any large and weird system that hash higer latencies, or is otherwise
+  more complicated, than just reading or writing from a disk. examples could be
+  tape archives, SSH/FTP, NAS, IPFS, etc
+  NETWORK: reach out to the network
+
+  LIBRARY throws a wrench in having a clear hierarichal system (in some cases),
+  since it is such a broad term. I should create a vector of ID_TIER_MAJORs for
+  preference, and only pass vectors of major tiers into the functions
+ */
+
 #define ID_TIER_MAJOR_MEM 0
 #define ID_TIER_MAJOR_CACHE 1
 #define ID_TIER_MAJOR_DISK 2
+#define ID_TIER_MAJOR_LIBRARY 3
+// only tier that can create network requests
+#define ID_TIER_MAJOR_NETWORK 4
 
 #define ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED 0
 #define ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED 1
@@ -120,6 +138,8 @@
 
 #define ID_TIER_GET_ID_BUFFER(medium) std::vector<std::pair<id_t_, mod_inc_t_> > id_tier_##medium##_get_id_buffer(id_t_ state_id)
 #define ID_TIER_UPDATE_ID_BUFFER(medium) void id_tier_##medium##_update_id_buffer(id_t_ state_id)
+
+typedef std::pair<id_t_, mod_inc_t_> id_buffer_t;
 
 struct id_tier_state_t{
 private:
@@ -189,9 +209,11 @@ public:
 	GET_SET(free_bytes, uint64_t);
 	
 	// can't use id_buffer through GET_SET since std::pair<> has a comma
+	GET_SET(id_buffer, std::vector<id_buffer_t>);
 	GET_SET(allowed_extra, std::vector<uint8_t>);
 	GET_SET(last_state_refresh_micro_s, uint64_t);
 	GET_SET(refresh_interval_micro_s, uint64_t);
+
 };
 
 struct id_tier_medium_t{
@@ -243,6 +265,8 @@ namespace id_tier{
 		  refernce only_state_of_tier for state_id, and that should
 		  work fine
 		 */	
+		std::vector<std::tuple<id_t_, uint8_t, uint8_t> > valid_state_with_id(
+			id_t_ id);
 		uint8_t fix_extra_flags_for_state(
 			id_t_ state_id,
 			uint8_t data_extra);
@@ -251,10 +275,15 @@ namespace id_tier{
 			std::vector<std::vector<uint8_t> > data);
 		void del_id_from_state(
 			std::vector<id_t_> state_id,
-			std::vector<std::vector<uint8_t> > data);
+			std::vector<id_t_> id);
 		std::vector<uint8_t> get_data_from_state(
 			std::vector<id_t_> state_id,
-			std::vector<std::vector<uint8_t> > data);
+			std::vector<id_t_> id_vector);
+		void shift_data_to_state(
+			id_t_ start_state_id,
+			id_t_ end_state_id,
+			std::vector<id_t_> id_vector);
+		
 	};
 
 	namespace mem{
@@ -272,7 +301,15 @@ namespace id_tier{
 		  Catch-22 with loading the state to laod the state to...
 		 */
 		data_id_t *get_id_ptr(
-			id_t_ id);
+			id_t_ id,
+			type_t_ type,
+			uint8_t high_major,
+			uint8_t high_minor);
+		data_id_t *get_id_ptr(
+			id_t_ id,
+			std::string type,
+			uint8_t high_major,
+			uint8_t high_minor);
 	};
 };
 
@@ -281,5 +318,6 @@ extern void id_tier_loop();
 extern void id_tier_close();
 
 extern std::vector<id_tier_medium_t> id_tier_mediums;	
-	
+
+#include "id_tier_memory.h"
 #endif
