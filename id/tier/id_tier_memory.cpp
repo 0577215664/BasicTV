@@ -87,9 +87,25 @@ void mem_del_id(data_id_t *ptr){
 
 static data_id_t *mem_lookup(id_t_ id){
 	for(uint64_t i = 0;i < id_vector.size();i++){
-		if(unlikely(id_vector[i]->get_id() == id)){
-			return id_vector[i];
-		}
+		try{
+			const id_t_ list_id =
+				id_vector[i]->get_id(true);
+			const bool matching_nonhash =
+				get_id_uuid(list_id) == get_id_uuid(id) &&
+				get_id_type(list_id) == get_id_type(id);
+			const bool matching_hash =
+				get_id_hash(list_id) == get_id_hash(id);
+			const bool list_hash_blank =
+				get_id_hash(list_id) == blank_hash;
+			const bool param_hash_blank =
+				get_id_hash(id) == blank_hash;
+			if(matching_nonhash){
+				if((list_hash_blank || param_hash_blank) ||
+				   matching_hash){
+					return id_vector[i];
+				}
+			}
+		}catch(...){}
 	}
 	return nullptr;
 }
@@ -302,6 +318,8 @@ ID_TIER_UPDATE_ID_BUFFER(mem){
 
 #pragma warning("disabled all non-memory reading for now, undo the following comment block")
 
+static std::vector<id_t_> lookup_vector;
+
 data_id_t *id_tier::mem::get_id_ptr(
 	id_t_ id,
 	type_t_ type,
@@ -312,8 +330,21 @@ data_id_t *id_tier::mem::get_id_ptr(
 		return nullptr;
 	}
 	ASSERT(get_id_type(id) == type, P_ERR);
+	if(std::find(
+		   lookup_vector.begin(),
+		   lookup_vector.end(),
+		   id) != lookup_vector.end()){
+		return nullptr;
+	}
 	data_id_t *retval =
-		mem_lookup(id);
+		nullptr;
+	lookup_vector.push_back(id);
+	try{
+		retval =
+			mem_lookup(id);
+	}catch(...){
+	}
+	lookup_vector.erase(lookup_vector.end()-1);
 	// if(retval != nullptr){
 	// 	std::vector<std::tuple<id_t_, uint8_t, uint8_t> > tier_data =
 	// 		id_tier::operation::valid_state_with_id(

@@ -127,12 +127,9 @@ id_t_ data_id_t::get_id(bool skip){
 		if(pub_key == nullptr){
 			print("do not have a hash yet, aborting", P_ERR);
 		}
-		id_t_ old_id = id;
-		mem_del_id(this);
 		set_id_hash(&id,
 			    encrypt_api::hash::sha256::gen_raw(
 				    pub_key->get_encrypt_key().second));
-		mem_add_id(this);
 	}
 	return id;
 }
