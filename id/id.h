@@ -251,7 +251,7 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 #define TYPE_NET_INTERFACE_SOFTWARE_DEV_T		31
 #define TYPE_ID_TIER_STATE_T 				32
 
-#define TYPE_COUNT 33
+#define TYPE_COUNT 32
 
 #define ID_MAKE_TMP(x)						\
 	if(true){						\

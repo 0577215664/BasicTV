@@ -72,18 +72,63 @@ std::vector<std::tuple<id_t_, uint8_t, uint8_t> > id_tier::operation::valid_stat
 		CONTINUE_IF_NULL(id_tier_state_ptr, P_WARN);
 		std::vector<std::pair<id_t_, mod_inc_t_> > state_cache =
 			id_tier_state_ptr->get_id_buffer();
-		
-		if(id_tier::state::has_id(
-			   id_tier_states[i],
-			   id)){
-			retval.push_back(
-				std::make_tuple(
-					id_tier_states[i],
-					id_tier_state_ptr->get_tier_major(),
-					id_tier_state_ptr->get_tier_minor()));
-		}
+		print("don't bother right now", P_CRIT);
+		// if(id_tier::state::has_id(
+		// 	   id_tier_states[i],
+		// 	   id)){
+		// 	retval.push_back(
+		// 		std::make_tuple(
+		// 			id_tier_states[i],
+		// 			id_tier_state_ptr->get_tier_major(),
+		// 			id_tier_state_ptr->get_tier_minor()));
+		// }
 	}
 	return retval;
+}
+
+void id_tier::operation::shift_data_to_state(
+	id_t_ start_state_id,
+	id_t_ end_state_id,
+	std::vector<id_t_> id_vector){
+	id_tier_state_t *state[2] = {
+		PTR_DATA(start_state_id,
+			 id_tier_state_t),
+		PTR_DATA(end_state_id,
+			 id_tier_state_t)
+	};
+	ASSERT(state[0] != nullptr, P_ERR);
+	ASSERT(state[1] != nullptr, P_ERR);
+
+	std::vector<std::pair<id_t_, mod_inc_t_> > first_buffer =
+		state[0]->get_id_buffer();
+	std::vector<std::pair<id_t_, mod_inc_t_> > second_buffer =
+		state[1]->get_id_buffer();
+	
+	for(uint64_t i = 0;i < id_vector.size();i++){
+		id_tier_medium_t first_medium =
+			id_tier::get_medium(
+				state[0]->get_medium());
+		id_tier_medium_t second_medium =
+			id_tier::get_medium(
+				state[1]->get_medium());
+		if(std::find_if(
+			   first_buffer.begin(),
+			   first_buffer.end(),
+			   [&id_vector, &i](std::pair<id_t_, mod_inc_t_> const& elem){
+				   return id_vector[i] == elem.first;
+			   }) != first_buffer.end()){
+			try{
+				second_medium.add_data(
+					end_state_id,
+					first_medium.get_id(
+						start_state_id,
+						id_vector[i]));
+						
+			}catch(...){
+				print("couldn't shift id " + id_breakdown(id_vector[i]) + " over to new device", P_ERR);
+			}
+		}
+	}
 }
 
 id_tier_state_t::id_tier_state_t() : id(this, TYPE_ID_TIER_STATE_T){

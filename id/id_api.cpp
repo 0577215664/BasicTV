@@ -474,7 +474,7 @@ std::vector<id_t_> id_api::get_all(){
   very nice for cluster computing, but that's not a high priority.
  */
 
-static bool id_api_should_write_to_disk_mod_inc(data_id_t *id_ptr){
+bool id_api_should_write_to_disk_mod_inc(data_id_t *id_ptr){
 	// std::string directory =
 	// 	id_disk_api::get_filename(id_);
 	// directory =
@@ -528,7 +528,7 @@ static bool id_api_should_write_to_disk_mod_inc(data_id_t *id_ptr){
 
 // TODO: should probably keep this more updated
 
-static bool id_api_should_write_to_disk_export_flags(
+bool id_api_should_write_to_disk_export_flags(
 	data_id_t *id_ptr){
 	uint8_t export_rules = 0;
 	id_ptr->get_highest_global_flag_level(
@@ -540,7 +540,7 @@ static bool id_api_should_write_to_disk_export_flags(
 
 // TODO: would make more sense to pass by pointer here
 
-static bool id_api_should_write_to_disk(data_id_t *id_ptr){
+bool id_api_should_write_to_disk(data_id_t *id_ptr){
 	return id_api_should_write_to_disk_mod_inc(id_ptr) &&
 		id_api_should_write_to_disk_export_flags(id_ptr);
 }

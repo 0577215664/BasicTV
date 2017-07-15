@@ -183,4 +183,6 @@ extern std::vector<std::string> id_gdb_lookup(const char *hex_id);
 extern std::vector<type_t_> encrypt_blacklist;
 extern bool encrypt_blacklist_type(type_t_ type);
 
+extern bool id_api_should_write_to_disk(data_id_t *ptr);
+
 #endif

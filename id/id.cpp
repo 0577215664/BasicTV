@@ -19,6 +19,8 @@
 #include "../encrypt/encrypt.h"
 #include "../compress/compress.h"
 
+#include "id_disk.h"
+
 std::array<uint8_t, 32> get_id_hash(id_t_ id){
 	std::array<uint8_t, 32> retval;
 	memcpy(&(retval[0]), &(id[8]), 32);

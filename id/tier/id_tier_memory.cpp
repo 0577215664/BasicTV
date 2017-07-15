@@ -32,7 +32,6 @@
 #include "../../compress/compress.h"
 #include "../../encrypt/encrypt.h"
 
-
 static std::vector<data_id_t*> id_vector;
 static std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
 
@@ -42,6 +41,15 @@ static std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
   try-catch blocks and keep them coupled together.
  */
 
+
+static void id_tier_mem_update_state_cache(
+	id_tier_state_t *tier_state_ptr){
+	// Probably could use some pointer magic
+	ASSERT(tier_state_ptr != nullptr, P_ERR);
+	tier_state_ptr->set_id_buffer(
+		id_buffer);
+}
+
 // special status, called by ID constructors ONLY
 
 void mem_add_id(data_id_t *ptr){
@@ -50,6 +58,9 @@ void mem_add_id(data_id_t *ptr){
 		std::make_pair(
 			ptr->get_id(),
 			ptr->get_mod_inc()));
+	id_tier_mem_update_state_cache(
+		PTR_DATA(id_tier::only_state_of_tier(0, 0),
+			 id_tier_state_t));
 }
 
 void mem_del_id(data_id_t *ptr){
@@ -69,6 +80,9 @@ void mem_del_id(data_id_t *ptr){
 			break;
 		}
 	}
+	id_tier_mem_update_state_cache(
+		PTR_DATA(id_tier::only_state_of_tier(0, 0),
+			 id_tier_state_t));
 }
 
 static data_id_t *mem_lookup(id_t_ id){
@@ -85,20 +99,35 @@ static void id_tier_mem_add_ptr(id_t_ state_id, data_id_t *ptr){
 	mem_add_id(ptr);
 }
 
-/*
-  TODO: it probably makes way more sense to just lookup the ID in a second,
-  safer, and more restrictive function so we don't have Catch-22s, ID_BLANK_ID
-  is guaranteed to be invalid at that point
- */
+#define GET_TIER_STATE()					\
+	id_tier_state_t *tier_state_ptr = nullptr;		\
+	if(true){						\
+		data_id_t *id_ptr =				\
+			id_tier::mem::get_id_ptr(		\
+				state_id,			\
+				TYPE_ID_TIER_STATE_T,		\
+				0,				\
+				0);				\
+		ASSERT(id_ptr != nullptr, P_ERR);		\
+		tier_state_ptr =				\
+			(id_tier_state_t*)id_ptr->get_ptr();	\
+	}
 
 ID_TIER_INIT_STATE(mem){
+	id_tier_state_t *tier_state_ptr =
+		new id_tier_state_t;
+	id_tier_mem_update_state_cache(
+		tier_state_ptr);
+	return tier_state_ptr->id.get_id();
 }
 
 ID_TIER_DEL_STATE(mem){
+	GET_TIER_STATE();
 }
 
 #define CHECK_TYPE(a)					\
 	if(convert::type::from(type) == #a){		\
+		loaded = true;				\
 		print("importing data", P_SPAM);	\
 		a* tmp = nullptr;			\
 		try{					\
@@ -114,6 +143,7 @@ ID_TIER_DEL_STATE(mem){
 
 // TODO: make this search for valid data first
 ID_TIER_ADD_DATA(mem){
+	GET_TIER_STATE();
 	id_t_ id = ID_BLANK_ID;
 	type_t_ type = 0;
 	try{
@@ -126,6 +156,7 @@ ID_TIER_ADD_DATA(mem){
 		throw e;
 	}
 	// initializer of data_id_t calls mem_add_id automatically
+	bool loaded = false;
 	CHECK_TYPE(tv_channel_t);
 	CHECK_TYPE(tv_frame_audio_t);
 	CHECK_TYPE(tv_frame_video_t);
@@ -140,16 +171,19 @@ ID_TIER_ADD_DATA(mem){
 	CHECK_TYPE(net_socket_t);
 	CHECK_TYPE(math_number_set_t);
 	CHECK_TYPE(net_interface_ip_address_t);
-	print("type " + convert::type::from(type) + " needs a loader", P_CRIT);
-
+	if(loaded == false){
+		print("can't add a type we don't have a macro creator for: " + convert::type::from(type), P_ERR);
+	}
 }
+
 
 #undef CHECK_TYPE
 
-#define DELETE_TYPE_2(a) if(ptr->get_type() == #a){print("deleting " + (std::string)(#a) + id_breakdown(ptr->get_id()), P_DEBUG);delete (a*)ptr->get_ptr();ptr = nullptr;return;}
+#define DELETE_TYPE_2(a) if(ptr->get_type() == #a){print("deleting " + (std::string)(#a) + id_breakdown(ptr->get_id()), P_DEBUG);delete (a*)ptr->get_ptr();ptr = nullptr;deleted = true;}
 
 
 ID_TIER_DEL_ID(mem){
+	GET_TIER_STATE();
 	// Again, data_id_t destructors call mem_del_id
 	data_id_t *ptr =
 		PTR_ID_PRE(id, );
@@ -158,7 +192,7 @@ ID_TIER_DEL_ID(mem){
 		return;
 	}
 	// TODO: convert this over into a jump table with type_t_
-	
+	bool deleted = false;
 	// TV subsystem
 	DELETE_TYPE_2(tv_frame_video_t);
 	DELETE_TYPE_2(tv_frame_audio_t);
@@ -198,9 +232,9 @@ ID_TIER_DEL_ID(mem){
 
 	DELETE_TYPE_2(net_interface_ip_address_t);
 	
-	print("No proper type was found for clean deleting, cutting losses "
-	      "and delisting it, memory leak occuring: " + ptr->get_type(), P_ERR);
-	
+	if(deleted == false){
+		print("No proper type was found for clean deleting" + ptr->get_type(), P_ERR);
+	}
 }
 
 #undef DELETE_TYPE_2
@@ -229,6 +263,11 @@ ID_TIER_GET_ID_MOD_INC(mem){
 	}
 	return 0;
 }
+
+/*
+  The local version and the id_tier_state_t version are identical, since they
+  can only change through this function
+ */
 
 ID_TIER_GET_ID_BUFFER(mem){
 	return id_buffer;

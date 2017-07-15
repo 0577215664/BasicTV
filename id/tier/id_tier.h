@@ -128,7 +128,7 @@
   also throw an error (somebody/Windows/FAT-32/etc. destroyed the naming scheme)
  */
 
-#define ID_TIER_INIT_STATE(medium) void id_tier_##medium##_init_state(id_t_ state_id)
+#define ID_TIER_INIT_STATE(medium) id_t_ id_tier_##medium##_init_state()
 #define ID_TIER_DEL_STATE(medium) void id_tier_##medium##_del_state(id_t_ state_id)
 
 #define ID_TIER_ADD_DATA(medium) void id_tier_##medium##_add_data(id_t_ state_id, std::vector<uint8_t> data)
@@ -214,12 +214,13 @@ public:
 	GET_SET(last_state_refresh_micro_s, uint64_t);
 	GET_SET(refresh_interval_micro_s, uint64_t);
 
+	GET_SET(payload, void*);
 };
 
 struct id_tier_medium_t{
 public:
-	void (*init_state)(id_t_ state_id) = nullptr;
-	void (*del_state)(id_t_ state_id) = nullptr;
+	id_t_ (*init_state)() = nullptr;
+	void (*del_state)(id_t_) = nullptr;
 	
 	void (*add_data)(id_t_ state_id, std::vector<uint8_t> data) = nullptr;
 	void (*del_id)(id_t_ state_id, id_t_ id) = nullptr;
@@ -230,7 +231,7 @@ public:
 	void (*update_id_buffer)(id_t_ state_id) = nullptr;
 
 	id_tier_medium_t(
-		void (*init_state_)(id_t_ state_id),
+		id_t_ (*init_state_)(),
 		void (*del_state_)(id_t_ state_id),
 		void (*add_data_)(id_t_, std::vector<uint8_t>),
 		void (*del_id_)(id_t_, id_t_),

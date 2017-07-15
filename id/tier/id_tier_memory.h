@@ -1,5 +1,10 @@
 #ifndef ID_TIER_MEMORY_H
 #define ID_TIER_MEMORY_H
+
+#include "id_tier.h"
+
+#include <algorithm>
+
 extern ID_TIER_INIT_STATE(mem);
 extern ID_TIER_DEL_STATE(mem);
 extern ID_TIER_ADD_DATA(mem);
