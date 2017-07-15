@@ -9,13 +9,15 @@
 
 #include <vector>
 
-#define SEND_IF_VALID(x) if(PTR_ID(x, )){proto_socket_ptr->send_id(x);}else{print("can't send id " + id_breakdown(x), P_ERR);}
+#define SEND_IF_VALID(x) if(PTR_ID(x, )){try{proto_socket_ptr->send_id(x);}catch(...){print("exception caught in transmission of id "#x" " + id_breakdown(x), P_ERR);}}else{print("can't send id " + id_breakdown(x), P_ERR);}
 
 static void net_proto_initiate_direct_tcp(
 	net_proto_con_req_t *con_req,
 	net_proto_peer_t *proto_peer_ptr,
 	net_interface_ip_address_t *ip_address_ptr){
 
+	std::raise(SIGINT); // 'catch throw'
+	
 	ASSERT(con_req != nullptr, P_ERR);
 	ASSERT(proto_peer_ptr != nullptr, P_ERR);
 	ASSERT(ip_address_ptr != nullptr, P_ERR);
@@ -24,43 +26,56 @@ static void net_proto_initiate_direct_tcp(
 	net_socket_t *socket_ptr = nullptr;
 	net_proto_socket_t *proto_socket_ptr = nullptr;
 	try{
-		socket_ptr =
-			new net_socket_t;
-		socket_ptr->set_net_ip(
-			net_interface::ip::raw::to_readable(
-				ip_address_ptr->get_address()),
-			ip_address_ptr->get_port());
-		socket_ptr->connect();
+		try{
+			ip_address_ptr->set_last_attempted_connect_time(
+				get_time_microseconds());
+			socket_ptr =
+				new net_socket_t;
+			socket_ptr->set_net_ip(
+				net_interface::ip::raw::to_readable(
+					ip_address_ptr->get_address()),
+				ip_address_ptr->get_port());
+			socket_ptr->connect();
+		}catch(...){
+			print("exception caught in connect()", P_ERR);
+		}
 		if(socket_ptr->is_alive() == false){
-			print("couldn't connect to peer", P_NOTE);
+			print("couldn't connect to peer", P_ERR);
 		}else{
 			print("opened connection with peer " +
-			      net_proto::peer::get_breakdown(ip_address_ptr->id.get_id()),
+			      net_proto::peer::get_breakdown(proto_peer_ptr->id.get_id()),
 			      P_NOTE);
 			delete con_req;
 			con_req = nullptr;
 		}
+			
+		try{
+			proto_socket_ptr =
+				new net_proto_socket_t;
+			proto_socket_ptr->set_peer_id(
+				proto_peer_ptr->id.get_id());
+			proto_socket_ptr->set_socket_id(
+				socket_ptr->id.get_id());
+		}catch(...){
+			print("exception caught in proto_socket initialization", P_ERR);
+		}
+		
+		try{
+			const id_t_ my_peer_id =
+				net_proto::peer::get_self_as_peer();
+			net_proto_peer_t *my_proto_peer_ptr =
+				PTR_DATA(my_peer_id,
+					 net_proto_peer_t);
+			ASSERT(my_proto_peer_ptr != nullptr, P_ERR);
 
-		ip_address_ptr->set_last_attempted_connect_time(
-			get_time_microseconds());
-		proto_socket_ptr =
-			new net_proto_socket_t;
-		proto_socket_ptr->set_peer_id(
-			proto_peer_ptr->id.get_id());
-		proto_socket_ptr->set_socket_id(
-			socket_ptr->id.get_id());
-		const id_t_ my_peer_id =
-			net_proto::peer::get_self_as_peer();
-		net_proto_peer_t *my_proto_peer_ptr =
-			PTR_DATA(my_peer_id,
-				 net_proto_peer_t);
-		ASSERT(my_proto_peer_ptr != nullptr, P_ERR);
-
-		SEND_IF_VALID(encrypt_api::search::pub_key_from_hash(get_id_hash(my_peer_id)));
-		SEND_IF_VALID(my_peer_id);
-		SEND_IF_VALID(my_proto_peer_ptr->get_address_id());
+			SEND_IF_VALID(encrypt_api::search::pub_key_from_hash(get_id_hash(my_peer_id)));
+			SEND_IF_VALID(my_peer_id);
+			SEND_IF_VALID(my_proto_peer_ptr->get_address_id());
+		}catch(...){
+			print("exception caught in initial data transmission", P_ERR);
+		}
 	}catch(...){
-		print("socket is a nullptr (client disconnect), destroying net_proto_socket_t", P_NOTE);
+		print("caught an exception in direct TCP connection attempt", P_NOTE);
 		if(proto_socket_ptr != nullptr){
 			delete proto_socket_ptr;
 			proto_socket_ptr = nullptr;

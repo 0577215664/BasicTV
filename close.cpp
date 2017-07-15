@@ -15,7 +15,7 @@ void close(){
 	input_close();
 	net_proto_close();
 	console_close();
-	// ID_TIER_DESTROY_all_data();
+	id_tier_close();
 	id_tier::operation::del_id_from_state(
 		{id_tier::state_tier::only_state_of_tier(0, 0)},
 		id_tier::lookup::ids::from_tier(

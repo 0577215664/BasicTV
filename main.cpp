@@ -41,7 +41,6 @@ bool running = false;
 bool closing = false;
 
 id_t_ production_priv_key_id = ID_BLANK_ID;
-bool id_throw_exception = true;
 
 static uint64_t avg_iter_time = 0;
 static uint64_t iter_count = 0;

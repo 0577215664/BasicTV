@@ -53,3 +53,11 @@ General Improvement
    shortcuts and optimizations could lay a roadblock for future strikes of genius.
 5. There are far too few tests being ran, and the tests that are being ran don't fit any basic style guidelines or have any serious documentation
    whatsoever. I want to fix this, since a majority of my problems come from false positives or outright broken tests.
+
+ESCROW/DRM
+1. Implement a DRM system
+2. Punish any nodes that change their prices
+   I understand that prices in Bitcoin can change over time, and that changes in price can happen for legitimate reasons. HOWEVER, this opens the
+   door for drastic markups and making older payments obsolete on the network (since the transaction at that time
+3. Include the encrypted version of the payment request in the Bitcoin message, so it can prove that it paid the proper price at the proper time
+4. Attach time slots inside the payment request that state that the price is valid through that window (fixes most problems!)

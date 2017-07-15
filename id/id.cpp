@@ -102,6 +102,7 @@ data_id_t::data_id_t(void *ptr_, type_t_ type_){
 	init_gen_id(type_);
 	init_list_all_data();
 	mem_add_id(this);
+	print("created " + id_breakdown(id), P_DEBUG);
 }
 
 data_id_t::~data_id_t(){
@@ -111,37 +112,12 @@ data_id_t::~data_id_t(){
 // is mem_del_id/mem_add_id needed anymore?
 
 id_t_ data_id_t::get_id(bool skip){
-	// even with unlikely, this seems pretty slow
-	if(unlikely(!skip &&
-		    !id_throw_exception &&
-		    get_id_hash(id) == ID_BLANK_HASH)){
-		encrypt_priv_key_t *priv_key =
-			PTR_DATA(production_priv_key_id,
-				 encrypt_priv_key_t);
-		if(priv_key == nullptr){
-			print("do not have a hash yet, aborting", P_ERR);
-		}
-		encrypt_pub_key_t *pub_key =
-			PTR_DATA(priv_key->get_pub_key_id(),
-				 encrypt_pub_key_t);
-		if(pub_key == nullptr){
-			print("do not have a hash yet, aborting", P_ERR);
-		}
-		set_id_hash(&id,
-			    encrypt_api::hash::sha256::gen_raw(
-				    pub_key->get_encrypt_key().second));
-	}
 	return id;
 }
 
 void data_id_t::set_id(id_t_ id_){
-	try{
-		mem_del_id(this);
-	}catch(...){} // shouldn't run anyways
 	set_id_uuid(&id, get_id_uuid(id_));
 	set_id_hash(&id, get_id_hash(id_));
-	// type HAS to be preserved
-	mem_add_id(this);
 }
 
 std::string data_id_t::get_type(){

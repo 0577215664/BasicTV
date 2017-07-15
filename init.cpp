@@ -89,14 +89,18 @@ static void bootstrap_production_priv_key_id(){
 	}else if(all_private_keys.size() > 1){
 		print("I have more than one private key, make a prompt to choose one", P_ERR);
 	}
-	set_id_hash(&production_priv_key_id,
-		    encrypt_api::hash::sha256::gen_raw(
-			    pub_key->get_encrypt_key().second));
-	priv_key->id.set_id(production_priv_key_id);
-	id_throw_exception = false;
-	priv_key->set_pub_key_id(pub_key->id.get_id());
-	P_V_S(convert::array::id::to_hex(production_priv_key_id), P_NOTE);
-	P_V_S(convert::array::id::to_hex(pub_key->id.get_id()), P_NOTE);
+	const hash_t_ hash =
+		encrypt_api::hash::sha256::gen_raw(
+			pub_key->get_encrypt_key().second);
+	std::vector<data_id_t*> id_vector =
+		mem_get_data_id_vector();
+	for(uint64_t i = 0;i < id_vector.size();i++){
+		id_t_ id_tmp =
+			id_vector[i]->get_id();
+		ASSERT(get_id_hash(id_tmp) == blank_hash, P_ERR);
+		set_id_hash(&id_tmp, hash);
+		id_vector[i]->set_id(id_tmp);
+	}
 }
 
 #define SHORT_TO_FULL(short_, full) try{settings::set_setting(full, settings::get_setting(short_));}catch(...){}
@@ -135,13 +139,9 @@ void init(){
 	settings::set_setting("data_folder", ((std::string)getenv("HOME"))+"/.BasicTV/");
 	settings::set_setting("print_backtrace", "false");
 	settings::set_setting("print_color", "true");
-	
-	id_tier_medium_t memory_medium_ptr =
-		id_tier::get_medium(
-			ID_TIER_MEDIUM_MEM);
-	memory_medium_ptr.init_state();
 
-	
+	settings::set_setting("print_delay", "0");
+		
 	settings_init();
 	
 	// copy shortcut settings over to full names for in-program use
@@ -162,8 +162,19 @@ void init(){
 	  TODO: use getuid and that stuff when getenv doesn't work (?)
 	 */
 	
+	
+	id_tier_medium_t memory_medium_ptr =
+		id_tier::get_medium(
+			ID_TIER_MEDIUM_MEM);
+	id_tier_state_t *tier_state_ptr =
+		PTR_DATA(memory_medium_ptr.init_state(),
+			 id_tier_state_t); // auto-updates
+
 	bootstrap_production_priv_key_id();
 
+	id_tier_mem_update_state_cache(
+		tier_state_ptr);
+	
 	// SDL2_net throws a SIGPIPE on client disconnects, I seriously need to
 	// upgrade to something better
 	signal(SIGPIPE, SIG_IGN);
@@ -172,5 +183,6 @@ void init(){
 	input_init();
 	net_proto_init();
 	console_init();
+	id_tier_init();
 }
 

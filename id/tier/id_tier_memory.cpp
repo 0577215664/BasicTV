@@ -41,12 +41,16 @@ static std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
  */
 
 
-static void id_tier_mem_update_state_cache(
+void id_tier_mem_update_state_cache(
 	id_tier_state_t *tier_state_ptr){
 	// Probably could use some pointer magic
 	ASSERT(tier_state_ptr != nullptr, P_ERR);
 	tier_state_ptr->set_id_buffer(
 		id_buffer);
+}
+
+std::vector<data_id_t*> mem_get_data_id_vector(){
+	return id_vector;
 }
 
 // special status, called by ID constructors ONLY
@@ -327,7 +331,8 @@ data_id_t *id_tier::mem::get_id_ptr(
 	if(id == ID_BLANK_ID){
 		return nullptr;
 	}
-	ASSERT(get_id_type(id) == type, P_ERR);
+	ASSERT(get_id_type(id) == type ||
+	       type == 0, P_ERR); // type == 0 is with ""
 	if(std::find(
 		   lookup_vector.begin(),
 		   lookup_vector.end(),
@@ -403,7 +408,7 @@ data_id_t *id_tier::mem::get_id_ptr(
 	uint8_t high_minor){
 	return id_tier::mem::get_id_ptr(
 		id,
-		convert::type::to(type),
+		(type == "") ? 0 : convert::type::to(type),
 		high_major,
 		high_minor);
 }

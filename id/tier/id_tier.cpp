@@ -32,6 +32,7 @@ id_t_ id_tier::state_tier::only_state_of_tier(
 	if(tier_state_ptr != nullptr){
 		return tier_state_ptr->id.get_id();
 	}
+	print("state isn't in memory at the moment, this needs to be ensured", P_CRIT);
 	std::vector<id_t_> id_state_list =
 		ID_TIER_CACHE_GET(
 			TYPE_ID_TIER_STATE_T);
