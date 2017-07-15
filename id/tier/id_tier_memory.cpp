@@ -113,9 +113,7 @@ static data_id_t *mem_lookup(id_t_ id){
 id_tier_state_t *mem_tier_state_lookup(
 	uint8_t major,
 	uint8_t minor){
-	P_V(id_vector.size(), P_VAR);
 	for(uint64_t i = 0;i < id_vector.size();i++){
-		P_V_S(convert::type::from(id_vector[i]->get_type_byte()), P_VAR);
 		if(unlikely(id_vector[i]->get_type_byte() == TYPE_ID_TIER_STATE_T)){
 			id_tier_state_t *tier_state_ptr =
 				(id_tier_state_t*)id_vector[i]->get_ptr();
