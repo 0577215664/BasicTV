@@ -297,7 +297,7 @@ id_t_ encrypt_api::search::pub_key_from_hash(std::array<uint8_t, 32> hash){
 	P_V(pub_key_vector.size(), P_VAR);
 	for(uint64_t i = 0;i < pub_key_vector.size();i++){
 		encrypt_pub_key_t *pub_key_ptr =
-			PTR_DATA_PRE(
+			PTR_DATA(
 				pub_key_vector[i],
 				encrypt_pub_key_t);
 		if(pub_key_ptr == nullptr){
@@ -315,6 +315,8 @@ id_t_ encrypt_api::search::pub_key_from_hash(std::array<uint8_t, 32> hash){
 				      std::vector<uint8_t>(
 					      &(pub_key_hash[0]),
 					      &(pub_key_hash[0])+32)), P_VAR);
+			ASSERT(get_id_hash(pub_key_vector[i]) ==
+			       pub_key_hash, P_ERR);
 			return pub_key_vector[i];
 		}
 	}

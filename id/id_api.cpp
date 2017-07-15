@@ -182,6 +182,7 @@ std::vector<id_t_> id_api::linked_list::list::by_distance_until_match(id_t_ star
  */
 
 std::vector<uint8_t> id_api::raw::encrypt(std::vector<uint8_t> data){
+	ASSERT(data.size() >= ID_PREAMBLE_SIZE, P_ERR);
 	id_t_ id = fetch_id(data);
 	P_V_S(convert::array::id::to_hex(id), P_VAR);
 	if(get_id_type(id) == TYPE_ENCRYPT_PUB_KEY_T){
@@ -232,6 +233,7 @@ std::vector<uint8_t> id_api::raw::encrypt(std::vector<uint8_t> data){
 }
 
 std::vector<uint8_t> id_api::raw::decrypt(std::vector<uint8_t> data){
+	ASSERT(data.size() >= ID_PREAMBLE_SIZE, P_ERR);
 	id_t_ id = fetch_id(data);
 	if(!(data[0] & ID_EXTRA_ENCRYPT)){
 		print("can't decrypt pre-decrypted data", P_WARN);
@@ -261,7 +263,8 @@ std::vector<uint8_t> id_api::raw::decrypt(std::vector<uint8_t> data){
 	return data;
 }
 
-std::vector<uint8_t> id_api::raw::compress(std::vector<uint8_t> data){
+std::vector<uint8_t> id_api::raw::compress(std::vector<uint8_t> data){	
+	ASSERT(data.size() >= ID_PREAMBLE_SIZE, P_ERR);
 	if(data[0] & ID_EXTRA_COMPRESS){
 		print("can't compress pre-compressed data", P_WARN);
 		print("TODO: compress pre-compressed data", P_NOTE);
@@ -286,6 +289,7 @@ std::vector<uint8_t> id_api::raw::compress(std::vector<uint8_t> data){
 }
 
 std::vector<uint8_t> id_api::raw::decompress(std::vector<uint8_t> data){
+	ASSERT(data.size() >= ID_PREAMBLE_SIZE, P_ERR);
 	if(!(data[0] & ID_EXTRA_COMPRESS)){
 		print("can't decompress uncompressed data", P_WARN);
 	}else{

@@ -187,13 +187,14 @@ void net_proto_socket_t::send_id(id_t_ id_){
 	// 		// ID_DATA_NETWORK_RULE_PUBLIC,
 	// 		// ID_DATA_EXPORT_RULE_NEVER,
 	// 		// ID_DATA_PEER_RULE_NEVER);
-	std::vector<uint8_t> payload =
+	std::vector<std::vector<uint8_t> > payload =
 		id_tier::operation::get_data_from_state(
 			{id_tier::state_tier::only_state_of_tier(
 					0, 0)},
-			{id_}).at(0);
-	id_api::raw::compress(payload); // TODO: make this a function
-	id_api::raw::encrypt(payload);
+			{id_});
+	ASSERT(payload.size() > 0, P_ERR);
+	id_api::raw::compress(payload[0]); // TODO: make this a function
+	id_api::raw::encrypt(payload[0]);
 	if(payload.size() == 0){
 		print("exported size of ID is zero, not sending", P_NOTE);
 		return;
@@ -209,7 +210,7 @@ void net_proto_socket_t::send_id(id_t_ id_){
 	std::vector<uint8_t> std_data_postescape =
 		escape_vector(std_data, NET_PROTO_ESCAPE);
 	std::vector<uint8_t> payload_postescape =
-		escape_vector(payload, NET_PROTO_ESCAPE);
+		escape_vector(payload[0], NET_PROTO_ESCAPE);
 	P_V(std_data_postescape.size(), P_VAR);
 	P_V(payload_postescape.size(), P_VAR);
 	socket_ptr->send(std_data_postescape);

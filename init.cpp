@@ -100,6 +100,7 @@ static void bootstrap_production_priv_key_id(){
 		ASSERT(get_id_hash(id_tmp) == blank_hash, P_ERR);
 		set_id_hash(&id_tmp, hash);
 		id_vector[i]->set_id(id_tmp);
+		P_V_S(id_breakdown(id_vector[i]->get_id()), P_NOTE);
 	}
 }
 
@@ -171,7 +172,8 @@ void init(){
 			 id_tier_state_t); // auto-updates
 
 	bootstrap_production_priv_key_id();
-
+	
+	id_tier_mem_regen_state_cache();
 	id_tier_mem_update_state_cache(
 		tier_state_ptr);
 	

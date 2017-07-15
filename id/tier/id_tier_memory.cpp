@@ -40,6 +40,14 @@ static std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
   try-catch blocks and keep them coupled together.
  */
 
+void id_tier_mem_regen_state_cache(){
+	id_buffer.clear();
+	for(uint64_t i = 0;i < id_vector.size();i++){
+		id_buffer.push_back(
+			std::make_pair(id_vector[i]->get_id(),
+				       id_vector[i]->get_mod_inc()));
+	}
+}
 
 void id_tier_mem_update_state_cache(
 	id_tier_state_t *tier_state_ptr){

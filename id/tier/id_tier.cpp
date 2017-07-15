@@ -14,6 +14,10 @@ std::vector<id_tier_medium_t> id_tier_medium = {
 };
 
 id_tier_medium_t id_tier::get_medium(uint8_t medium_type){
+	if(medium_type != 1){
+		print("fix medium_type soon", P_WARN);
+		medium_type = 1;
+	}
 	return id_tier_medium.at(medium_type-1); // 0 is undefined
 }
 
@@ -185,18 +189,23 @@ std::vector<std::vector<uint8_t> > id_tier::operation::get_data_from_state(
 					tier_state_ptr);
 			for(uint64_t c = 0;c < id_vector.size();c++){
 				try{
-					if(std::find(
-						   state_cache.begin(),
-						   state_cache.end(),
-						   id_vector[c]) != state_cache.end()){
+					// if(std::find(
+					// 	   state_cache.begin(),
+					// 	   state_cache.end(),
+					// 	   id_vector[c]) != state_cache.end()){
 						id_tier_medium_t medium =
 							id_tier::get_medium(
 								tier_state_ptr->get_medium());
-						retval.push_back(
+						std::vector<uint8_t> id_exp =
 							medium.get_id(
 								tier_state_ptr->id.get_id(),
-								id_vector[c]));
-					}
+								id_vector[c]);
+						if(id_exp.size() > 0){
+							retval.push_back(
+								id_exp);
+							break;
+						}
+					// }
 				}catch(...){}
 			}
 		}catch(...){}
