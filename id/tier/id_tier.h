@@ -4,78 +4,25 @@
 #include "../id.h"
 #include "../id_api.h"
 
-/*
-  id_tier.h: Tiered storage system for all IDs
+#define PTR_DATA(id_, type_) ((type_*)id_tier::mem::get_ptr(id_, #type_, 0, 0))
+#define PTR_ID(id_, type_) (id_tier::mem::get_id_ptr(id_, #type_, 0, 0))
 
-  Okay, so here is how storage is going to work:
-  1. data_id_t'd type is chagned in memory is a direct change to tier 0
+// Only until I re-implement cache
+#define PTR_DATA_FAST PTR_DATA
+#define PTR_ID_FAST PTR_ID
 
-  2. A function call inside of data_id_t exports this change to tier 1
+#define PTR_DATA_PRE PTR_DATA
+#define PTR_ID_PRE PTR_ID
 
-  3. Once exported to tier 1, it checks all lower tiers and exports to those
-  when there is an update on a set interval
+#define ID_TIER_CACHE_GET(type_) (id_tier::lookup::type::from_tier(0, 0, type_))
 
-  4. If any other tier has a more recent version, and is proven to be
-     cryptographically correct (mod_inc in filename matches the encrypted
-     version, ID hash checks out, etc.), then we spread that out to any places
-     where the ID currently exists
-     a. Non-malicious conflicts should be very, very rare as long as we
-        segregate private keys
-
-  All data_id_t'd types have that export function called every cycle, since
-  the cache is used as the de-facto lookup system for network calls, and we
-  want to:
-  1. Serve the data as fast as possible
-  2. Only serve valid data (under the assumption that any data that is networked
-     would be in a working state when it is dereferenced as a pointer at the end
-     of the function, or at least at the end of the main loop)
-
- */
-
-/*
-  Minor tiers can only move up (in most cases), since they involve decryption.
-
-  The only case for minor tiers currently is for statistical hinting of future
-  data use, and spreading the investment across multiple IDs of a similar
-  likelihood, so we get more reliable results instead of a high std. dev. hit
-  and miss system (in cases where we don't have enough computational horsepower
-  to do it all in one swoop, which might be prety common given the high
-  compression ratios and the default of RSA-4096)
-
-  Tiers, mediums, and states aren't interchangeable:
-  Tiers are used internally (or planned to be) to set bounds on where data can
-  be looked for to prevent deadlocks and improve speed in code by reducing 
-  impossible or weird places to search.
-
-  Mediums are the physical interfaces to the device, containing all of the
-  code and stuff to actually read and write the data (and other FS functions).
-  Mediums can be more specific than the tier (multiple network connection
-  stuff possibly, SSD v. HDD for optimal read/write preference, etc.)
-
-  States are one instance of a medium, containing the ID cache, medium ID, as
-  well as any other stuff needed to use the information. 
- */
-
-/*
-  MEM: anything in memory
-  CACHE: anything loaded into the program as a string to import, minor tiers
-  segregate that into encryption states and that jazz
-  DISK: reads and writes from any disk
-  LIBRARY: any large and weird system that hash higer latencies, or is otherwise
-  more complicated, than just reading or writing from a disk. examples could be
-  tape archives, SSH/FTP, NAS, IPFS, etc
-  NETWORK: reach out to the network
-
-  LIBRARY throws a wrench in having a clear hierarichal system (in some cases),
-  since it is such a broad term. I should create a vector of ID_TIER_MAJORs for
-  preference, and only pass vectors of major tiers into the functions
- */
+// expose more nitty gritties to the user later on
+#define ID_TIER_DESTROY(id_) (id_tier::operation::del_id_from_state({id_tier::state_tier::only_state_of_tier(0, 0)}, {id_}))
 
 #define ID_TIER_MAJOR_MEM 0
 #define ID_TIER_MAJOR_CACHE 1
 #define ID_TIER_MAJOR_DISK 2
 #define ID_TIER_MAJOR_LIBRARY 3
-// only tier that can create network requests
 #define ID_TIER_MAJOR_NETWORK 4
 
 #define ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED 0
@@ -86,56 +33,12 @@
 #define ID_TIER_MEDIUM_CACHE 2
 #define ID_TIER_MEDIUM_DISK 3
 
-// Network isn't a tier, and most users at this stage probably aren't using tape
-// libraries or giant archiving systems :(
-
-/*
-  Functions breakdown:
-  Add ID
-  Delete ID
-  Get ID's mod_inc
-
-  Fetch a buffer of all IDs and their mod_inc
-  Update an internal buffer of all of the IDs and the mod_inc
-    (called by some looped function, so every cycle most likely)
-  Fetch tier level that any tiered medium falls on
-
-
-  FUTURE:
-  Get ID of all read/write speeds
-
-  DEFINED BEHAVIOR:
-
-  Any calls to a 'mem' device (memory loaded) should be passed with a blank
-  ID, since having a directory of pointers inside of an ID'd type itself
-  is dangerous, impractical, and pretty out of line with the rest of the code
-
-  Any case where the state_id cannot be loaded as a pointer would cause
-  an error to be thrown in the format of:
-  ASSERT(state_ptr != nullptr, P_ERR);
-
-  add_id: adds id, throws if it cannot add it
-  del_id: deletes id, don't throw if we can't delete it
-  get_id: gets id's data, throw on reading error, return empty on not found
-
-  get_id_mod_inc: get an id's mod_inc, throw if we can't access it
-
-  get_id_buffer: returns std::vector<std::pair<id_t_, mod_inc_t_> >, no
-  exceptions generated by this function specifically
-
-  update_id_buffer: attempts to update the local ID buffer (see above), throw
-  an error if we can't update it. Any errors in reading the medium itself should
-  also throw an error (somebody/Windows/FAT-32/etc. destroyed the naming scheme)
- */
-
 #define ID_TIER_INIT_STATE(medium) id_t_ id_tier_##medium##_init_state()
 #define ID_TIER_DEL_STATE(medium) void id_tier_##medium##_del_state(id_t_ state_id)
-
 #define ID_TIER_ADD_DATA(medium) void id_tier_##medium##_add_data(id_t_ state_id, std::vector<uint8_t> data)
 #define ID_TIER_DEL_ID(medium) void id_tier_##medium##_del_id(id_t_ state_id, id_t_ id)
 #define ID_TIER_GET_ID(medium) std::vector<uint8_t> id_tier_##medium##_get_id(id_t_ state_id, id_t_ id)
 #define ID_TIER_GET_ID_MOD_INC(medium) mod_inc_t_ id_tier_##medium##_get_id_mod_inc(id_t_ state_id, id_t_ id)
-
 #define ID_TIER_GET_ID_BUFFER(medium) std::vector<std::pair<id_t_, mod_inc_t_> > id_tier_##medium##_get_id_buffer(id_t_ state_id)
 #define ID_TIER_UPDATE_ID_BUFFER(medium) void id_tier_##medium##_update_id_buffer(id_t_ state_id)
 
@@ -143,77 +46,31 @@ typedef std::pair<id_t_, mod_inc_t_> id_buffer_t;
 
 struct id_tier_state_t{
 private:
-	// id_tier_medium_t
 	uint8_t medium = 0;
-
 	uint8_t tier_major = 0;
-	uint8_t tier_minor = 0;
-
-	/*
-	  In Tier 0 (memory), we have to use some fancy Linux calls to get the
-	  total amount used in memory, and reference some old but never used
-	  setting and enforce an upper limit on memory usage. 
-
-	  Thankfully, we can easily shift anything we need down seamlessly,
-	  since the cache is very easy when it comes to what extra'd data we
-	  can export (would probably opt for unencrypted uncompressed, since
-	  we would probably re-open it later ourselves).
-
-	  Tier 1 can actually measure the exported data size, since that's all
-	  it deals with.
-	  
-	  Tiers 2 and higher (HDD and beyond) use the same logic as 1, but 
-	  have to use some system calls to get file size
-
-	  Because of Tier 0 complexities, used_bytes + free_bytes might not be
-	  total_size_bytes, since we may have to operate with a buffer for
-	  sanity, cache or OOM reasons
-	 */
-	
+	uint8_t tier_minor = 0;	
 	uint64_t total_size_bytes = 0;
 	uint64_t used_bytes = 0;
 	uint64_t free_bytes = 0;
-	
 	std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
-
-	/*
-	  Data should only be exported to disk if it is able to be sent to other
-	  people, so here is a list of all of the allowed extra flags any data
-	  put into this state thing ought to have.
-
-	  HDD and lower should have one entry of encrypted and compressed,
-	  cache can vary on the minor, and memory can be none (falls inline with
-	  not being able to reliably re-generate it on the other end too)
-	 */
 	std::vector<uint8_t> allowed_extra;
-
 	uint64_t last_state_refresh_micro_s = 0;
 	uint64_t refresh_interval_micro_s = 0;
-
-	/*
-	  Each medium has a custom defined struct that this pointer references,
-	  that isn't registered with the ID subsystem
-	 */
 	void *payload = nullptr;
 public:
 	data_id_t id;
 	id_tier_state_t();
 	~id_tier_state_t();
-
 	GET_SET(medium, uint8_t);
 	GET_SET(tier_major, uint8_t);
 	GET_SET(tier_minor, uint8_t);
-
 	GET_SET(total_size_bytes, uint64_t);
 	GET_SET(used_bytes, uint64_t);
 	GET_SET(free_bytes, uint64_t);
-	
-	// can't use id_buffer through GET_SET since std::pair<> has a comma
 	GET_SET(id_buffer, std::vector<id_buffer_t>);
 	GET_SET(allowed_extra, std::vector<uint8_t>);
 	GET_SET(last_state_refresh_micro_s, uint64_t);
 	GET_SET(refresh_interval_micro_s, uint64_t);
-
 	GET_SET(payload, void*);
 };
 
@@ -221,15 +78,12 @@ struct id_tier_medium_t{
 public:
 	id_t_ (*init_state)() = nullptr;
 	void (*del_state)(id_t_) = nullptr;
-	
 	void (*add_data)(id_t_ state_id, std::vector<uint8_t> data) = nullptr;
 	void (*del_id)(id_t_ state_id, id_t_ id) = nullptr;
 	std::vector<uint8_t> (*get_id)(id_t_ state_id, id_t_ id) = nullptr;
 	mod_inc_t_ (*get_id_mod_inc)(id_t_ state_id, id_t_ id) = nullptr;
-	
 	std::vector<std::pair<id_t_, mod_inc_t_> > (*get_id_buffer)(id_t_ state_id) = nullptr;
 	void (*update_id_buffer)(id_t_ state_id) = nullptr;
-
 	id_tier_medium_t(
 		id_t_ (*init_state_)(),
 		void (*del_state_)(id_t_ state_id),
@@ -254,59 +108,88 @@ namespace id_tier{
 	id_tier_medium_t get_medium(
 		uint8_t medium_type);
 	
-	id_t_ only_state_of_tier(
-		uint8_t tier_major,
-		uint8_t tier_minor);
-	std::vector<id_t_> optimal_state_vector_of_tier(
-		uint8_t tier_major,
-		uint8_t tier_minor);
+	namespace state_tier{
+		id_t_ only_state_of_tier(
+			uint8_t tier_major,
+			uint8_t tier_minor);
+		std::vector<id_t_> optimal_state_vector_of_tier(
+			uint8_t tier_major,
+			uint8_t tier_minor);
+		std::vector<id_t_> optimal_state_vector_of_tier_vector(
+			std::vector<std::pair<uint8_t, uint8_t> > tier_vector);
+	};
 	namespace operation{
-		/*
-		  In most cases (especially with memory and cache), we can
-		  refernce only_state_of_tier for state_id, and that should
-		  work fine
-		 */	
-		std::vector<std::tuple<id_t_, uint8_t, uint8_t> > valid_state_with_id(
-			id_t_ id);
-		uint8_t fix_extra_flags_for_state(
-			id_t_ state_id,
-			uint8_t data_extra);
 		void add_data_to_state(
 			std::vector<id_t_> state_id,
 			std::vector<std::vector<uint8_t> > data);
 		void del_id_from_state(
 			std::vector<id_t_> state_id,
 			std::vector<id_t_> id);
-		std::vector<uint8_t> get_data_from_state(
+		std::vector<std::vector<uint8_t> > get_data_from_state(
 			std::vector<id_t_> state_id,
 			std::vector<id_t_> id_vector);
 		void shift_data_to_state(
 			id_t_ start_state_id,
 			id_t_ end_state_id,
 			std::vector<id_t_> id_vector);
-		
+		std::vector<std::tuple<id_t_, uint8_t, uint8_t> > valid_state_with_id(
+			id_t_ id);
+		uint8_t fix_extra_flags_for_state(
+			id_t_ state_id,
+			uint8_t data_extra);
 	};
-
+	namespace lookup{
+		namespace id_mod_inc{
+			std::vector<std::pair<id_t_, mod_inc_t_> > from_tier(
+				uint8_t major,
+				uint8_t minor);
+			std::vector<std::pair<id_t_, mod_inc_t_> > from_state(
+				id_t_ state_id);
+			std::vector<std::pair<id_t_, mod_inc_t_> > from_state(
+				id_tier_state_t* tier_state_ptr);
+		};
+		namespace ids{
+			std::vector<id_t_> from_tier(
+				uint8_t major,
+				uint8_t minor);
+			std::vector<id_t_> from_state(
+				id_t_ state_id);
+			std::vector<id_t_> from_state(
+				id_tier_state_t* tier_state_ptr);
+		};
+		namespace type{
+			std::vector<id_t_> from_tier(
+				uint8_t major,
+				uint8_t minor,
+				uint8_t type);
+			std::vector<id_t_> from_tier(
+				uint8_t major,
+				uint8_t minor,
+				std::string type); // ID_TIER_CACHE_GET
+			std::vector<id_t_> from_state(
+				id_t_ state_id,
+				uint8_t type);
+			std::vector<id_t_> from_state(
+				id_tier_state_t* tier_state_ptr,
+				uint8_t type);
+		};
+	};
+	
+	std::vector<id_t_> fetch_id_buffer(
+		id_t_ state_id);
+	
 	namespace mem{
-		/*
-		  Pracitcal mem functions are done through here (using ptrs),
-		  since they deal with pointers. However, non get and set
-		  functions should work fine (i.e. we should be able to pull
-		  any exported information through it just fine, push it
-		  without getting a pointer back, and all that stuff. This
-		  interface is given for when we need a pointer back
-		  directly.
-
-		  These don't rely on a state, since all memory loading
-		  has to be done on a static location, since we'd have a
-		  Catch-22 with loading the state to laod the state to...
-		 */
 		data_id_t *get_id_ptr(
 			id_t_ id,
 			type_t_ type,
 			uint8_t high_major,
 			uint8_t high_minor);
 		data_id_t *get_id_ptr(
+			id_t_ id,
+			std::string type,
+			uint8_t high_major,
+			uint8_t high_minor);
+		void *get_ptr(
 			id_t_ id,
 			std::string type,
 			uint8_t high_major,

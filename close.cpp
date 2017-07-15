@@ -8,7 +8,6 @@
 #include "console/console.h"
 #include "id/id_api.h"
 #include "settings.h"
-#include "id/id_disk.h"
 
 void close(){
 	closing = true;
@@ -16,7 +15,11 @@ void close(){
 	input_close();
 	net_proto_close();
 	console_close();
-	id_api::destroy_all_data();
+	// ID_TIER_DESTROY_all_data();
+	id_tier::operation::del_id_from_state(
+		{id_tier::state_tier::only_state_of_tier(0, 0)},
+		id_tier::lookup::ids::from_tier(
+			0, 0));
 	ENGINE_cleanup();
 	EVP_cleanup();
 	ERR_free_strings();

@@ -300,10 +300,10 @@ uint8_t convert::type::to(std::string type){
 	CONV_CHECK_TYPE("tv_frame_video_t", TYPE_TV_FRAME_VIDEO_T);
 	CONV_CHECK_TYPE("tv_frame_caption_t", TYPE_TV_FRAME_CAPTION_T);
 	CONV_CHECK_TYPE("input_dev_standard_t", TYPE_INPUT_DEV_STANDARD_T);
-	CONV_CHECK_TYPE("id_disk_index_t", TYPE_ID_DISK_INDEX_T);
 	CONV_CHECK_TYPE("math_number_set_t", TYPE_MATH_NUMBER_SET_T);
 	CONV_CHECK_TYPE("tv_item_t", TYPE_TV_ITEM_T);
 	CONV_CHECK_TYPE("net_interface_ip_address_t", TYPE_NET_INTERFACE_IP_ADDRESS_T);
+	CONV_CHECK_TYPE("id_tier_state_t", TYPE_ID_TIER_STATE_T);
 	print("unknown type has been passed, returning zero", P_CRIT);
 	return 0;
 }
@@ -356,14 +356,14 @@ std::string convert::type::from(uint8_t type){
 		return "tv_frame_caption_t";
 	case TYPE_INPUT_DEV_STANDARD_T:
 		return "input_dev_standard_t";
-	case TYPE_ID_DISK_INDEX_T:
-		return "id_disk_index_t";
 	case TYPE_MATH_NUMBER_SET_T:
 		return "math_number_set_t";
 	case TYPE_TV_ITEM_T:
 		return "tv_item_t";
 	case TYPE_NET_INTERFACE_IP_ADDRESS_T:
 		return "net_interface_ip_address_t";
+	case TYPE_ID_TIER_STATE_T:
+		return "id_tier_state_t";
 	case 0:
 		print("zero type, something went wrong earlier", P_WARN);
 		return "NOTYPE";

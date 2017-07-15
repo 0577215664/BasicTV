@@ -34,11 +34,13 @@ net_proto_request_bare_t::net_proto_request_bare_t(){}
 
 net_proto_request_bare_t::~net_proto_request_bare_t(){}
 
-void net_proto_request_bare_t::list_bare_virtual_data(data_id_t *id){
-	id->add_data_id(&origin_peer_id, 1);
-	id->add_data_id(&destination_peer_id, 1);
-	id->add_data_raw((uint8_t*)&request_time, sizeof(request_time));
-	id->add_data_raw((uint8_t*)&ttl_micro_s, sizeof(ttl_micro_s));
+void net_proto_request_bare_t::list_bare_virtual_data(data_id_t *id_){
+	id_->add_data_id(&origin_peer_id, 1);
+	id_->add_data_id(&destination_peer_id, 1);
+	id_->add_data_raw((uint8_t*)&request_time, sizeof(request_time));
+	id_->add_data_raw((uint8_t*)&ttl_micro_s, sizeof(ttl_micro_s));
+
+	id = id_;
 }
 
 id_t_ net_proto_request_bare_t::get_origin_peer_id(){
@@ -70,10 +72,10 @@ net_proto_request_set_t::net_proto_request_set_t(){}
 
 net_proto_request_set_t::~net_proto_request_set_t(){}
 
-void net_proto_request_set_t::list_set_virtual_data(data_id_t *id){
+void net_proto_request_set_t::list_set_virtual_data(data_id_t *id_){
 	// id->add_data_one_byte_vector(&ids, ~0);
-	id->add_data_one_byte_vector(&ids, ~0);
-	id->add_data_eight_byte_vector(&mod_inc, 65536);
+	id_->add_data_one_byte_vector(&ids, ~0);
+	id_->add_data_eight_byte_vector(&mod_inc, 65536);
 }
 
 void net_proto_request_set_t::set_ids(std::vector<id_t_> ids_){
@@ -177,7 +179,7 @@ id_t_ net_proto_linked_list_request_t::get_curr_id(){
 void net_proto_type_request_t::update_type(type_t_ type_){
 	type = type_;
 	set_ids(
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			type_));
 }
 
@@ -235,7 +237,7 @@ void net_proto::request::add_id(id_t_ id){
 	  code can handle copying that over to other interfaces as well.
 	 */
 	std::vector<id_t_> id_request_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_NET_PROTO_ID_REQUEST_T);
 	for(uint64_t i = 0;i < id_request_vector.size();i++){
 		net_proto_id_request_t *id_request_ptr =
@@ -305,7 +307,7 @@ void net_proto::request::add_id_linked_list(id_t_ id, int64_t length){
 
 void net_proto::request::del_id(id_t_ id){
 	std::vector<id_t_> id_request_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_NET_PROTO_ID_REQUEST_T);
 	for(uint64_t i = 0;i < id_request_vector.size();i++){
 		net_proto_id_request_t *id_request =
@@ -472,14 +474,14 @@ bool net_proto_obsolete_request(T request, uint64_t timeout_micro_s){
 #define NET_PROTO_REQUEST_CLEANUP_CREATOR(type)				\
 	if(true){							\
 		std::vector<id_t_> vector =				\
-			id_api::cache::get(#type);			\
+			ID_TIER_CACHE_GET(#type);			\
 		for(uint64_t i = 0;i < vector.size();i++){		\
 			try{						\
 				if(net_proto_obsolete_request(		\
 					   PTR_DATA(vector[i],		\
 						    type),		\
 					   15*1000*1000)){		\
-					id_api::destroy(vector[i]);	\
+					ID_TIER_DESTROY(vector[i]);	\
 				}					\
 			}catch(...){}					\
 		}							\

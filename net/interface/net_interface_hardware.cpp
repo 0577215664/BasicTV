@@ -10,12 +10,12 @@
 #include "../net.h"
 
 net_interface_hardware_dev_t::net_interface_hardware_dev_t() : id(this, TYPE_NET_INTERFACE_HARDWARE_DEV_T){
-	SIMPLE_ADD(max_soft_dev);
-	SIMPLE_ADD(outbound_transport_type);
-	SIMPLE_ADD(inbound_transport_type);
-	SIMPLE_ADD(outbound_transport_flags);
-	SIMPLE_ADD(inbound_transport_flags);
-	SIMPLE_ADD(medium);
+	ADD_DATA(max_soft_dev);
+	ADD_DATA(outbound_transport_type);
+	ADD_DATA(inbound_transport_type);
+	ADD_DATA(outbound_transport_flags);
+	ADD_DATA(inbound_transport_flags);
+	ADD_DATA(medium);
 
 	id.add_data_one_byte_vector(&soft_dev_list, ~0);
 	id.add_data_id(&inbound_throughput_number_set_id, 1);

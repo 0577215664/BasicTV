@@ -86,7 +86,7 @@ static void net_proto_first_id_logic(net_proto_con_req_t *con_req_ptr,
 
 void net_proto_initiate_all_connections(){
 	std::vector<id_t_> proto_con_req_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_con_req_t");
 	const uint64_t cur_time_micro_s =
 		get_time_microseconds();
@@ -120,7 +120,7 @@ void net_proto_initiate_all_connections(){
 		if(ip_address_ptr == nullptr){
 			print("ip_address_ptr is a nullptr " + id_breakdown(second_peer_ptr->get_address_id()) +
 			      " in association with " + id_breakdown(second_peer_ptr->id.get_id()), P_WARN);
-			id_api::destroy(second_peer_ptr->id.get_id());
+			ID_TIER_DESTROY(second_peer_ptr->id.get_id());
 			second_peer_ptr = nullptr;
 			continue;
 		}

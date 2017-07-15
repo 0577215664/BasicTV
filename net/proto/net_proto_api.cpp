@@ -15,7 +15,7 @@ static id_t_ net_proto_preferable_id_from_hash(
 		id_t_ matching_hash_peer_id =
 		ID_BLANK_ID;
 	std::vector<id_t_> peer_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_NET_PROTO_PEER_T);
 	for(uint64_t i = 0;i < peer_vector.size();i++){
 		if(unlikely(hash ==
@@ -72,7 +72,7 @@ id_t_ net_proto::peer::get_self_as_peer(){
 std::vector<id_t_> net_proto::socket::all_proto_socket_of_peer(id_t_ peer_id){
 	std::vector<id_t_> retval;
 	std::vector<id_t_> proto_socket_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_socket_t");
 	for(uint64_t i = 0;i < proto_socket_vector.size();i++){
 		net_proto_socket_t *proto_socket =
@@ -115,7 +115,7 @@ id_t_ net_proto::socket::optimal_proto_socket_of_peer(id_t_ peer_id){
 
 id_t_ net_proto::peer::random_peer_id(){
 	std::vector<id_t_> proto_peer_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_NET_PROTO_PEER_T);
 	std::random_shuffle(
 		proto_peer_vector.begin(),
@@ -159,7 +159,7 @@ static id_t_ net_proto_generate_con_req(id_t_ peer_id){
 static uint64_t all_con_req_to_peer(id_t_ peer_id_){
 	uint64_t retval = 0;
 	std::vector<id_t_> con_req_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_NET_PROTO_CON_REQ_T);
 	for(uint64_t i = 0;i < con_req_vector.size();i++){
 		net_proto_con_req_t *con_req_ptr =
@@ -209,7 +209,7 @@ void net_proto::socket::connect(id_t_ peer_id_, uint32_t min){
 
 id_t_ net_proto::peer::optimal_peer_for_id(id_t_ id){
 	const std::vector<id_t_> proto_peer_vector =
-		id_api::cache::get(TYPE_NET_PROTO_PEER_T);
+		ID_TIER_CACHE_GET(TYPE_NET_PROTO_PEER_T);
 	const hash_t_ id_hash =
 		get_id_hash(id);
 	for(uint64_t i = 0;i < proto_peer_vector.size();i++){

@@ -27,7 +27,6 @@
 #include "system.h"
 #include "escape.h"
 #include "id/id_set.h"
-#include "id/id_disk.h"
 #include "id/id_api.h"
 
 #include "test/test.h" // includes benchmarking code too

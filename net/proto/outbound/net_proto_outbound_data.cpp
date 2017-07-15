@@ -55,8 +55,8 @@ static void net_proto_send_logic(std::vector<id_t_> id_vector,
 			proto_socket->send_id(id_vector[i]);
 		}catch(...){
 			print("proto_socket is broken, deleting net_socket_t and net_proto_socket_t", P_WARN);
-			id_api::destroy(proto_socket->get_socket_id());
-			id_api::destroy(proto_socket->id.get_id());
+			ID_TIER_DESTROY(proto_socket->get_socket_id());
+			ID_TIER_DESTROY(proto_socket->id.get_id());
 			proto_socket = nullptr;
 			break;
 		}
@@ -134,7 +134,7 @@ static bool net_proto_valid_request_to_send(
 
 static void net_proto_fill_type_requests(){
 	std::vector<id_t_> net_proto_type_requests =
-	 	id_api::cache::get(
+	 	ID_TIER_CACHE_GET(
 			TYPE_NET_PROTO_TYPE_REQUEST_T);
 	for(uint64_t i = 0;i < net_proto_type_requests.size();i++){
 	 	net_proto_type_request_t *proto_type_request =
@@ -147,7 +147,7 @@ static void net_proto_fill_type_requests(){
 				const std::vector<id_t_> raw_id_vector =
 					proto_type_request->get_ids();
 				const std::vector<id_t_> type_vector =
-					id_api::cache::get(
+					ID_TIER_CACHE_GET(
 						proto_type_request->get_type());
 				const std::vector<id_t_> real_payload =
 					remove_ids_from_vector(
@@ -171,7 +171,7 @@ static void net_proto_fill_type_requests(){
 					}
 				}
 			}catch(...){}
-			id_api::destroy(net_proto_type_requests[i]);
+			ID_TIER_DESTROY(net_proto_type_requests[i]);
 			proto_type_request = nullptr;
 		}
 	}
@@ -180,7 +180,7 @@ static void net_proto_fill_type_requests(){
 
 static void net_proto_fill_id_requests(){
 	std::vector<id_t_> net_proto_id_requests =
-	 	id_api::cache::get(TYPE_NET_PROTO_ID_REQUEST_T);
+	 	ID_TIER_CACHE_GET(TYPE_NET_PROTO_ID_REQUEST_T);
 	for(uint64_t i = 0;i < net_proto_id_requests.size();i++){
 	 	net_proto_id_request_t *proto_id_request =
 	 		PTR_DATA(net_proto_id_requests[i],
@@ -210,7 +210,7 @@ static void net_proto_fill_id_requests(){
 						origin_peer_id);
 				}catch(...){}
 			}catch(...){}
-			id_api::destroy(net_proto_id_requests[i]);
+			ID_TIER_DESTROY(net_proto_id_requests[i]);
 			proto_id_request = nullptr;
 		}
 	}
@@ -218,7 +218,7 @@ static void net_proto_fill_id_requests(){
 
 static void net_proto_fill_linked_list_requests(){
 	std::vector<id_t_> net_proto_linked_list_requests =
-	 	id_api::cache::get("net_proto_linked_list_request_t");
+	 	ID_TIER_CACHE_GET("net_proto_linked_list_request_t");
 	for(uint64_t i = 0;i < net_proto_linked_list_requests.size();i++){
 	 	net_proto_linked_list_request_t *proto_linked_list_request =
 	 		PTR_DATA(net_proto_linked_list_requests[i],
@@ -240,7 +240,7 @@ static void net_proto_fill_linked_list_requests(){
 					origin_id);
 			}catch(...){}
 			if(proto_linked_list_request->get_curr_length() == 0){
-				id_api::destroy(net_proto_linked_list_requests[i]);
+				ID_TIER_DESTROY(net_proto_linked_list_requests[i]);
 			}
 		}
 	}
@@ -277,7 +277,7 @@ void net_proto_handle_request_send(T request_ptr){
 
 #define NET_PROTO_HANDLE_REQUEST_HANDLER(type)			\
 	std::vector<id_t_> request_vector =			\
-		id_api::cache::get(				\
+		ID_TIER_CACHE_GET(				\
 			#type);					\
 	for(uint64_t i = 0;i < request_vector.size();i++){	\
 		type *ptr = PTR_DATA(request_vector[i], type);	\

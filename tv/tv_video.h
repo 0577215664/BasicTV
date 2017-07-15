@@ -13,11 +13,11 @@ private:
 	uint8_t flags = 0;
 public:
 	void list_virtual_data(data_id_t *id);
-	GET_SET(bits_per_second, uint32_t);
-	GET_SET(x_res, uint32_t);
-	GET_SET(y_res, uint32_t);
-	GET_SET(compression_scheme, uint8_t);
-	GET_SET(flags, uint8_t);
+	GET_SET_S(bits_per_second, uint32_t);
+	GET_SET_S(x_res, uint32_t);
+	GET_SET_S(y_res, uint32_t);
+	GET_SET_S(compression_scheme, uint8_t);
+	GET_SET_S(flags, uint8_t);
 };
 
 extern void tv_video_init();

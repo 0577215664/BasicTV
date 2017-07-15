@@ -29,7 +29,7 @@
 
 id_t_ tv::chan::next_id(id_t_ id, uint64_t flags){
 	std::vector<id_t_> all_channels =
-		id_api::cache::get("tv_channel_t");
+		ID_TIER_CACHE_GET("tv_channel_t");
 	P_V_S(convert::array::id::to_hex(id), P_VAR);
 	return rand_id(flags);
 	// id_t_ retval = ID_BLANK_ID;
@@ -43,7 +43,7 @@ id_t_ tv::chan::next_id(id_t_ id, uint64_t flags){
 
 id_t_ tv::chan::prev_id(id_t_ id, uint64_t flags){
 	std::vector<id_t_> all_channels =
-		id_api::cache::get("tv_channel_t");
+		ID_TIER_CACHE_GET("tv_channel_t");
 	P_V_S(convert::array::id::to_hex(id), P_VAR);
 	return rand_id(flags);
 	//return id;
@@ -51,7 +51,7 @@ id_t_ tv::chan::prev_id(id_t_ id, uint64_t flags){
 
 id_t_ tv::chan::rand_id(uint64_t flags){
 	std::vector<id_t_> channel_id =
-		id_api::cache::get("tv_channel_t");
+		ID_TIER_CACHE_GET("tv_channel_t");
 	P_V_B(flags, P_VAR);
 	if(channel_id.size() == 0){
 		return ID_BLANK_ID;

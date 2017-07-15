@@ -8,7 +8,6 @@
 #include "console/console.h"
 #include "id/id_api.h"
 #include "settings.h"
-#include "id/id_disk.h"
 
 /*
   All information imported has the SHA256 hash of the public key. It follows
@@ -45,17 +44,11 @@
 */
 
 static void bootstrap_production_priv_key_id(){
-	id_api::import::load_all_of_type(
-		"encrypt_pub_key_t",
-		ID_API_IMPORT_FROM_DISK);
-	id_api::import::load_all_of_type(
-		"encrypt_priv_key_t",
-		ID_API_IMPORT_FROM_DISK);
 	std::vector<id_t_> all_public_keys =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"encrypt_pub_key_t");
 	std::vector<id_t_> all_private_keys =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"encrypt_priv_key_t");
 	encrypt_priv_key_t *priv_key = nullptr;
 	encrypt_pub_key_t *pub_key = nullptr;
@@ -142,8 +135,15 @@ void init(){
 	settings::set_setting("data_folder", ((std::string)getenv("HOME"))+"/.BasicTV/");
 	settings::set_setting("print_backtrace", "false");
 	settings::set_setting("print_color", "true");
-	settings_init();
+	
+	id_tier_medium_t memory_medium_ptr =
+		id_tier::get_medium(
+			ID_TIER_MEDIUM_MEM);
+	memory_medium_ptr.init_state();
 
+	
+	settings_init();
+	
 	// copy shortcut settings over to full names for in-program use
 	// most calls still need console_port
 	SHORT_TO_FULL("hostname", "net_interface_ip_hostname");
@@ -161,21 +161,7 @@ void init(){
 
 	  TODO: use getuid and that stuff when getenv doesn't work (?)
 	 */
-
-	id_disk_index_t *disk_index =
-		new id_disk_index_t;
-	disk_index->id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
-		
-	disk_index->set(
-		ID_DISK_MEDIUM_HDD,
-		2, // Tier 2 is lowest for non-RAM storage
-		ID_DISK_TRANS_DIR,
-		{ID_DISK_ENHANCE_UNDEF}, // macro to zero, here for verbosity
-		settings::get_setting("data_folder"));
-
+	
 	bootstrap_production_priv_key_id();
 
 	// SDL2_net throws a SIGPIPE on client disconnects, I seriously need to

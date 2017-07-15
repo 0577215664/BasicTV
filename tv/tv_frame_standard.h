@@ -34,11 +34,11 @@ private:
 public:
 	tv_frame_standard_t();
 	~tv_frame_standard_t();
-	GET_SET(codec_state_ref, uint64_t);
-	GET_SET(flags, uint64_t);
-	GET_SET(start_time_micro_s, uint64_t);
-	GET_SET(ttl_micro_s, uint32_t);
-	GET_SET(frame_entry, uint64_t);
+	GET_SET_S(codec_state_ref, uint64_t);
+	GET_SET_S(flags, uint64_t);
+	GET_SET_S(start_time_micro_s, uint64_t);
+	GET_SET_S(ttl_micro_s, uint32_t);
+	GET_SET_S(frame_entry, uint64_t);
 	void list_virtual_data(data_id_t *id);
 	void set_standard(uint64_t start_time_micro_s_,
 			  uint32_t ttl_micro_s_,
@@ -88,7 +88,7 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 			}
 		}
 		data_id_t *new_id_ptr =
-			id_api::array::ptr_id(new_id, "");
+			PTR_ID(new_id, );
 		if(new_id_ptr != nullptr){
 			data = (T)new_id_ptr->get_ptr();
 		}else{

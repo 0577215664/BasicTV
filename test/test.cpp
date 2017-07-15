@@ -34,7 +34,7 @@ id_t_ test_create_generic_id(){
 #define RUN_TEST(x)							\
 	if(true){							\
 		const uint64_t old_id_count =				\
-			id_api::array::get_id_count();			\
+			id_tier::lookup::id_mod_inc::from_tier(0, 0).size(); \
 		const uint64_t start_time_micro_s =			\
 			get_time_microseconds();			\
 		try{							\
@@ -45,8 +45,8 @@ id_t_ test_create_generic_id(){
 		}							\
 		const uint64_t elapsed_time_micro_s =			\
 			get_time_microseconds()-start_time_micro_s;	\
-		if(old_id_count != id_api::array::get_id_count()){	\
-			P_V(id_api::array::get_id_count(), P_WARN);	\
+		if(old_id_count != id_tier::lookup::id_mod_inc::from_tier(0, 0).size()){ \
+			P_V(id_tier::lookup::id_mod_inc::from_tier(0, 0).size(), P_WARN); \
 			P_V(old_id_count, P_WARN);			\
 			print("test " #x " is leaking possibly invalid data, fix this", P_CRIT); \
 		}							\

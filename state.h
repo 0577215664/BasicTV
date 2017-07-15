@@ -25,8 +25,8 @@ private:
 	void *state_ptr = nullptr;
 	uint64_t state_format = 0;
 public:
-	GET_SET(state_ptr, void*);
-	GET_SET(state_format, uint64_t);
+	GET_SET_S(state_ptr, void*);
+	GET_SET_S(state_format, uint64_t);
 };
 
 #endif

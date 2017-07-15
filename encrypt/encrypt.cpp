@@ -292,7 +292,7 @@ std::string encrypt_api::hash::sha256::gen_str_from_raw(std::array<uint8_t, 32> 
 
 id_t_ encrypt_api::search::pub_key_from_hash(std::array<uint8_t, 32> hash){
 	std::vector<id_t_> pub_key_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"encrypt_pub_key_t");
 	P_V(pub_key_vector.size(), P_VAR);
 	for(uint64_t i = 0;i < pub_key_vector.size();i++){
@@ -325,7 +325,7 @@ id_t_ encrypt_api::search::pub_key_from_hash(std::array<uint8_t, 32> hash){
 id_t_ encrypt_api::search::priv_key_from_hash(std::array<uint8_t, 32> hash){
 	id_t_ pub_key = pub_key_from_hash(hash);
 	std::vector<id_t_> priv_keys =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_ENCRYPT_PRIV_KEY_T);
 	/*
 	  I'm assuming the search area is small enough for this not to be a

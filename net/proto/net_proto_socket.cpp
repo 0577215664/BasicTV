@@ -104,11 +104,11 @@ net_proto_socket_t::net_proto_socket_t() : id(this, TYPE_NET_PROTO_SOCKET_T){
 }
 
 net_proto_socket_t::~net_proto_socket_t(){
-	id_api::destroy(socket_id);
+	ID_TIER_DESTROY(socket_id);
 	socket_id = ID_BLANK_ID;
-	id_api::destroy(inbound_id_set_id);
+	ID_TIER_DESTROY(inbound_id_set_id);
 	inbound_id_set_id = ID_BLANK_ID;
-	id_api::destroy(outbound_id_set_id);
+	ID_TIER_DESTROY(outbound_id_set_id);
 	outbound_id_set_id = ID_BLANK_ID;	       
 }
 
@@ -124,7 +124,7 @@ void net_proto_socket_t::update_working_buffer(){
 		buffer = socket_ptr->recv_all_buffer();
 	}catch(...){
 		print("socket has closed, deleting and self-terminating", P_DEBUG);
-		id_api::destroy(socket_ptr->id.get_id());
+		ID_TIER_DESTROY(socket_ptr->id.get_id());
 		socket_ptr = nullptr;
 		print("throwing for caller to delete me", P_UNABLE);
 	}
@@ -176,17 +176,24 @@ void net_proto_socket_t::send_id(id_t_ id_){
 	if(id_tmp == nullptr){
 		print("id to send is a nullptr", P_ERR);
 	}
+	// std::vector<uint8_t> payload =
+	// 	id_api::export_id(
+	// 		id_,
+	// 		0,
+	// 		ID_EXTRA_COMPRESS | ID_EXTRA_ENCRYPT,
+	// 		ID_DATA_RULE_UNDEF,
+	// 		ID_DATA_RULE_UNDEF,
+	// 		ID_DATA_RULE_UNDEF);
+	// 		// ID_DATA_NETWORK_RULE_PUBLIC,
+	// 		// ID_DATA_EXPORT_RULE_NEVER,
+	// 		// ID_DATA_PEER_RULE_NEVER);
 	std::vector<uint8_t> payload =
-		id_api::export_id(
-			id_,
-			0,
-			ID_EXTRA_COMPRESS | ID_EXTRA_ENCRYPT,
-			ID_DATA_RULE_UNDEF,
-			ID_DATA_RULE_UNDEF,
-			ID_DATA_RULE_UNDEF);
-			// ID_DATA_NETWORK_RULE_PUBLIC,
-			// ID_DATA_EXPORT_RULE_NEVER,
-			// ID_DATA_PEER_RULE_NEVER);
+		id_tier::operation::get_data_from_state(
+			{id_tier::state_tier::only_state_of_tier(
+					0, 0)},
+			{id_}).at(0);
+	id_api::raw::compress(payload); // TODO: make this a function
+	id_api::raw::encrypt(payload);
 	if(payload.size() == 0){
 		print("exported size of ID is zero, not sending", P_NOTE);
 		return;
@@ -223,7 +230,7 @@ void net_proto_socket_t::send_id_vector(std::vector<id_t_> id_vector){
 void net_proto_socket_t::load_blocks(){
 	/*
 	  For now, i'm fine with loading this directly into memory and letting
-	  the id_api::destroy take care of exporting it somehow, but I would
+	  the ID_TIER_DESTROY take care of exporting it somehow, but I would
 	  like to create an index where information can be stored really
 	  anywhere, and have a more robust intratransport system for this
 	  data (expandable to say giant tape libraries, CD/DVD/BD archvies,

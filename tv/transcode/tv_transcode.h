@@ -46,7 +46,7 @@ struct tv_transcode_state_encode_codec_t{
 private:
 	uint8_t format = 0;
 public:
-	GET_SET(format, uint8_t);
+	GET_SET_S(format, uint8_t);
 	tv_transcode_state_encode_codec_t(
 		uint8_t format_,
 		tv_transcode_encode_state_t* (*encode_init_state_)(tv_audio_prop_t*),
@@ -70,7 +70,7 @@ struct tv_transcode_state_decode_codec_t{
 private:
 	uint8_t format = 0;
 public:
-	GET_SET(format, uint8_t);
+	GET_SET_S(format, uint8_t);
 	tv_transcode_state_decode_codec_t(
 		uint8_t format_,
 		tv_transcode_decode_state_t* (*decode_init_state_)(tv_audio_prop_t*),

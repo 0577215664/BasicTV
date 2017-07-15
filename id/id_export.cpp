@@ -171,7 +171,5 @@ std::vector<uint8_t> data_id_t::export_data(
 	if(extra & ID_EXTRA_ENCRYPT){
 		retval = id_api::raw::encrypt(retval);
 	}
-	id_api::cache::add_data(
-		retval);
 	return retval;
 }

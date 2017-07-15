@@ -24,7 +24,7 @@
 #define WINDOW_Y_RES 720
 
 /*
-  channel and window arrays are created OTF with id_api::cache::get
+  channel and window arrays are created OTF with ID_TIER_CACHE_GET
  */
 
 static SDL_Window *sdl_window = nullptr;
@@ -277,7 +277,7 @@ static id_t_ tv_render_get_preferable_frame_list(tv_item_t *item){
 			continue;
 		}
 		data_id_t *tmp =
-			id_api::array::ptr_id(
+			PTR_ID(
 				stream_list[i][0],
 				"tv_frame_video_t");
 		// TODO: actually do some work here
@@ -290,7 +290,7 @@ static id_t_ tv_render_get_preferable_frame_list(tv_item_t *item){
 
 static void tv_render_all(){
 	std::vector<id_t_> all_windows =
-		id_api::cache::get("tv_window_t");
+		ID_TIER_CACHE_GET("tv_window_t");
 	SDL_Surface *sdl_window_surface =
 		SDL_GetWindowSurface(sdl_window);
 	if(unlikely(sdl_window_surface == nullptr)){

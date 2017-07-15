@@ -117,7 +117,7 @@ DEC_CMD(exit){
 	}
 	socket->disconnect();
 	socket_id = ID_BLANK_ID;
-	id_api::destroy(socket->id.get_id());
+	ID_TIER_DESTROY(socket->id.get_id());
 }
 
 void console_t::run(){
@@ -226,7 +226,7 @@ static bool console_is_alive(console_t *console){
 void console_loop(){
 	console_accept_connections();
 	std::vector<id_t_> console_entries =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"console_t");
 	for(uint64_t i = 0;i < console_entries.size();i++){
 		console_t *console_tmp =
@@ -238,7 +238,7 @@ void console_loop(){
 		if(console_is_alive(console_tmp)){
 			console_tmp->run();
 		}else{
-			id_api::destroy(console_tmp->id.get_id());
+			ID_TIER_DESTROY(console_tmp->id.get_id());
 		}
 	}
 }

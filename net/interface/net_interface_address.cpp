@@ -18,7 +18,8 @@ void net_interface_address_t::set_medium_modulation_encapsulation(
 	packet_encapsulation = encapsulation_;
 }
 
-void net_interface_address_t::list_virtual_data(data_id_t *id){
+void net_interface_address_t::list_virtual_data(data_id_t *id_){
+	id = id_;
 	ADD_DATA_PTR(first_time_micro_s);
 	ADD_DATA_PTR(end_to_start_micro_s);
 	ADD_DATA_PTR(start_available_micro_s);
@@ -33,3 +34,4 @@ void net_interface_address_t::list_virtual_data(data_id_t *id){
 	ADD_DATA_PTR(required_intermediary);
 	ADD_DATA_PTR(last_attempted_connect_time);
 }
+

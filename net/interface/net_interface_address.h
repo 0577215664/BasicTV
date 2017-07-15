@@ -67,27 +67,29 @@ private:
 	  Last attempted connect time
 	 */
 	uint64_t last_attempted_connect_time = 0;
+
+	data_id_t *id = nullptr;
 public:
-	void list_virtual_data(data_id_t *id);
-	GET_SET(first_time_micro_s, uint64_t);
-	GET_SET(end_to_start_micro_s, uint64_t);
-	GET_SET(start_available_micro_s, uint64_t);
-	GET_SET(end_available_micro_s, uint64_t);
+	void list_virtual_data(data_id_t *id_);
+	GET_SET_V(first_time_micro_s, uint64_t);
+	GET_SET_V(end_to_start_micro_s, uint64_t);
+	GET_SET_V(start_available_micro_s, uint64_t);
+	GET_SET_V(end_available_micro_s, uint64_t);
 
-	GET_SET(latitude, std::vector<uint8_t>);
-	GET_SET(longitude, std::vector<uint8_t>);
+	GET_SET_V(latitude, std::vector<uint8_t>);
+	GET_SET_V(longitude, std::vector<uint8_t>);
 
-	GET_SET(last_attempted_connect_time, uint64_t);
+	GET_SET_V(last_attempted_connect_time, uint64_t);
 	
 	void set_medium_modulation_encapsulation(
 		uint8_t medium_,
 		uint8_t packet_modulation_,
 		uint8_t packet_encapsulation_);
 	
-	GET(medium, uint8_t);
-	GET(packet_modulation, uint8_t);
-	GET(packet_encapsulation, uint8_t);
-	GET(required_intermediary, uint8_t);
+	GET_V(medium, uint8_t);
+	GET_V(packet_modulation, uint8_t);
+	GET_V(packet_encapsulation, uint8_t);
+	GET_V(required_intermediary, uint8_t);
 };
 
 #endif

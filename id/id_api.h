@@ -7,115 +7,9 @@
 #include <sys/resource.h>
 #include <cstdio>
 
-/*
-  Redefined and more unified ID API. 
- */
-
-// Function macros for common ID API calls
-
-/*
-  Currently only used in stats collection for sockets. If the information
-  doesn't exist locally, then it has fallen out of use. This DOES allow for
-  re-loading of cached data (since it shouldn't be too slow)
- */
-
-// can refer to id_disk_index_t
-#define ID_LOOKUP_FAST 1
-// cannot refer to id_disk_index_t, only looks in memory
-#define ID_LOOKUP_MEM 2
-// pre loaded as a type, no cache
-#define ID_LOOKUP_PRE 3
-
-#define ID_LOOKUP_DISK 4
-
-/*
-  Restricts lookups to certain areas to prevent deadlocks, false positives,
-  and efficiency in using this for optimization stuff
-
-  One of the reasons why I brough this back so that it can be redefined and
-  exposed to the PTR_DATA()/PTR_ID() calls as the highest tier that data
-  can be pulled from (0 is mem, 1 is cache, 2 is HDD, 3 is network (?))
- */
-
-#define PTR_DATA_PRE(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_PRE))
-#define PTR_ID_PRE(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_PRE))
-
-#define PTR_DATA_MEM(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_MEM))
-#define PTR_ID_MEM(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_MEM))
-
-#define PTR_DATA_FAST(id, type) ((type*)id_api::array::ptr_data(id, #type, ID_LOOKUP_FAST))
-#define PTR_ID_FAST(id, type) (id_api::array::ptr_id(id, #type, ID_LOOKUP_FAST))
-
-#define PTR_DATA(id, type) ((type*)id_api::array::ptr_data(id, #type))
-#define PTR_ID(id, type) (id_api::array::ptr_id(id, #type))
-
-#define EXISTS(id) id_api::exists(id)
-
-#define ID_API_IMPORT_FROM_DISK (1 << 0)
-#define ID_API_IMPORT_FROM_NET (1 << 1)
-
-#define SIMPLE_ADD(x) id.add_data_raw(&x, sizeof(x));
-
 #define ASSERT_VALID_ID(id) id_api::assert_valid_id(id)
 
-/*
-  TODO: drastically simplify and clarify this section
-
-  I feel like a lot of the code declarations here are better subdivided into 
-  smaller sections that are only public to the ID code itself, like loading
-  data from the disk into memory, and other small stuff
- */
-
 namespace id_api{
-	namespace array{
-		data_id_t *ptr_id(id_t_ id,
-				  std::string type,
-				  uint8_t flags = 0);
-		data_id_t *ptr_id(id_t_ id,
-				  type_t_ type,
-				  uint8_t flags = 0);
-		void *ptr_data(id_t_ id,
-			       std::string type,
-			       uint8_t flags = 0);
-		void *ptr_data(id_t_ id,
-			       type_t_ type,
-			       uint8_t flags = 0);
-		void add(data_id_t *ptr);
-		void del(id_t_ id); // no type
-		id_t_ add_data(std::vector<uint8_t> data_, bool raw = false);
-		// used for quick lookups of my own type (encrypt_priv_key_t,
-		// net_peer_t, etc.)
-		id_t_ fetch_one_from_hash(type_t_ type,
-					  std::array<uint8_t, 32> sha_hash);
-		// TODO: create a version that throws on more than one
-		uint64_t get_id_count();
-
-		bool exists_in_array(id_t_ id_);
-	}
-	namespace cache{
-		// get_type_vector_ptr should never be used outside of id_api.cpp	
-		void add(id_t_ id,
-			 type_t_ type);
-		void add(id_t_ id,
-			 std::string type);
-		void del(id_t_ id,
-			 type_t_ type);
-		void del(id_t_ id,
-			 std::string type);
-		std::vector<id_t_> get(type_t_ type);
-		std::vector<id_t_> get(std::string type);
-
-		// really two different things
-		void hint_increment_id(id_t_ id);
-		void hint_decrement_id(id_t_ id);
-		void add_data(std::vector<uint8_t> data);
-		void load_id(id_t_ id);
-		std::vector<uint8_t> get_id(
-			id_t_ id_,
-			uint8_t state);
-
-		std::string breakdown();
-	}
 	namespace linked_list{
 		// next and previous are in the id itself, no interdependency
 		void link_vector(std::vector<id_t_> vector);
@@ -146,13 +40,6 @@ namespace id_api{
 	std::vector<id_t_> get_all();
 	void free_mem();
 	void add_data(std::vector<uint8_t> data);
-	std::vector<uint8_t> export_id(
-		id_t_ id,
-		uint8_t flags,
-		uint8_t extra,
-		uint8_t network_flags,
-		uint8_t export_flags,
-		uint8_t peer_flags);
 	void destroy(id_t_ id);
 	void destroy_all_data();
 	void print_id_vector(std::vector<id_t_> vector, uint32_t p_l);
@@ -178,11 +65,7 @@ namespace id_api{
 	};
 };
 
-extern std::vector<std::string> id_gdb_lookup(const char *hex_id);
-
 extern std::vector<type_t_> encrypt_blacklist;
 extern bool encrypt_blacklist_type(type_t_ type);
-
-extern bool id_api_should_write_to_disk(data_id_t *ptr);
 
 #endif

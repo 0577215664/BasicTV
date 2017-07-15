@@ -19,8 +19,6 @@
 #include "../encrypt/encrypt.h"
 #include "../compress/compress.h"
 
-#include "id_disk.h"
-
 std::array<uint8_t, 32> get_id_hash(id_t_ id){
 	std::array<uint8_t, 32> retval;
 	memcpy(&(retval[0]), &(id[8]), 32);
@@ -100,7 +98,7 @@ void data_id_t::init_gen_id(type_t_ type_){
 
 
 data_id_t::data_id_t(void *ptr_, type_t_ type_){
-	ptr = ptr_;
+	ptr = ptr_;	
 	init_gen_id(type_);
 	init_list_all_data();
 	mem_add_id(this);
@@ -109,6 +107,8 @@ data_id_t::data_id_t(void *ptr_, type_t_ type_){
 data_id_t::~data_id_t(){
 	mem_del_id(this);
 }
+
+// is mem_del_id/mem_add_id needed anymore?
 
 id_t_ data_id_t::get_id(bool skip){
 	// even with unlikely, this seems pretty slow
@@ -128,24 +128,23 @@ id_t_ data_id_t::get_id(bool skip){
 			print("do not have a hash yet, aborting", P_ERR);
 		}
 		id_t_ old_id = id;
+		mem_del_id(this);
 		set_id_hash(&id,
 			    encrypt_api::hash::sha256::gen_raw(
 				    pub_key->get_encrypt_key().second));
-		// ID list is raw pointers, type list is an ID vector (fast)
-		id_api::cache::del(old_id, get_id_type(id));
-		id_api::cache::add(id, get_id_type(id));
+		mem_add_id(this);
 	}
 	return id;
 }
 
 void data_id_t::set_id(id_t_ id_){
 	try{
-		id_api::cache::del(id, get_id_type(id));
+		mem_del_id(this);
 	}catch(...){} // shouldn't run anyways
 	set_id_uuid(&id, get_id_uuid(id_));
 	set_id_hash(&id, get_id_hash(id_));
 	// type HAS to be preserved
-	id_api::cache::add(id, get_id_type(id));
+	mem_add_id(this);
 }
 
 std::string data_id_t::get_type(){

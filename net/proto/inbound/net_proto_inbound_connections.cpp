@@ -144,7 +144,7 @@ static bool net_proto_facilitate_reverse_forward(
 
 static void net_proto_accept_unorthodox_connections(){
 	std::vector<id_t_> con_req_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_con_req_t");
 	for(uint64_t i = 0;i < con_req_vector.size();i++){
 		net_proto_con_req_t *con_req =

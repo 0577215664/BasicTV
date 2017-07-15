@@ -72,7 +72,7 @@ static void list_to_socket_count(id_t_ peer_id, std::vector<std::pair<id_t_, uin
 
 static void add_sockets_to_socket_count(std::vector<std::pair<id_t_, uint64_t> > *peer_socket_count){
 	std::vector<id_t_> proto_socket_count =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_socket_t");
 	for(uint64_t i = 0;i < proto_socket_count.size();i++){
 		net_proto_socket_t *proto_socket_ptr =
@@ -90,7 +90,7 @@ static void add_sockets_to_socket_count(std::vector<std::pair<id_t_, uint64_t> >
 
 static void add_con_req_to_socket_count(std::vector<std::pair<id_t_, uint64_t> > *peer_socket_count){
 	std::vector<id_t_> con_req_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_con_req_t");
 	for(uint64_t i = 0;i < con_req_vector.size();i++){
 		net_proto_con_req_t *con_req_ptr =
@@ -122,7 +122,7 @@ static uint64_t get_all_peer_socket_count(std::vector<std::pair<id_t_, uint64_t>
 
 static bool pending_clearnet_con_req_for_peer(id_t_ peer_id){
 	std::vector<id_t_> con_req_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_con_req_t");
 	for(uint64_t i = 0;i < con_req_vector.size();i++){
 		net_proto_con_req_t *con_req_ptr =
@@ -158,7 +158,7 @@ void net_proto_create_random_connections(){
 			"net_interface_ip_tcp_max_con",
 			64); // semi-reasonable max
 	std::vector<id_t_> peer_id_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_peer_t");
 	std::random_shuffle(
 		peer_id_vector.begin(),
@@ -185,7 +185,7 @@ void net_proto_create_random_connections(){
 
 static void net_proto_remove_stale_requests(){
 	std::vector<id_t_> con_req_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_con_req_t");
 	for(uint64_t i = 0;i < con_req_vector.size();i++){
 		net_proto_con_req_t *con_req_ptr =

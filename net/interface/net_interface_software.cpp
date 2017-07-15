@@ -42,7 +42,7 @@ void net_interface_software_dev_t::set_address_id(id_t_ address_id_){
 	intermediary = NET_INTERFACE_INTERMEDIARY_UNDEFINED;
 	if(ip_address_ptr->get_required_intermediary() != NET_INTERFACE_INTERMEDIARY_NONE){
 		std::vector<id_t_> intermediary_vector =
-			id_api::cache::get(
+			ID_TIER_CACHE_GET(
 				TYPE_NET_INTERFACE_INTERMEDIARY_T);
 		for(uint64_t i = 0;i < intermediary_vector.size();i++){
 			net_interface_intermediary_t *intermediary_ptr =

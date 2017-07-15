@@ -18,18 +18,18 @@ static void print_stats(uint64_t avg_iter_time){
 		get_time_microseconds();
 	if(cur_time_micro_s-last_print_micro_s > print_stat_freq){
 		std::string network_socket_count =
-			"Proto Socket Count: " + std::to_string(id_api::cache::get(TYPE_NET_PROTO_SOCKET_T).size());
+			"Proto Socket Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_NET_PROTO_SOCKET_T).size());
 		std::string network_peer_count =
-			"Peer Count: " + std::to_string(id_api::cache::get(TYPE_NET_PROTO_PEER_T).size());
+			"Peer Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_NET_PROTO_PEER_T).size());
 		std::string channel_count =
-			"Channel Count: " + std::to_string(id_api::cache::get(TYPE_TV_CHANNEL_T).size());
+			"Channel Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_TV_CHANNEL_T).size());
 		std::string item_count =
-			"Item Count: " + std::to_string(id_api::cache::get(TYPE_TV_ITEM_T).size());
+			"Item Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_TV_ITEM_T).size());
 		std::string avg_iter_time_ =
 			"Average Iteration Frequency: " + std::to_string(1/((long double)((long double)avg_iter_time/(long double)1000000)));
-		print("Routine Stats\n" +
-		      id_api::cache::breakdown() + 
-		      avg_iter_time_, P_NOTE);
+		// print("Routine Stats\n" +
+		//       id_api::cache::breakdown() + 
+		//       avg_iter_time_, P_NOTE);
 		last_print_micro_s =
 			cur_time_micro_s;
 	}

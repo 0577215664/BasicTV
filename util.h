@@ -32,36 +32,6 @@
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 
-#define GET(data_to_get, type)				\
-	type get_##data_to_get(){return data_to_get;}	
-
-#define SET(data_to_set, type)						\
-	void set_##data_to_set(type datum){data_to_set = datum;}	
-
-// can only warn, since most of the code isn't exception-safe enough,
-// and there are valid use cases for setting a blank ID
-
-#define GET_ID(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
-
-#define SET_ID(data_to_set) void set_##data_to_set(id_t_ datum){if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
-		
-
-#define GET_SET_ID(data)			\
-	GET(data, id_t_)			\
-	SET(data, id_t_)			\
-
-#define GET_SET(data, type)			\
-	GET(data, type)				\
-	SET(data, type)				\
-
-#define ADD_DEL_VECTOR(data_to_set, type)				\
-	void add_##data_to_set(type datum){for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
-	void del_##data_to_set(type datum){for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
-	void append_##data_to_set(std::vector<type> datum){data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
-
-#define GET_SIZE_VECTOR(data_to_size)\
-	uint64_t get_size_##data_to_size(){return data_to_size.size();}
-
 // GET_SET_ID_VECTOR is in id/id.h for inclusion reasons
 
 #ifdef __GNUC__

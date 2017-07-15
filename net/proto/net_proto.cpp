@@ -96,7 +96,7 @@ static std::vector<std::pair<std::string, uint16_t> > bootstrap_nodes;
 
 static void net_proto_verify_bootstrap_nodes(){
 	std::vector<id_t_> peer_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_NET_PROTO_PEER_T);
 	try{
 		const std::string custom_bootstrap_ip =
@@ -187,7 +187,7 @@ static void net_proto_verify_bootstrap_nodes(){
 		      P_NOTE);
 	}
 	const uint64_t start_node_count =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			"net_proto_peer_t").size()-1; // don't count ourselves
 	if(start_node_count == 0){
 		// only OK if i'm connecting with another peer first
@@ -224,9 +224,6 @@ static void net_proto_init_proxy(){
 }
 
 void net_proto_init(){
-	id_api::import::load_all_of_type(
-		"net_proto_peer_t",
-		ID_API_IMPORT_FROM_DISK);
 	net_proto_init_self_peer();	
 	net_proto_init_proxy();
 	net_proto_verify_bootstrap_nodes();

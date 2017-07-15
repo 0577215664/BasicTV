@@ -9,7 +9,7 @@
 
 void net_proto_handle_inbound_data(){
 	std::vector<id_t_> proto_sockets =
-		id_api::cache::get("net_proto_socket_t");
+		ID_TIER_CACHE_GET("net_proto_socket_t");
 	for(uint64_t i = 0;i < proto_sockets.size();i++){
 		net_proto_socket_t *proto_socket =
 			PTR_DATA(proto_sockets[i],
@@ -21,7 +21,7 @@ void net_proto_handle_inbound_data(){
 			proto_socket->update();
 		}catch(...){
 			print("peer has disconnected, deleting proto_socket", P_DEBUG);
-			id_api::destroy(proto_socket->id.get_id());
+			ID_TIER_DESTROY(proto_socket->id.get_id());
 			proto_socket = nullptr;
 		}
 	}

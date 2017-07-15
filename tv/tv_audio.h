@@ -64,7 +64,21 @@ private:
 	// 32 bits for an CTL and 32 bits for a value
 	// Opus seems pretty set on 32-bits too
 	std::vector<uint64_t> encoder_flags;
+
 public:
+	bool operator==(const tv_audio_prop_t& rhs){
+		return format == rhs.format &&
+		flags == rhs.flags &&
+		bit_depth == rhs.bit_depth &&
+		bit_rate == rhs.bit_rate &&
+		sampling_freq == rhs.sampling_freq &&
+		channel_count == rhs.channel_count &&
+		snippet_duration_micro_s == rhs.snippet_duration_micro_s &&
+		encoder_flags == rhs.encoder_flags;
+	}
+	bool operator!=(const tv_audio_prop_t &rhs){
+		return !(*this == rhs);
+	}
 	void list_virtual_data(data_id_t *id);
 	tv_audio_prop_t();
 	~tv_audio_prop_t();
@@ -72,14 +86,14 @@ public:
 		encoder_flags.push_back(
 			(uint64_t)(codec_var) & ((uint64_t)codec_val << (uint64_t)32));
 	}
-	GET_SET(encoder_flags, std::vector<uint64_t>);
-	GET_SET(flags, uint32_t);
-	GET_SET(format, uint8_t);
-	GET_SET(sampling_freq, uint32_t);
-	GET_SET(bit_depth, uint8_t);
-	GET_SET(bit_rate, uint32_t);
-	GET_SET(channel_count, uint8_t);
-	GET_SET(snippet_duration_micro_s, uint32_t);
+	GET_SET_S(encoder_flags, std::vector<uint64_t>);
+	GET_SET_S(flags, uint32_t);
+	GET_SET_S(format, uint8_t);
+	GET_SET_S(sampling_freq, uint32_t);
+	GET_SET_S(bit_depth, uint8_t);
+	GET_SET_S(bit_rate, uint32_t);
+	GET_SET_S(channel_count, uint8_t);
+	GET_SET_S(snippet_duration_micro_s, uint32_t);
 };
 
 #define PRINT_AUDIO_PROP(audio_prop) P_V((audio_prop).get_sampling_freq(), P_VAR); \

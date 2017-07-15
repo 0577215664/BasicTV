@@ -66,8 +66,8 @@ void net_stats_init(){
 }
 
 void net_stats_close(){
-	id_api::destroy(net_stats_throughput_global_set_id);
-	id_api::destroy(net_stats_latency_global_set_id);
+	ID_TIER_DESTROY(net_stats_throughput_global_set_id);
+	ID_TIER_DESTROY(net_stats_latency_global_set_id);
 }
 
 void net::stats::add_throughput_datum(

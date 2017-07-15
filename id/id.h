@@ -13,6 +13,98 @@
   id_t: ID and pointer system for the networking system
  */
 
+
+#define GET(data_to_get, type)				\
+	type get_##data_to_get(){return data_to_get;}	
+
+#define SET(data_to_set, type)						\
+	void set_##data_to_set(type datum){if(data_to_set != datum){id.mod_inc();}data_to_set = datum;}	
+
+#define GET_ID(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
+
+#define SET_ID(data_to_set) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){id.mod_inc();}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
+		
+
+#define GET_SET_ID(data)			\
+	GET(data, id_t_)			\
+	SET(data, id_t_)			\
+
+#define GET_SET(data, type)			\
+	GET(data, type)				\
+	SET(data, type)				\
+
+#define ADD_DEL_VECTOR(data_to_set, type)				\
+	void add_##data_to_set(type datum){id.mod_inc();for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
+	void del_##data_to_set(type datum){id.mod_inc();for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
+	void append_##data_to_set(std::vector<type> datum){id.mod_inc();data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
+
+#define GET_SIZE_VECTOR(data_to_size)\
+	uint64_t get_size_##data_to_size(){return data_to_size.size();}
+
+
+// INHERITED STUFF (saves a pointer to data_id_t on list_virtual_data call)
+#define GET_V(data_to_get, type)				\
+	type get_##data_to_get(){return data_to_get;}	
+
+#define SET_V(data_to_set, type)						\
+	void set_##data_to_set(type datum){if(data_to_set != datum){id->mod_inc();}data_to_set = datum;}	
+
+#define GET_ID_V(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
+
+#define SET_ID_V(data_to_set) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){id->mod_inc();}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
+		
+
+#define GET_SET_ID_V(data)			\
+	GET_V(data, id_t_)			\
+	SET_V(data, id_t_)			\
+
+#define GET_SET_V(data, type)			\
+	GET_V(data, type)				\
+	SET_V(data, type)				\
+
+#define ADD_DEL_VECTOR_V(data_to_set, type)				\
+	void add_##data_to_set(type datum){id->mod_inc();for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
+	void del_##data_to_set(type datum){id->mod_inc();for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
+	void append_##data_to_set(std::vector<type> datum){id->mod_inc();data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
+
+#define GET_SIZE_VECTOR_V(data_to_size)\
+	uint64_t get_size_##data_to_size(){return data_to_size.size();}
+
+
+
+// SIMPLE (no mod_inc)
+
+#define GET_S(data_to_get, type)				\
+	type get_##data_to_get(){return data_to_get;}	
+
+#define SET_S(data_to_set, type)						\
+	void set_##data_to_set(type datum){data_to_set = datum;}	
+
+// can only warn, since most of the code isn't exception-safe enough,
+// and there are valid use cases for setting a blank ID
+
+#define GET_ID_S(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
+
+#define SET_ID_S(data_to_set) void set_##data_to_set(id_t_ datum){if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
+		
+
+#define GET_SET_ID_S(data)			\
+	GET_S(data, id_t_)			\
+	SET_S(data, id_t_)			\
+
+#define GET_SET_S(data, type)			\
+	GET_S(data, type)				\
+	SET_S(data, type)				\
+
+#define ADD_DEL_VECTOR_S(data_to_set, type)				\
+	void add_##data_to_set(type datum){for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
+	void del_##data_to_set(type datum){for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
+	void append_##data_to_set(std::vector<type> datum){data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
+
+#define GET_SIZE_VECTOR_S(data_to_size)\
+	uint64_t get_size_##data_to_size(){return data_to_size.size();}
+
+
 #define ADD_DATA(x) id.add_data_raw((uint8_t*)&x, sizeof(x))
 #define ADD_DATA_PTR(x) id->add_data_raw((uint8_t*)&x, sizeof(x))
 
@@ -92,10 +184,10 @@ public:
 	void *get_ptr();
 	uint32_t get_length();
 	std::vector<uint32_t> get_length_vector();
-	GET_SET(flags, uint8_t);
-	GET_SET(network_rules, uint8_t);
-	GET_SET(export_rules, uint8_t);
-	GET_SET(peer_rules, uint8_t);
+	GET_SET_S(flags, uint8_t);
+	GET_SET_S(network_rules, uint8_t);
+	GET_SET_S(export_rules, uint8_t);
+	GET_SET_S(peer_rules, uint8_t);
 };
 
 /*
@@ -241,17 +333,16 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 #define TYPE_TV_FRAME_VIDEO_T				21
 #define TYPE_TV_FRAME_CAPTION_T				22
 #define TYPE_INPUT_DEV_STANDARD_T			23
-#define TYPE_ID_DISK_INDEX_T				24
-#define TYPE_MATH_NUMBER_SET_T				25
-#define TYPE_TV_ITEM_T					26
-#define TYPE_NET_INTERFACE_RADIO_ADDRESS_T		27
-#define TYPE_NET_INTERFACE_IP_ADDRESS_T			28
-#define TYPE_NET_INTERFACE_INTERMEDIARY_T		29
-#define TYPE_NET_INTERFACE_HARDWARE_DEV_T		30
-#define TYPE_NET_INTERFACE_SOFTWARE_DEV_T		31
-#define TYPE_ID_TIER_STATE_T 				32
+#define TYPE_MATH_NUMBER_SET_T				24
+#define TYPE_TV_ITEM_T					25
+#define TYPE_NET_INTERFACE_RADIO_ADDRESS_T		26
+#define TYPE_NET_INTERFACE_IP_ADDRESS_T			27
+#define TYPE_NET_INTERFACE_INTERMEDIARY_T		28
+#define TYPE_NET_INTERFACE_HARDWARE_DEV_T		29
+#define TYPE_NET_INTERFACE_SOFTWARE_DEV_T		30
+#define TYPE_ID_TIER_STATE_T 				31
 
-#define TYPE_COUNT 32
+#define TYPE_COUNT 31
 
 #define ID_MAKE_TMP(x)						\
 	if(true){						\
@@ -272,6 +363,6 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 			
 std::string id_breakdown(id_t_ id_);
 
-#define IS_OWNER(id) (id == get_id_hash(production_priv_key_id))
-
+#define IS_OWNER(id) (id == get_id_hash(production_priv_key_id)
+#include "tier/id_tier.h"
 #endif

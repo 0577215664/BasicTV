@@ -97,7 +97,7 @@ void console_t::tv_manager_play_loaded_item(
 		print("channel_ptr is a nullptr", P_ERR);
 	}
 	std::vector<id_t_> window_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_TV_WINDOW_T);
 	tv_window_t *window_ptr = nullptr;
 	if(window_vector.size() == 0){
@@ -135,7 +135,7 @@ void console_t::tv_manager_change_item_in_window(
 			tv_manager_read_string(
 				console_inbound_socket));
 	std::vector<id_t_> window_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_TV_WINDOW_T);
 	id_t_ window_id = ID_BLANK_ID;
 	if(window_vector.size() == 1){
@@ -165,7 +165,7 @@ void console_t::tv_manager_change_item_in_window(
 
 void console_t::tv_manager_list_channels_and_items(){
 	std::vector<id_t_> channel_vector =
-		id_api::cache::get(
+		ID_TIER_CACHE_GET(
 			TYPE_TV_CHANNEL_T);
 	// uses output_table
 	output_table.clear();
@@ -220,7 +220,7 @@ void console_t::tv_manager_create_tv_channel(
 	}catch(...){
 		print_socket("unable to interpret input\n");
 		if(channel_ptr != nullptr){
-			id_api::destroy(channel_ptr->id.get_id());
+			ID_TIER_DESTROY(channel_ptr->id.get_id());
 			channel_ptr = nullptr;
 		}
 		return;

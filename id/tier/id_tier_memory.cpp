@@ -3,7 +3,6 @@
 
 #include "../id.h"
 #include "../id_api.h"
-#include "../id_disk.h"
 
 // new/delete
 #include "../../tv/tv_dev_audio.h"
@@ -59,7 +58,7 @@ void mem_add_id(data_id_t *ptr){
 			ptr->get_id(),
 			ptr->get_mod_inc()));
 	id_tier_mem_update_state_cache(
-		PTR_DATA(id_tier::only_state_of_tier(0, 0),
+		PTR_DATA(id_tier::state_tier::only_state_of_tier(0, 0),
 			 id_tier_state_t));
 }
 
@@ -81,14 +80,34 @@ void mem_del_id(data_id_t *ptr){
 		}
 	}
 	id_tier_mem_update_state_cache(
-		PTR_DATA(id_tier::only_state_of_tier(0, 0),
+		PTR_DATA(id_tier::state_tier::only_state_of_tier(0, 0),
 			 id_tier_state_t));
 }
+
 
 static data_id_t *mem_lookup(id_t_ id){
 	for(uint64_t i = 0;i < id_vector.size();i++){
 		if(unlikely(id_vector[i]->get_id() == id)){
 			return id_vector[i];
+		}
+	}
+	return nullptr;
+}
+
+id_tier_state_t *mem_tier_state_lookup(
+	uint8_t major,
+	uint8_t minor){
+	P_V(id_vector.size(), P_VAR);
+	for(uint64_t i = 0;i < id_vector.size();i++){
+		P_V_S(convert::type::from(id_vector[i]->get_type_byte()), P_VAR);
+		if(unlikely(id_vector[i]->get_type_byte() == TYPE_ID_TIER_STATE_T)){
+			id_tier_state_t *tier_state_ptr =
+				(id_tier_state_t*)id_vector[i]->get_ptr();
+			ASSERT(tier_state_ptr != nullptr, P_ERR);
+			if(tier_state_ptr->get_tier_major() == major &&
+			   tier_state_ptr->get_tier_minor() == minor){
+				return tier_state_ptr;
+			}
 		}
 	}
 	return nullptr;
@@ -223,8 +242,6 @@ ID_TIER_DEL_ID(mem){
 	DELETE_TYPE_2(encrypt_priv_key_t);
 	DELETE_TYPE_2(encrypt_pub_key_t);
 
-	DELETE_TYPE_2(id_disk_index_t);
-	
        	DELETE_TYPE_2(wallet_set_t);
 
 	// Math
@@ -283,6 +300,8 @@ ID_TIER_UPDATE_ID_BUFFER(mem){
   cannot call id_tier (out of fear of an infinite loop)
  */
 
+#pragma warning("disabled all non-memory reading for now, undo the following comment block")
+
 data_id_t *id_tier::mem::get_id_ptr(
 	id_t_ id,
 	type_t_ type,
@@ -295,40 +314,56 @@ data_id_t *id_tier::mem::get_id_ptr(
 	ASSERT(get_id_type(id) == type, P_ERR);
 	data_id_t *retval =
 		mem_lookup(id);
-	if(retval != nullptr){
-		std::vector<std::tuple<id_t_, uint8_t, uint8_t> > tier_data =
-			id_tier::operation::valid_state_with_id(
-				id);
-		const id_t_ mem_state_id =
-			id_tier::only_state_of_tier(
-				0, 0);
-		for(uint64_t i = 0;i < tier_data.size();i++){
-			const uint8_t tier_major =
-				std::get<1>(tier_data[i]);
-			const uint8_t tier_minor =
-				std::get<2>(tier_data[i]);
-			const bool lower_major =
-				tier_major <= high_major;
-			const bool lower_minor =
-				tier_minor <= high_minor;
-			if(likely((lower_major && lower_minor))){
-				try{
-					id_tier::operation::shift_data_to_state(
-						std::get<0>(tier_data[i]),
-						mem_state_id,
-						{id});
-					if((retval = mem_lookup(id)) != nullptr){
-						break;
-					}
-				}catch(...){
-					P_V(high_major, P_WARN);
-					P_V(high_minor, P_WARN);
-					print("reading error", P_ERR);
-				}
-			}
-		}
-	}
+	// if(retval != nullptr){
+	// 	std::vector<std::tuple<id_t_, uint8_t, uint8_t> > tier_data =
+	// 		id_tier::operation::valid_state_with_id(
+	// 			id);
+	// 	const id_t_ mem_state_id =
+	// 		id_tier::state_tier::only_state_of_tier(
+	// 			0, 0);
+	// 	for(uint64_t i = 0;i < tier_data.size();i++){
+	// 		const uint8_t tier_major =
+	// 			std::get<1>(tier_data[i]);
+	// 		const uint8_t tier_minor =
+	// 			std::get<2>(tier_data[i]);
+	// 		const bool lower_major =
+	// 			tier_major <= high_major;
+	// 		const bool lower_minor =
+	// 			tier_minor <= high_minor;
+	// 		if(likely((lower_major && lower_minor))){
+	// 			try{
+	// 				id_tier::operation::shift_data_to_state(
+	// 					std::get<0>(tier_data[i]),
+	// 					mem_state_id,
+	// 					{id});
+	// 				if((retval = mem_lookup(id)) != nullptr){
+	// 					break;
+	// 				}
+	// 			}catch(...){
+	// 				P_V(high_major, P_WARN);
+	// 				P_V(high_minor, P_WARN);
+	// 				print("reading error", P_ERR);
+	// 			}
+	// 		}
+	// 	}
+	// }
 	return retval;
+}
+
+void *id_tier::mem::get_ptr(
+	id_t_ id,
+	std::string type,
+	uint8_t high_major,
+	uint8_t high_minor){
+	data_id_t *id_ptr =
+		get_id_ptr(id,
+		       convert::type::to(type),
+		       high_major,
+		       high_minor);
+	if(id_ptr == nullptr){
+		return nullptr;
+	}
+	return id_ptr->get_ptr();
 }
 
 

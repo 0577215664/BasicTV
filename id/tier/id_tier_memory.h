@@ -16,11 +16,8 @@ extern ID_TIER_UPDATE_ID_BUFFER(mem);
 
 extern void mem_add_id(data_id_t*);
 extern void mem_del_id(data_id_t*);
+extern id_tier_state_t* mem_tier_state_lookup(uint8_t, uint8_t);
 
-/*
-  We don't need this for anything, but it is here
-  for the sake of completion
- */
 struct id_tier_memory_state_t{
 };
 #endif

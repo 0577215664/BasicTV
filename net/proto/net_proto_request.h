@@ -19,6 +19,8 @@ private:
 	uint64_t ttl_micro_s = 0;
 	id_t_ origin_peer_id = ID_BLANK_ID;
 	id_t_ destination_peer_id = ID_BLANK_ID;
+
+	data_id_t *id = nullptr;
 public:
 	net_proto_request_bare_t();
 	~net_proto_request_bare_t();
@@ -28,11 +30,11 @@ public:
 	id_t_ get_destination_peer_id();
 
 	void update_broadcast_time_micro_s();
-	GET(broadcast_time_micro_s, uint64_t);
+	GET_V(broadcast_time_micro_s, uint64_t);
 	
 	void update_request_time();
-	GET(request_time, uint64_t);
-	GET_SET(ttl_micro_s, uint64_t);
+	GET_V(request_time, uint64_t);
+	GET_SET_V(ttl_micro_s, uint64_t);
 	void list_bare_virtual_data(data_id_t *id);
 };
 

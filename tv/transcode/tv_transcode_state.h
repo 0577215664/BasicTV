@@ -15,11 +15,11 @@ private:
 
 	tv_audio_prop_t audio_prop;
 public:
-	GET_SET(state_ptr, void*);
-	GET_SET(audio_prop, tv_audio_prop_t);
+	GET_SET_S(state_ptr, void*);
+	GET_SET_S(audio_prop, tv_audio_prop_t);
 	id_t_ get_start_frame_id();
 	void set_start_frame_id(id_t_ id_);
-	GET_SET_ID(last_frame_id);
+	GET_SET_ID_S(last_frame_id);
 	uint8_t get_state_format(){return state_format;}
 };
 
@@ -34,11 +34,11 @@ private:
 
 	tv_audio_prop_t audio_prop;
 public:
-	GET_SET(state_ptr, void*);
-	GET_SET(audio_prop, tv_audio_prop_t);
+	GET_SET_S(state_ptr, void*);
+	GET_SET_S(audio_prop, tv_audio_prop_t);
 	id_t_ get_start_frame_id();
 	void set_start_frame_id(id_t_ id_);
-	GET_SET_ID(last_frame_id);
+	GET_SET_ID_S(last_frame_id);
 	uint8_t get_state_format(){return state_format;}
 };
 
