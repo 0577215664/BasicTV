@@ -190,7 +190,7 @@ void id_tier::operation::del_id_from_state(
 			id_tier_medium_t medium =
 				id_tier::get_medium(
 					tier_state_ptr->get_medium());
-			for(uint64_t c = 0;c < id.size();i++){
+			for(uint64_t c = 0;c < id.size();c++){
 				try{
 					medium.del_id(
 						tier_state_ptr->id.get_id(),

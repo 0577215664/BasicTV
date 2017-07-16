@@ -281,15 +281,26 @@ ID_TIER_DEL_ID(mem){
 
 	// Math
 	DELETE_TYPE_2(math_number_set_t);
-
 	DELETE_TYPE_2(net_interface_ip_address_t);
+
+	// can't destroy an id_tier_state_t (at least not tier 0), since
+	// that's pretty essential to core ID function
+	// // Tier
+	// DELETE_TYPE_2(id_tier_state_t);
 	
-	if(deleted == false){
-		print("No proper type was found for clean deleting" + ptr->get_type(), P_ERR);
+	if(deleted == false &&
+	   ptr->get_type_byte() != TYPE_ID_TIER_STATE_T){
+		auto pos =
+			std::find(
+				id_vector.begin(),
+				id_vector.end(),
+				ptr);
+		if(pos != id_vector.end()){
+			id_vector.erase(
+				pos);
+		}
+		print("No proper type was found for clean deleting" + ptr->get_type(), P_WARN);
 	}
-	/*
-	  this is only written poorly because I don't care enough now
-	 */
 	id_tier_mem_regen_state_cache();
 	id_tier_mem_update_state_cache(
 		tier_state_ptr);
