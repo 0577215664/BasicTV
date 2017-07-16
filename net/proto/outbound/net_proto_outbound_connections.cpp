@@ -15,8 +15,6 @@ static void net_proto_initiate_direct_tcp(
 	net_proto_con_req_t *con_req,
 	net_proto_peer_t *proto_peer_ptr,
 	net_interface_ip_address_t *ip_address_ptr){
-
-	std::raise(SIGINT); // 'catch throw'
 	
 	ASSERT(con_req != nullptr, P_ERR);
 	ASSERT(proto_peer_ptr != nullptr, P_ERR);

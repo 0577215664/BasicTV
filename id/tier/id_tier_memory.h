@@ -11,8 +11,6 @@ extern ID_TIER_ADD_DATA(mem);
 extern ID_TIER_DEL_ID(mem);
 extern ID_TIER_GET_ID(mem);
 extern ID_TIER_GET_ID_MOD_INC(mem);
-extern ID_TIER_GET_ID_BUFFER(mem);
-extern ID_TIER_UPDATE_ID_BUFFER(mem);
 
 // init/bootstrap only (other uses internally, only use externally)
 extern id_tier_state_t* mem_tier_state_lookup(uint8_t, uint8_t);

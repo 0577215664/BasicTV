@@ -1,5 +1,13 @@
 #include "id_tier.h"
 #include "id_tier_memory.h"
+#include "id_tier_cache.h"
+
+std::vector<std::pair<uint8_t, uint8_t> > all_tiers = {
+	{ID_TIER_MAJOR_MEM, 0},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED}
+};
 
 std::vector<id_tier_medium_t> id_tier_medium = {
 	id_tier_medium_t(
@@ -8,16 +16,19 @@ std::vector<id_tier_medium_t> id_tier_medium = {
 		id_tier_mem_add_data,
 		id_tier_mem_del_id,
 		id_tier_mem_get_id,
-		id_tier_mem_get_id_mod_inc,
-		id_tier_mem_get_id_buffer,
-		id_tier_mem_update_id_buffer)
+		id_tier_mem_get_id_mod_inc),
+	id_tier_medium_t(
+		id_tier_cache_init_state,
+		id_tier_cache_del_state,
+		id_tier_cache_add_data,
+		id_tier_cache_del_id,
+		id_tier_cache_get_id,
+		id_tier_cache_get_id_mod_inc),
 };
 
 id_tier_medium_t id_tier::get_medium(uint8_t medium_type){
-	if(medium_type != 1){
-		print("fix medium_type soon", P_WARN);
-		medium_type = 1;
-	}
+	ASSERT(medium_type == 1 ||
+	       medium_type == 2, P_ERR);
 	return id_tier_medium.at(medium_type-1); // 0 is undefined
 }
 
@@ -36,7 +47,7 @@ id_t_ id_tier::state_tier::only_state_of_tier(
 	if(tier_state_ptr != nullptr){
 		return tier_state_ptr->id.get_id();
 	}
-	print("state isn't in memory at the moment, this needs to be ensured", P_CRIT);
+	print("state isn't in memory at the moment, this needs to be ensured", P_ERR);
 	std::vector<id_t_> id_state_list =
 		ID_TIER_CACHE_GET(
 			TYPE_ID_TIER_STATE_T);
@@ -71,6 +82,22 @@ std::vector<id_t_> id_tier::state_tier::optimal_state_vector_of_tier(
 			retval.push_back(
 				id_state_list[i]);
 		}
+	}
+	return retval;
+}
+
+std::vector<id_t_> id_tier::state_tier::optimal_state_vector_of_tier_vector(
+	std::vector<std::pair<uint8_t, uint8_t> > tier_vector){
+	std::vector<id_t_> retval;
+	for(uint64_t i = 0;i < tier_vector.size();i++){
+		std::vector<id_t_> tmp =
+			optimal_state_vector_of_tier(
+				tier_vector[i].first,
+				tier_vector[i].second);
+		retval.insert(
+			retval.end(),
+			tmp.begin(),
+			tmp.end());
 	}
 	return retval;
 }
@@ -178,34 +205,29 @@ std::vector<std::vector<uint8_t> > id_tier::operation::get_data_from_state(
 	std::vector<id_t_> state_id,
 	std::vector<id_t_> id_vector){
 	std::vector<std::vector<uint8_t> > retval;
-	for(uint64_t i = 0;i < state_id.size();i++){
+	for(uint64_t c = 0;c < id_vector.size();c++){
 		try{
-			id_tier_state_t *tier_state_ptr =
-				PTR_DATA(state_id[i],
-					 id_tier_state_t);
-			CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
-			std::vector<id_t_> state_cache =
-				id_tier::lookup::ids::from_state(
-					tier_state_ptr);
-			for(uint64_t c = 0;c < id_vector.size();c++){
+			for(uint64_t i = 0;i < state_id.size();i++){
 				try{
-					// if(std::find(
-					// 	   state_cache.begin(),
-					// 	   state_cache.end(),
-					// 	   id_vector[c]) != state_cache.end()){
-						id_tier_medium_t medium =
-							id_tier::get_medium(
-								tier_state_ptr->get_medium());
-						std::vector<uint8_t> id_exp =
-							medium.get_id(
-								tier_state_ptr->id.get_id(),
-								id_vector[c]);
-						if(id_exp.size() > 0){
-							retval.push_back(
-								id_exp);
-							break;
-						}
-					// }
+					id_tier_state_t *tier_state_ptr =
+						PTR_DATA(state_id[i],
+							 id_tier_state_t);
+					CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
+					std::vector<id_t_> state_cache =
+						id_tier::lookup::ids::from_state(
+							tier_state_ptr);
+					id_tier_medium_t medium =
+						id_tier::get_medium(
+							tier_state_ptr->get_medium());
+					std::vector<uint8_t> id_exp =
+						medium.get_id(
+							tier_state_ptr->id.get_id(),
+							id_vector[c]);
+					if(id_exp.size() > 0){
+						retval.push_back(
+							id_exp);
+						break;
+					}
 				}catch(...){}
 			}
 		}catch(...){}
@@ -225,6 +247,11 @@ void id_tier::operation::add_data_to_state(
 			CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
 			for(uint64_t c = 0;c < data_vector.size();c++){
 				try{
+					if(tier_state_ptr->is_allowed_extra(
+						   id_api::raw::fetch_extra(
+							   data_vector[c])) == false){
+						continue;
+					}
 					id_tier_medium_t medium =
 						id_tier::get_medium(
 							tier_state_ptr->get_medium());
@@ -241,6 +268,23 @@ id_tier_state_t::id_tier_state_t() : id(this, TYPE_ID_TIER_STATE_T){
 }
 
 id_tier_state_t::~id_tier_state_t(){
+}
+
+bool id_tier_state_t::is_allowed_extra(extra_t_ extra_){
+	return std::find(
+		allowed_extra.begin(),
+		allowed_extra.end(),
+		extra_) != allowed_extra.end();
+}
+
+void id_tier_state_t::del_id_buffer(id_t_ id_){
+	for(uint64_t i = 0;i < id_buffer.size();i++){
+		if(id_buffer[i].first == id_){
+			id_buffer.erase(
+				id_buffer.begin()+i);
+			break;
+		}
+	}
 }
 
 

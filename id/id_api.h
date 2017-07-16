@@ -57,6 +57,10 @@ namespace id_api{
 		type_t_ fetch_type(std::vector<uint8_t>);
 		mod_inc_t_ fetch_mod_inc(std::vector<uint8_t>);
 
+		std::vector<uint8_t> force_to_extra(
+			std::vector<uint8_t> data,
+			uint8_t extra);
+		
 		std::vector<uint8_t> strip_to_lowest_rules(
 			std::vector<uint8_t> data,
 			uint8_t network_rules,

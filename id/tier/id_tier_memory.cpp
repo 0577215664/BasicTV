@@ -161,6 +161,10 @@ static void id_tier_mem_add_ptr(id_t_ state_id, data_id_t *ptr){
 ID_TIER_INIT_STATE(mem){
 	id_tier_state_t *tier_state_ptr =
 		new id_tier_state_t;
+	tier_state_ptr->set_medium(
+		ID_TIER_MEDIUM_MEM);
+	tier_state_ptr->set_payload(
+		nullptr); // id_tier_memory_t isn't used
 	id_tier_mem_update_state_cache(
 		tier_state_ptr);
 	return tier_state_ptr->id.get_id();
@@ -168,6 +172,7 @@ ID_TIER_INIT_STATE(mem){
 
 ID_TIER_DEL_STATE(mem){
 	GET_TIER_STATE();
+	// should probably do something with this?
 }
 
 #define CHECK_TYPE(a)					\
@@ -187,8 +192,11 @@ ID_TIER_DEL_STATE(mem){
 	}						\
 
 // TODO: make this search for valid data first
-ID_TIER_ADD_DATA(mem){
+ID_TIER_ADD_DATA(mem){	
 	GET_TIER_STATE();
+	ASSERT(tier_state_ptr->is_allowed_extra(
+		       id_api::raw::fetch_extra(
+			       data)), P_ERR);
 	id_t_ id = ID_BLANK_ID;
 	type_t_ type = 0;
 	try{
@@ -224,7 +232,8 @@ ID_TIER_ADD_DATA(mem){
 
 #undef CHECK_TYPE
 
-#define DELETE_TYPE_2(a) if(ptr->get_type() == #a){print("deleting " + (std::string)(#a) + id_breakdown(ptr->get_id()), P_DEBUG);delete (a*)ptr->get_ptr();ptr = nullptr;deleted = true;}
+// I remember MSVC++ switching ifs like this one, that'd be a problem
+#define DELETE_TYPE_2(a) if(deleted == false && ptr->get_type() == #a){print("deleting " + (std::string)(#a) + id_breakdown(ptr->get_id()), P_DEBUG);delete (a*)ptr->get_ptr();ptr = nullptr;deleted = true;}
 
 
 ID_TIER_DEL_ID(mem){
@@ -278,6 +287,12 @@ ID_TIER_DEL_ID(mem){
 	if(deleted == false){
 		print("No proper type was found for clean deleting" + ptr->get_type(), P_ERR);
 	}
+	/*
+	  this is only written poorly because I don't care enough now
+	 */
+	id_tier_mem_regen_state_cache();
+	id_tier_mem_update_state_cache(
+		tier_state_ptr);
 }
 
 #undef DELETE_TYPE_2
@@ -287,6 +302,8 @@ ID_TIER_GET_ID(mem){
 	   get_id_hash(production_priv_key_id)){
 		// Technically we CAN, but anything we have in memory should
 		// be stored encrypted on the cache
+		P_V_S(id_breakdown(id), P_VAR);
+		P_V_S(id_breakdown(production_priv_key_id), P_VAR);
 		print("cannot/shouldn't supply data I do not own directly from memory, refer to tier 1 or higher", P_ERR);
 	}
 	for(uint64_t i = 0;i < id_vector.size();i++){
@@ -305,19 +322,6 @@ ID_TIER_GET_ID_MOD_INC(mem){
 		}
 	}
 	return 0;
-}
-
-/*
-  The local version and the id_tier_state_t version are identical, since they
-  can only change through this function
- */
-
-ID_TIER_GET_ID_BUFFER(mem){
-	return id_buffer;
-}
-
-ID_TIER_UPDATE_ID_BUFFER(mem){
-	// Buffer is guaranteed to be up-to-date
 }
 
 /*

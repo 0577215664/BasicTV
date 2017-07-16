@@ -1,0 +1,110 @@
+#include "id_tier.h"
+#include "id_tier_cache.h"
+#include "id_tier_define.h"
+
+// We only need one medium for all cache, since they work interchangeably,
+// the real cool-ness comes from the restrictions on the extra flags (which
+// is how we enforce the encryption/compression states across all imported IDsg
+
+ID_TIER_INIT_STATE(cache){
+	id_tier_state_t *tier_state_ptr =
+		new id_tier_state_t;
+	id_tier_cache_state_t *cache_state_ptr =
+		new id_tier_cache_state_t;
+	tier_state_ptr->set_medium(
+		ID_TIER_MEDIUM_MEM);
+	tier_state_ptr->set_payload(
+		cache_state_ptr);
+	return tier_state_ptr->id.get_id();
+}
+
+ID_TIER_DEL_STATE(cache){
+	GET_ALL_STATE_PTR(cache);
+	delete tier_state_ptr;
+	tier_state_ptr = nullptr;
+	delete cache_state_ptr;
+	cache_state_ptr = nullptr;
+}
+
+ID_TIER_ADD_DATA(cache){
+	GET_ALL_STATE_PTR(cache);
+	ASSERT(tier_state_ptr->is_allowed_extra(
+		       id_api::raw::fetch_extra(
+			       data)), P_ERR);
+	const id_t_ id_new =
+		id_api::raw::fetch_id(
+			data);
+	const mod_inc_t_ mod_inc_new =
+		id_api::raw::fetch_mod_inc(
+			data);
+	tier_state_ptr->add_id_buffer(
+		std::make_pair(id_new,
+			       mod_inc_new));
+	bool wrote = false;
+	for(uint64_t i = 0;i < cache_state_ptr->cache_data.size();i++){
+		const id_t_ id_tmp =
+			id_api::raw::fetch_id(
+				cache_state_ptr->cache_data[i]);
+		const mod_inc_t_ mod_inc_tmp =
+			id_api::raw::fetch_mod_inc(
+				cache_state_ptr->cache_data[i]);
+		if(unlikely(id_tmp == id_new)){
+			if(mod_inc_tmp > mod_inc_new){
+				print("we are overriding an newer version with an older version, this is bad", P_ERR);
+			}else{
+				cache_state_ptr->cache_data[i] =
+					data;
+				wrote = true;
+				break;
+			}
+		}
+	}
+	if(wrote == false){
+		cache_state_ptr->cache_data.push_back(
+			data);
+	}
+}
+
+ID_TIER_DEL_ID(cache){
+	GET_ALL_STATE_PTR(cache);
+	tier_state_ptr->del_id_buffer(
+		id);
+	for(uint64_t i = 0;i < cache_state_ptr->cache_data.size();i++){
+		const id_t_ id_tmp =
+			id_api::raw::fetch_id(
+				cache_state_ptr->cache_data[i]);
+		if(unlikely(id_tmp == id)){
+			cache_state_ptr->cache_data.erase(
+				cache_state_ptr->cache_data.begin()+i);
+			break;
+		}
+	}
+}
+
+ID_TIER_GET_ID(cache){
+	GET_ALL_STATE_PTR(cache);
+	for(uint64_t i = 0;i < cache_state_ptr->cache_data.size();i++){
+		const id_t_ id_tmp =
+			id_api::raw::fetch_id(
+				cache_state_ptr->cache_data[i]);
+		if(unlikely(id_tmp == id)){
+			return cache_state_ptr->cache_data[i];
+		}
+	}
+	return std::vector<uint8_t>({});
+}
+
+ID_TIER_GET_ID_MOD_INC(cache){
+	GET_ALL_STATE_PTR(cache);
+	for(uint64_t i = 0;i < cache_state_ptr->cache_data.size();i++){
+		const id_t_ id_tmp =
+			id_api::raw::fetch_id(
+				cache_state_ptr->cache_data[i]);
+		if(unlikely(id_tmp == id)){
+			return id_api::raw::fetch_mod_inc(
+				cache_state_ptr->cache_data[i]);
+		}
+	}
+	print("no ID, so no mod_inc", P_ERR);
+	return 0;
+}

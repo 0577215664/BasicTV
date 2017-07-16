@@ -337,7 +337,16 @@ static void generic_fetch(uint8_t *ptr, uint64_t start, uint64_t size, uint8_t *
 
 void id_api::add_data(std::vector<uint8_t> data){
 	id_tier::operation::add_data_to_state(
-		{id_tier::state_tier::only_state_of_tier(0, 0)},
+		id_tier::state_tier::optimal_state_vector_of_tier_vector(
+			std::vector<std::pair<uint8_t, uint8_t> > ({
+					std::make_pair(ID_TIER_MAJOR_MEM,
+						       0),
+						std::make_pair(ID_TIER_MAJOR_CACHE,
+							       ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED),
+						std::make_pair(ID_TIER_MAJOR_CACHE,
+							       ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED),
+						std::make_pair(ID_TIER_MAJOR_CACHE,
+							       ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)})),
 		{data});
 }
 
@@ -480,6 +489,38 @@ std::vector<uint8_t> id_api::raw::strip_to_lowest_rules(
 				data.begin()+vector_pos+trans_size);
 			vector_pos -= trans_size;
 		}
+	}
+	return data;
+}
+
+std::vector<uint8_t> id_api::raw::force_to_extra(
+	std::vector<uint8_t> data,
+	uint8_t extra){
+	const uint8_t cur_extra =
+		fetch_extra(data);
+	const bool need_encrypt =
+		(cur_extra & ID_EXTRA_ENCRYPT) &&
+		!(extra & ID_EXTRA_ENCRYPT);
+	const bool need_decrypt =
+		!(cur_extra & ID_EXTRA_ENCRYPT) &&
+		(extra & ID_EXTRA_ENCRYPT);
+	const bool need_compress =
+		(cur_extra & ID_EXTRA_COMPRESS) &&
+		!(extra & ID_EXTRA_COMPRESS);
+	const bool need_decompress =
+		!(cur_extra & ID_EXTRA_COMPRESS) &&
+		(extra & ID_EXTRA_COMPRESS);
+	if(need_decrypt){
+		data = id_api::raw::decrypt(data);
+	}
+	if(need_decompress){
+		data = id_api::raw::decompress(data);
+	}
+	if(need_encrypt){
+		data = id_api::raw::encrypt(data);
+	}
+	if(need_compress){
+		data = id_api::raw::compress(data);
 	}
 	return data;
 }

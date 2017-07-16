@@ -64,13 +64,13 @@ static void encrypt_pull_key_info(id_t_ id,
 	data_id_t *ptr = PTR_ID(id, );
 	if(ptr == nullptr){
 		P_V_I(id, P_SPAM)
-		print("id is nullptr", P_ERR);
+		print("id is nullptr", P_UNABLE);
 	}
 	if(ptr->get_type() == "encrypt_pub_key_t"){
 		encrypt_pub_key_t *pub_key =
 			(encrypt_pub_key_t*)ptr->get_ptr();
 		if(pub_key == nullptr){
-			print("can't load public key", P_ERR);
+			print("can't load public key", P_UNABLE);
 		}
 		std::pair<uint8_t, std::vector<uint8_t> > key_data =
 			pub_key->get_encrypt_key();
@@ -83,7 +83,7 @@ static void encrypt_pull_key_info(id_t_ id,
 		encrypt_priv_key_t *priv_key =
 			(encrypt_priv_key_t*)ptr->get_ptr();
 		if(priv_key == nullptr){
-			print("can't load private key", P_ERR);
+			print("can't load private key", P_UNABLE);
 		}
 		std::pair<uint8_t, std::vector<uint8_t> > key_data =
 			priv_key->get_encrypt_key();
@@ -185,10 +185,11 @@ std::vector<uint8_t> encrypt_api::encrypt(std::vector<uint8_t> data,
 	std::vector<uint8_t> key;
 	uint8_t key_encryption_scheme = 0;
 	uint8_t key_type = 0;
-	encrypt_pull_key_info(key_id,
-			      &key,
-			      &key_encryption_scheme,
-			      &key_type);
+	encrypt_pull_key_info(
+		key_id,
+		&key,
+		&key_encryption_scheme,
+		&key_type);
 	if(key_encryption_scheme != ENCRYPT_RSA){
 		print("not bothering with non-RSA encryption keys for now", P_ERR);
 	}

@@ -17,9 +17,12 @@ void close(){
 	console_close();
 	id_tier_close();
 	id_tier::operation::del_id_from_state(
-		{id_tier::state_tier::only_state_of_tier(0, 0)},
+		{id_tier::state_tier::only_state_of_tier(
+				0, 0)},
 		id_tier::lookup::ids::from_tier(
-			0, 0));
+			std::vector<std::pair<uint8_t, uint8_t> >({
+				std::make_pair(
+					ID_TIER_MAJOR_MEM, 0)})));
 	ENGINE_cleanup();
 	EVP_cleanup();
 	ERR_free_strings();
