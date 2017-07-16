@@ -1,5 +1,6 @@
 #include "id_tier.h"
-#include "id_tier_memory.h"
+#include "memory/id_tier_memory.h"
+#include "memory/id_tier_memory_helper.h"
 #include "id_tier_cache.h"
 
 std::vector<std::pair<uint8_t, uint8_t> > all_tiers = {
@@ -41,9 +42,11 @@ id_t_ id_tier::state_tier::only_state_of_tier(
 	  in memory. Enforce that
 	 */
 	id_tier_state_t *tier_state_ptr =
-		mem_tier_state_lookup(
-			tier_major,
-			tier_minor);
+		mem_helper::lookup::tier_state(
+			std::vector<std::pair<uint8_t, uint8_t> >({
+				std::make_pair(
+					tier_major,
+					tier_minor)})).at(0);
 	if(tier_state_ptr != nullptr){
 		return tier_state_ptr->id.get_id();
 	}
@@ -137,27 +140,32 @@ void id_tier::operation::shift_data_to_state(
 	id_t_ start_state_id,
 	id_t_ end_state_id,
 	std::vector<id_t_> id_vector){
-	id_tier_state_t *state[2] = {
-		PTR_DATA(start_state_id,
-			 id_tier_state_t),
-		PTR_DATA(end_state_id,
-			 id_tier_state_t)
-	};
-	ASSERT(state[0] != nullptr, P_ERR);
-	ASSERT(state[1] != nullptr, P_ERR);
+	shift_data_to_state(
+		PTR_DATA(start_state_id, id_tier_state_t),
+		PTR_DATA(end_state_id, id_tier_state_t),
+		id_vector);
+}
+
+void id_tier::operation::shift_data_to_state(
+	id_tier_state_t *start_state_ptr,
+	id_tier_state_t *end_state_ptr,
+	std::vector<id_t_> id_vector){
+
+	ASSERT(start_state_ptr != nullptr, P_ERR);
+	ASSERT(end_state_ptr != nullptr, P_ERR);
 
 	std::vector<std::pair<id_t_, mod_inc_t_> > first_buffer =
-		state[0]->get_id_buffer();
+		start_state_ptr->get_id_buffer();
 	std::vector<std::pair<id_t_, mod_inc_t_> > second_buffer =
-		state[1]->get_id_buffer();
+		end_state_ptr->get_id_buffer();
 	
 	for(uint64_t i = 0;i < id_vector.size();i++){
 		id_tier_medium_t first_medium =
 			id_tier::get_medium(
-				state[0]->get_medium());
+				start_state_ptr->get_medium());
 		id_tier_medium_t second_medium =
 			id_tier::get_medium(
-				state[1]->get_medium());
+				end_state_ptr->get_medium());
 		if(std::find_if(
 			   first_buffer.begin(),
 			   first_buffer.end(),
@@ -166,9 +174,9 @@ void id_tier::operation::shift_data_to_state(
 			   }) != first_buffer.end()){
 			try{
 				second_medium.add_data(
-					end_state_id,
+					end_state_ptr->id.get_id(),
 					first_medium.get_id(
-						start_state_id,
+						start_state_ptr->id.get_id(),
 						id_vector[i]));
 						
 			}catch(...){

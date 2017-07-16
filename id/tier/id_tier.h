@@ -4,8 +4,8 @@
 #include "../id.h"
 #include "../id_api.h"
 
-#define PTR_DATA(id_, type_) ((type_*)id_tier::mem::get_ptr(id_, #type_, 0, 0))
-#define PTR_ID(id_, type_) (id_tier::mem::get_id_ptr(id_, #type_, 0, 0))
+#define PTR_DATA(id_, type_) ((type_*)id_tier::mem::get_ptr(id_, #type_, all_tiers))
+#define PTR_ID(id_, type_) (id_tier::mem::get_id_ptr(id_, #type_, all_tiers))
 
 // Only until I re-implement cache
 #define PTR_DATA_FAST PTR_DATA
@@ -129,6 +129,10 @@ namespace id_tier{
 			id_t_ start_state_id,
 			id_t_ end_state_id,
 			std::vector<id_t_> id_vector);
+		void shift_data_to_state(
+			id_tier_state_t *start_state_ptr,
+			id_tier_state_t *end_state_ptr,
+			std::vector<id_t_> id_vector);
 		std::vector<std::tuple<id_t_, uint8_t, uint8_t> > valid_state_with_id(
 			id_t_ id);
 		uint8_t fix_extra_flags_for_state(
@@ -172,21 +176,21 @@ namespace id_tier{
 		id_t_ state_id);
 	
 	namespace mem{
+		// although tier 0 can be listed here without triggering an
+		// error, it will always be searched, since it is the only
+		// way to return a valid pointer
 		data_id_t *get_id_ptr(
 			id_t_ id,
 			type_t_ type,
-			uint8_t high_major,
-			uint8_t high_minor);
+			std::vector<std::pair<uint8_t, uint8_t> > tier_vector);
 		data_id_t *get_id_ptr(
 			id_t_ id,
 			std::string type,
-			uint8_t high_major,
-			uint8_t high_minor);
+			std::vector<std::pair<uint8_t, uint8_t> > tier_vector);
 		void *get_ptr(
 			id_t_ id,
 			std::string type,
-			uint8_t high_major,
-			uint8_t high_minor);
+			std::vector<std::pair<uint8_t, uint8_t> > tier_vector);
 	};
 };
 
@@ -198,5 +202,5 @@ extern std::vector<id_tier_medium_t> id_tier_mediums;
 
 extern std::vector<std::pair<uint8_t, uint8_t> > all_tiers;
 
-#include "id_tier_memory.h"
+#include "memory/id_tier_memory.h"
 #endif

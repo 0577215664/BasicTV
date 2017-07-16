@@ -9,6 +9,9 @@
 #include "id/id_api.h"
 #include "settings.h"
 
+#include "id/tier/memory/id_tier_memory_helper.h"
+#include "id/tier/memory/id_tier_memory_special.h"
+
 /*
   All information imported has the SHA256 hash of the public key. It follows
   the following rules:
@@ -97,7 +100,7 @@ static void bootstrap_production_priv_key_id(){
 		encrypt_api::hash::sha256::gen_raw(
 			pub_key->get_encrypt_key().second);
 	std::vector<data_id_t*> id_vector =
-		mem_get_data_id_vector();
+		mem_helper::get_data_id_vector();
 	for(uint64_t i = 0;i < id_vector.size();i++){
 		id_t_ id_tmp =
 			id_vector[i]->get_id();

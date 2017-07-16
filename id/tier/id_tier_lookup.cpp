@@ -1,5 +1,6 @@
 #include "id_tier.h"
-#include "id_tier_memory.h"
+#include "memory/id_tier_memory.h"
+#include "id_tier_cache.h"
 
 std::vector<std::pair<id_t_, mod_inc_t_> > id_tier::lookup::id_mod_inc::from_state(
 	id_tier_state_t *tier_state_ptr){

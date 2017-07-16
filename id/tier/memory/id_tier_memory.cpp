@@ -1,38 +1,41 @@
-#include "id_tier.h"
 #include "id_tier_memory.h"
+#include "id_tier_memory_special.h"
+#include "id_tier_memory_helper.h"
+#include "../id_tier.h"
 
-#include "../id.h"
-#include "../id_api.h"
+#include "../../id.h"
+#include "../../id_api.h"
 
 // new/delete
-#include "../../tv/tv_dev_audio.h"
-#include "../../tv/tv_dev_video.h"
-#include "../../tv/tv_frame_audio.h"
-#include "../../tv/tv_frame_video.h"
-#include "../../tv/tv_frame_caption.h"
-#include "../../tv/tv_channel.h"
-#include "../../tv/tv_window.h"
-#include "../../tv/tv_menu.h"
-#include "../../tv/tv_item.h"
-#include "../../net/proto/inbound/net_proto_inbound_data.h"
-#include "../../net/proto/outbound/net_proto_outbound_data.h"
-#include "../../net/proto/net_proto_con_req.h"
-#include "../../net/proto/net_proto_peer.h"
-#include "../../net/proto/net_proto_con_req.h"
-#include "../../net/proto/net_proto.h"
-#include "../../net/proto/net_proto_socket.h"
-#include "../../net/net_cache.h"
-#include "../../net/net.h"
-#include "../../input/input.h"
-#include "../../input/input_ir.h"
-#include "../../settings.h"
-#include "../../system.h"
-#include "../../cryptocurrency.h"
-#include "../../compress/compress.h"
-#include "../../encrypt/encrypt.h"
+#include "../../../tv/tv_dev_audio.h"
+#include "../../../tv/tv_dev_video.h"
+#include "../../../tv/tv_frame_audio.h"
+#include "../../../tv/tv_frame_video.h"
+#include "../../../tv/tv_frame_caption.h"
+#include "../../../tv/tv_channel.h"
+#include "../../../tv/tv_window.h"
+#include "../../../tv/tv_menu.h"
+#include "../../../tv/tv_item.h"
+#include "../../../net/proto/inbound/net_proto_inbound_data.h"
+#include "../../../net/proto/outbound/net_proto_outbound_data.h"
+#include "../../../net/proto/net_proto_con_req.h"
+#include "../../../net/proto/net_proto_peer.h"
+#include "../../../net/proto/net_proto_con_req.h"
+#include "../../../net/proto/net_proto.h"
+#include "../../../net/proto/net_proto_socket.h"
+#include "../../../net/net_cache.h"
+#include "../../../net/net.h"
+#include "../../../input/input.h"
+#include "../../../input/input_ir.h"
+#include "../../../settings.h"
+#include "../../../system.h"
+#include "../../../cryptocurrency.h"
+#include "../../../compress/compress.h"
+#include "../../../encrypt/encrypt.h"
 
-static std::vector<data_id_t*> id_vector;
-static std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
+// not static for id_tier_memory_helper.cpp only, not declared extern in header
+std::vector<data_id_t*> id_vector;
+std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
 
 /*
   This is guaranteed to be called for every data_id_t created when
@@ -40,119 +43,12 @@ static std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
   try-catch blocks and keep them coupled together.
  */
 
-void id_tier_mem_regen_state_cache(){
-	id_buffer.clear();
-	for(uint64_t i = 0;i < id_vector.size();i++){
-		id_buffer.push_back(
-			std::make_pair(id_vector[i]->get_id(),
-				       id_vector[i]->get_mod_inc()));
-	}
-}
-
-void id_tier_mem_update_state_cache(
-	id_tier_state_t *tier_state_ptr){
-	// Probably could use some pointer magic
-	ASSERT(tier_state_ptr != nullptr, P_ERR);
-	tier_state_ptr->set_id_buffer(
-		id_buffer);
-}
-
-std::vector<data_id_t*> mem_get_data_id_vector(){
-	return id_vector;
-}
-
-// special status, called by ID constructors ONLY
-
-void mem_add_id(data_id_t *ptr){
-	id_vector.push_back(ptr);
-	id_buffer.push_back(
-		std::make_pair(
-			ptr->get_id(),
-			ptr->get_mod_inc()));
-	id_tier_mem_update_state_cache(
-		PTR_DATA(id_tier::state_tier::only_state_of_tier(0, 0),
-			 id_tier_state_t));
-}
-
-void mem_del_id(data_id_t *ptr){
-	auto id_pos =
-		std::find(
-			id_vector.begin(),
-			id_vector.end(),
-			ptr);
-	if(id_pos != id_vector.end()){
-		id_vector.erase(
-			id_pos);
-	}
-	for(uint64_t i = 0;i < id_buffer.size();i++){
-		if(id_buffer[i].first == ptr->get_id()){
-			id_buffer.erase(
-				id_buffer.begin()+i);
-			break;
-		}
-	}
-	id_tier_mem_update_state_cache(
-		PTR_DATA(id_tier::state_tier::only_state_of_tier(0, 0),
-			 id_tier_state_t));
-}
-
-
-static data_id_t *mem_lookup(id_t_ id){
-	for(uint64_t i = 0;i < id_vector.size();i++){
-		try{
-			const id_t_ list_id =
-				id_vector[i]->get_id(true);
-			const bool matching_nonhash =
-				get_id_uuid(list_id) == get_id_uuid(id) &&
-				get_id_type(list_id) == get_id_type(id);
-			const bool matching_hash =
-				get_id_hash(list_id) == get_id_hash(id);
-			const bool list_hash_blank =
-				get_id_hash(list_id) == blank_hash;
-			const bool param_hash_blank =
-				get_id_hash(id) == blank_hash;
-			if(matching_nonhash){
-				if((list_hash_blank || param_hash_blank) ||
-				   matching_hash){
-					return id_vector[i];
-				}
-			}
-		}catch(...){}
-	}
-	return nullptr;
-}
-
-id_tier_state_t *mem_tier_state_lookup(
-	uint8_t major,
-	uint8_t minor){
-	for(uint64_t i = 0;i < id_vector.size();i++){
-		if(unlikely(id_vector[i]->get_type_byte() == TYPE_ID_TIER_STATE_T)){
-			id_tier_state_t *tier_state_ptr =
-				(id_tier_state_t*)id_vector[i]->get_ptr();
-			ASSERT(tier_state_ptr != nullptr, P_ERR);
-			if(tier_state_ptr->get_tier_major() == major &&
-			   tier_state_ptr->get_tier_minor() == minor){
-				return tier_state_ptr;
-			}
-		}
-	}
-	return nullptr;
-}
-
-static void id_tier_mem_add_ptr(id_t_ state_id, data_id_t *ptr){
-	ASSERT(ptr != nullptr, P_ERR);
-	mem_add_id(ptr);
-}
-
 #define GET_TIER_STATE()					\
 	id_tier_state_t *tier_state_ptr = nullptr;		\
 	if(true){						\
 		data_id_t *id_ptr =				\
-			id_tier::mem::get_id_ptr(		\
-				state_id,			\
-				TYPE_ID_TIER_STATE_T,		\
-				0,				\
-				0);				\
+			mem_helper::lookup::id(			\
+				state_id);			\
 		ASSERT(id_ptr != nullptr, P_ERR);		\
 		tier_state_ptr =				\
 			(id_tier_state_t*)id_ptr->get_ptr();	\
@@ -240,7 +136,7 @@ ID_TIER_DEL_ID(mem){
 	GET_TIER_STATE();
 	// Again, data_id_t destructors call mem_del_id
 	data_id_t *ptr =
-		PTR_ID_PRE(id, );
+		mem_helper::lookup::id(id);
 	if(ptr == nullptr){
 		print("already destroying a destroyed type " + id_breakdown(id), P_SPAM);
 		return;
@@ -348,9 +244,7 @@ static std::vector<id_t_> lookup_vector;
 data_id_t *id_tier::mem::get_id_ptr(
 	id_t_ id,
 	type_t_ type,
-	uint8_t high_major,
-	uint8_t high_minor){
-	ASSERT(high_minor == 0, P_ERR); // actually write this in later
+	std::vector<std::pair<uint8_t, uint8_t> > tier_vector){
 	if(id == ID_BLANK_ID){
 		return nullptr;
 	}
@@ -367,56 +261,64 @@ data_id_t *id_tier::mem::get_id_ptr(
 	lookup_vector.push_back(id);
 	try{
 		retval =
-			mem_lookup(id);
+			mem_helper::lookup::id(id);
 	}catch(...){
 	}
 	lookup_vector.erase(lookup_vector.end()-1);
-	// if(retval != nullptr){
-	// 	std::vector<std::tuple<id_t_, uint8_t, uint8_t> > tier_data =
-	// 		id_tier::operation::valid_state_with_id(
-	// 			id);
-	// 	const id_t_ mem_state_id =
-	// 		id_tier::state_tier::only_state_of_tier(
-	// 			0, 0);
-	// 	for(uint64_t i = 0;i < tier_data.size();i++){
-	// 		const uint8_t tier_major =
-	// 			std::get<1>(tier_data[i]);
-	// 		const uint8_t tier_minor =
-	// 			std::get<2>(tier_data[i]);
-	// 		const bool lower_major =
-	// 			tier_major <= high_major;
-	// 		const bool lower_minor =
-	// 			tier_minor <= high_minor;
-	// 		if(likely((lower_major && lower_minor))){
-	// 			try{
-	// 				id_tier::operation::shift_data_to_state(
-	// 					std::get<0>(tier_data[i]),
-	// 					mem_state_id,
-	// 					{id});
-	// 				if((retval = mem_lookup(id)) != nullptr){
-	// 					break;
-	// 				}
-	// 			}catch(...){
-	// 				P_V(high_major, P_WARN);
-	// 				P_V(high_minor, P_WARN);
-	// 				print("reading error", P_ERR);
-	// 			}
-	// 		}
-	// 	}
-	// }
+	if(retval != nullptr){
+		std::vector<id_tier_state_t*> tier_state_vector =
+			mem_helper::lookup::tier_state(
+				tier_vector);
+			id_tier_state_t *mem_state_ptr =
+				mem_helper::lookup::tier_state(
+					std::vector<std::pair<uint8_t, uint8_t> >(
+						{std::make_pair(0, 0)})).at(0);
+			ASSERT(mem_state_ptr != nullptr, P_ERR);
+			for(uint64_t i = 0;i < tier_state_vector.size();i++){
+				if(tier_state_vector[i]->id.get_id() ==
+				   mem_state_ptr->id.get_id()){
+					continue;
+					// can't shift from memory to memory
+				}
+				const uint8_t tier_major =
+					tier_state_vector[i]->get_tier_major();
+				const uint8_t tier_minor =
+					tier_state_vector[i]->get_tier_minor();
+				const bool good_tier_pair =
+					std::find(
+						tier_vector.begin(),
+						tier_vector.end(),
+						std::make_pair(
+							tier_major,
+							tier_minor)) !=
+					tier_vector.end();
+				if(good_tier_pair){
+					try{
+						id_tier::operation::shift_data_to_state(
+							tier_state_vector[i],
+							mem_state_ptr,
+							{id});
+						if((retval = mem_helper::lookup::id(id)) != nullptr){
+							break;
+						}
+					}catch(...){
+						print("reading error", P_ERR);
+					}
+				}
+			}
+	}
 	return retval;
 }
 
 void *id_tier::mem::get_ptr(
 	id_t_ id,
 	std::string type,
-	uint8_t high_major,
-	uint8_t high_minor){
+	std::vector<std::pair<uint8_t, uint8_t> > tier_vector){
 	data_id_t *id_ptr =
-		get_id_ptr(id,
-		       convert::type::to(type),
-		       high_major,
-		       high_minor);
+		get_id_ptr(
+			id,
+			convert::type::to(type),
+		        tier_vector);
 	if(id_ptr == nullptr){
 		return nullptr;
 	}
@@ -427,11 +329,9 @@ void *id_tier::mem::get_ptr(
 data_id_t *id_tier::mem::get_id_ptr(
 	id_t_ id,
 	std::string type,
-	uint8_t high_major,
-	uint8_t high_minor){
+	std::vector<std::pair<uint8_t, uint8_t> > tier_vector){
 	return id_tier::mem::get_id_ptr(
 		id,
 		(type == "") ? 0 : convert::type::to(type),
-		high_major,
-		high_minor);
+	        tier_vector);
 }
