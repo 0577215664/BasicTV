@@ -281,6 +281,7 @@ DEC_CMD(tv_manager){
 		case 6:
 			print_socket("closing TV manager\n");
 			tv_manager_loop = false;
+			break;
 		default:
 			print_socket("invalid option\n");
 			return;

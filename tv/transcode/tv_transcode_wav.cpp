@@ -200,6 +200,12 @@ static void sanity_check_prepend(std::vector<uint8_t> *universal_wave_prepend,
 	const bool good_bit_depth =
 		bit_depth == target_bit_depth;
 	if(!(good_samp_freq && good_channel_count && good_bit_depth)){
+		P_V(sampling_freq, P_NOTE);
+		P_V(target_sampling_freq, P_NOTE);
+		P_V(bit_depth, P_NOTE);
+		P_V(target_bit_depth, P_NOTE);
+		P_V(channel_count, P_NOTE);
+		P_V(target_channel_count, P_NOTE);
 		print("invalid WAVE data", P_ERR);
 	}
 }

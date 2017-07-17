@@ -7,20 +7,30 @@
 
 #include "../id/set/id_set.h"
 
+#include "../escape.h"
+
 std::vector<std::vector<id_t_> > tv_item_t::get_frame_id_vector(){
-	std::vector<std::vector<id_t_> > retval;
-	for(uint64_t i = 0;i < frame_sets.size();i++){
-		retval.push_back(
-			expand_id_set(frame_sets[i]));
+	std::pair<std::vector<std::vector<uint8_t> >, std::vector<uint8_t> > tmp =
+		unescape_all_vectors(
+			frame_sets, 0x80);
+	std::vector<std::vector<id_t_> > id_vector;
+	for(uint64_t i = 0;i < tmp.first.size();i++){
+		id_vector.push_back(
+			expand_id_set(
+				tmp.first[i]));
 	}
-	return retval;
+	return id_vector;
 }
 
 void tv_item_t::add_frame_id(std::vector<id_t_> stream_id_vector_){
-	// TODO: check for redundancies if that isn't too slow
-	// (it probably will be)
-	frame_sets.push_back(
-		compact_id_set(stream_id_vector_));
+	std::vector<uint8_t> chunk =
+		escape_vector(
+			compact_id_set(stream_id_vector_),
+			0x80);
+	frame_sets.insert(
+		frame_sets.end(),
+		chunk.begin(),
+		chunk.end());
 }
 
 // it is pretty hard to keep track of what is what, espeically
@@ -34,6 +44,11 @@ void tv_item_t::clear_frame_sets(){
 }
 
 tv_item_t::tv_item_t() : id(this, TYPE_TV_ITEM_T){
+	ADD_DATA(tv_channel_id);
+	ADD_DATA(wallet_set_id);
+	id.add_data_one_byte_vector(&frame_sets, ~0);
+	ADD_DATA(start_time_micro_s);
+	ADD_DATA(end_time_micro_s);
 }
 
 tv_item_t::~tv_item_t(){}

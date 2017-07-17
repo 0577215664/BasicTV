@@ -36,7 +36,7 @@ private:
 	// Vector of ID SETS
 	// can have variable lengths associated with them
 	// being short just checks it against the frame linked list
-	std::vector<std::vector<uint8_t> > frame_sets;
+	std::vector<uint8_t> frame_sets;
 	uint64_t start_time_micro_s = 0;
 	uint64_t end_time_micro_s = 0;
 	// Item wallet takes precedence over tv_channel_t wallet, can
@@ -48,8 +48,8 @@ public:
 	data_id_t id;
 	tv_item_t();
 	~tv_item_t();
-	GET_SET_ID(wallet_set_id)
-	GET_SET_ID(tv_channel_id)
+	GET_SET_ID(wallet_set_id);
+	GET_SET_ID(tv_channel_id);
 	GET_SET(start_time_micro_s, uint64_t);
 	GET_SET(end_time_micro_s, uint64_t);
 	

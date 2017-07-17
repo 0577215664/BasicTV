@@ -3,6 +3,7 @@
 #include "../id/id_api.h"
 // type of choice
 #include "../net/proto/net_proto_request.h"
+#include "../tv/tv_item.h"
 // SHA-256 hash for ID spoofing
 #include "../encrypt/encrypt.h"
 
@@ -17,7 +18,7 @@ static void unload_nuke_reload(T ptr){
 				ID_DATA_EXPORT_RULE_NEVER,
 				ID_DATA_PEER_RULE_NEVER);
 		delete (*ptr);
-		*ptr = new net_proto_id_request_t; // change this as test_id_transport chanages
+		*ptr = new tv_item_t; // change this as test_id_transport chanages
 		(*ptr)->id.import_data(
 			data);
 	}
@@ -28,22 +29,23 @@ void test::id_system::transport::proper(){
 		{production_priv_key_id,
 		 production_priv_key_id,
 		 production_priv_key_id};
-	net_proto_id_request_t *id_request_ptr =
-		new net_proto_id_request_t;
-	id_request_ptr->set_ids(
+	tv_item_t *item_ptr =
+		new tv_item_t;
+	
+	item_ptr->add_frame_id(
 		old);
 	id_api::print_id_vector(
-		id_request_ptr->get_ids(),
+		item_ptr->get_frame_id_vector().at(0),
 		P_DEBUG);
-	unload_nuke_reload(&id_request_ptr);
+	unload_nuke_reload(&item_ptr);
 	id_api::print_id_vector(
-		id_request_ptr->get_ids(),
+		item_ptr->get_frame_id_vector().at(0),
 		P_DEBUG);
-	ASSERT(old == id_request_ptr->get_ids(), P_ERR);
+	ASSERT(old == item_ptr->get_frame_id_vector().at(0), P_ERR);
 	id_api::print_id_vector(old, P_SPAM);
-	id_api::print_id_vector(id_request_ptr->get_ids(), P_SPAM);
-	delete id_request_ptr;
-	id_request_ptr = nullptr;
+	id_api::print_id_vector(item_ptr->get_frame_id_vector().at(0), P_SPAM);
+	delete item_ptr;
+	item_ptr = nullptr;
 }
 
 void test::id_system::transport::import::random(){

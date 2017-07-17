@@ -33,6 +33,10 @@ void tv_audio_prop_t::list_virtual_data(data_id_t *id){
 	id->add_data_raw(&format, sizeof(format));
 	id->add_data_raw(&bit_depth, sizeof(bit_depth));
 	id->add_data_raw(&sampling_freq, sizeof(sampling_freq));
+	id->add_data_raw(&channel_count, sizeof(channel_count));
+
+	id->add_data_raw(&snippet_duration_micro_s, sizeof(snippet_duration_micro_s));
+	id->add_data_eight_byte_vector(&encoder_flags, ~0);
 }
 
 void tv_audio_init(){
@@ -143,7 +147,7 @@ static std::vector<std::pair<id_t_, id_t_> > tv_audio_get_current_frame_audios()
 				PTR_DATA(active_streams[c],
 					 tv_frame_audio_t);
 			if(audio_frame_tmp == nullptr){
-				print("supposed active stream is a nullptr", P_ERR);
+				print("supposed active stream is a nullptr", P_DEBUG);
 				continue;
 			}
 			id_t_ curr_id =
@@ -157,7 +161,7 @@ static std::vector<std::pair<id_t_, id_t_> > tv_audio_get_current_frame_audios()
 						windows[i],
 						curr_id));
 			}else{
-				print("curr_id is a nullptr, probably an invalid timestamp", P_WARN);
+				print("curr_id is a nullptr, probably an invalid timestamp", P_SPAM);
 			}
 		}
 	}

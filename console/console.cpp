@@ -261,6 +261,7 @@ std::vector<std::vector<std::string> > console_generate_generic_id_table(std::ve
 		tmp_vector.push_back(convert::array::id::to_hex(id_vector[i]));
 		data_id_t *id_ptr =
 			PTR_ID_FAST(id_vector[i], );
+		CONTINUE_IF_NULL(id_ptr, P_NOTE);
 		std::pair<std::vector<id_t_>, std::vector<id_t_> > linked_list_data =
 			id_ptr->get_linked_list();
 		if(linked_list_data.first.size() == 0){

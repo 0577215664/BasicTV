@@ -231,6 +231,11 @@ void net_proto::request::del_slow_routine_type(std::string type){
 }
 
 void net_proto::request::add_id(id_t_ id){
+	ASSERT_VALID_ID(id);
+	if(id == ID_BLANK_ID){
+		print("not adding a blank ID", P_SPAM);
+		return;
+	}
 	if(PTR_ID(id, ) != nullptr){
 		print("requesting ID already in a readable tier", P_SPAM);
 		return;
@@ -278,19 +283,8 @@ void net_proto::request::add_id(id_t_ id){
 }
 
 void net_proto::request::add_id(std::vector<id_t_> id){
-	// could probably speed this up
-	for(uint64_t c = 0;c < id.size();c++){
-		for(uint64_t i = 0;i < id_request_buffer.size();i++){
-			while(get_id_hash(id[c]) == get_id_hash(id_request_buffer[i])){
-				id_request_buffer.insert(
-					id_request_buffer.begin()+i,
-					id[c]);
-				if(c < id.size()){
-					c++;
-				}
-			}
-		}
-		id_request_buffer.push_back(id[c]);
+	for(uint64_t i = 0;i < id.size();i++){
+		add_id(id[i]);
 	}
 }
 
@@ -403,6 +397,9 @@ static void net_proto_create_id_request_loop(){
 		const id_t_ preferable_peer_id =
 			net_proto::peer::optimal_peer_for_id(
 				id_request_buffer[i]);
+		if(id_request_buffer[i] == ID_BLANK_ID){
+			continue;
+		}
 		if(preferable_peer_id == ID_BLANK_ID){
 			print("preferable_peer_id is blank", P_ERR);
 		}

@@ -55,6 +55,8 @@ void mem_del_id(data_id_t *ptr){
 	if(id_pos != id_vector.end()){
 		id_vector.erase(
 			id_pos);
+	}else{
+		print("couldn't find ptr in id_vector", P_WARN);
 	}
 	id_tier_mem_regen_state_cache();
 	id_tier_mem_update_state_cache(

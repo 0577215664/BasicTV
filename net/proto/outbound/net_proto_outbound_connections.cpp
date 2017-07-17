@@ -140,10 +140,14 @@ void net_proto_initiate_all_connections(){
 		// CONTINUE_IF_NULL(ip_address_ptr, P_WARN);
 		if(cur_time_micro_s >
 		   ip_address_ptr->get_last_attempted_connect_time()+1000000){
-			net_proto_first_id_logic(
-				con_req,
-				second_peer_ptr,
-				ip_address_ptr); // only write to IP address is last connect attempt time
+			try{
+				net_proto_first_id_logic(
+					con_req,
+					second_peer_ptr,
+					ip_address_ptr); // only  write to IP address is last connect attempt time
+			}catch(...){
+				print("couldn't connect to peer", P_NOTE);
+			}
 		}
 	}
 	// second is always inbound, don't bother with that here

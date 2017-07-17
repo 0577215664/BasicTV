@@ -219,7 +219,8 @@ id_t_ net_proto::peer::optimal_peer_for_id(id_t_ id){
 			return proto_peer_vector[i];
 		}
 	}
-	return ID_BLANK_ID;
+	print("no matching hash found on network, returning random", P_NOTE);
+	return random_peer_id();
 }
 
 /*
