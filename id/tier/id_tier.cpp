@@ -153,12 +153,14 @@ void id_tier::operation::shift_data_to_state(
 
 	ASSERT(start_state_ptr != nullptr, P_ERR);
 	ASSERT(end_state_ptr != nullptr, P_ERR);
-
-	std::vector<std::pair<id_t_, mod_inc_t_> > first_buffer =
-		start_state_ptr->get_id_buffer();
-	std::vector<std::pair<id_t_, mod_inc_t_> > second_buffer =
-		end_state_ptr->get_id_buffer();
 	
+	std::vector<id_t_> first_buffer =
+		id_tier::lookup::ids::from_state(
+			start_state_ptr);
+	std::vector<id_t_> second_buffer =
+		id_tier::lookup::ids::from_state(
+			end_state_ptr);
+
 	for(uint64_t i = 0;i < id_vector.size();i++){
 		id_tier_medium_t first_medium =
 			id_tier::get_medium(
@@ -166,21 +168,31 @@ void id_tier::operation::shift_data_to_state(
 		id_tier_medium_t second_medium =
 			id_tier::get_medium(
 				end_state_ptr->get_medium());
-		if(std::find_if(
+		if(std::find(
 			   first_buffer.begin(),
 			   first_buffer.end(),
-			   [&id_vector, &i](std::pair<id_t_, mod_inc_t_> const& elem){
-				   return id_vector[i] == elem.first;
-			   }) != first_buffer.end()){
+			   id_vector[i]) != first_buffer.end()){
+			print("found ID in first medium state", P_DEBUG);
+			std::vector<uint8_t> shift_payload;
+			try{
+				std::vector<uint8_t> allowed_extra =
+					end_state_ptr->get_allowed_extra();
+				ASSERT(allowed_extra.size() > 0, P_ERR);
+				shift_payload =
+					id_api::raw::force_to_extra(
+						first_medium.get_id(
+							start_state_ptr->id.get_id(),
+							id_vector[i]),
+						allowed_extra[0]); // TODO: compute this stuff better (?)
+			}catch(...){
+				print("couldn't shift id " + id_breakdown(id_vector[i]) + " over to new device (get)", P_ERR);
+			}
 			try{
 				second_medium.add_data(
 					end_state_ptr->id.get_id(),
-					first_medium.get_id(
-						start_state_ptr->id.get_id(),
-						id_vector[i]));
-						
+					shift_payload);
 			}catch(...){
-				print("couldn't shift id " + id_breakdown(id_vector[i]) + " over to new device", P_ERR);
+				print("couldn't shift id " + id_breakdown(id_vector[i]) + " over to new device (set)", P_ERR);
 			}
 		}
 	}
@@ -255,17 +267,14 @@ void id_tier::operation::add_data_to_state(
 			CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
 			for(uint64_t c = 0;c < data_vector.size();c++){
 				try{
-					if(tier_state_ptr->is_allowed_extra(
-						   id_api::raw::fetch_extra(
-							   data_vector[c])) == false){
-						continue;
-					}
 					id_tier_medium_t medium =
 						id_tier::get_medium(
 							tier_state_ptr->get_medium());
 					medium.add_data(
 						tier_state_ptr->id.get_id(),
-						data_vector[c]);
+						id_api::raw::force_to_extra(
+							data_vector[c],
+							tier_state_ptr->get_allowed_extra().at(0)));
 				}catch(...){}
 			}
 		}catch(...){}

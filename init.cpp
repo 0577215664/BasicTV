@@ -117,8 +117,16 @@ static id_tier_state_t* bootstrap_id_tier_mem(){
 	id_tier_medium_t memory_medium_ptr =
 		id_tier::get_medium(
 			ID_TIER_MEDIUM_MEM);
-	return	PTR_DATA(memory_medium_ptr.init_state(),
-			 id_tier_state_t); // auto-updates
+	id_tier_state_t *memory_ptr =
+		PTR_DATA(memory_medium_ptr.init_state(),
+			 id_tier_state_t);
+	memory_ptr->set_tier_major(0);
+	memory_ptr->set_tier_minor(0);
+	memory_ptr->set_allowed_extra(
+		std::vector<uint8_t>({0}));
+	memory_ptr->set_medium(
+		ID_TIER_MEDIUM_MEM);
+	return memory_ptr;
 }
 
 // don't need pointers to this since we can do all lookups, mem can't at the
@@ -139,29 +147,31 @@ static void bootstrap_id_tier_cache(){
 					std::make_pair(
 						ID_TIER_MAJOR_CACHE,
 						ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED)),
-				std::make_tuple(
-					PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
-					ID_EXTRA_COMPRESS,
-					ID_TIER_MEDIUM_CACHE,
-					std::make_pair(
-						ID_TIER_MAJOR_CACHE,
-						ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED)),
-				std::make_tuple(
-					PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
-					ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS,
-					ID_TIER_MEDIUM_CACHE,
-					std::make_pair(
-						ID_TIER_MAJOR_CACHE,
+					std::make_tuple(
+						PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
+						ID_EXTRA_COMPRESS,
+						ID_TIER_MEDIUM_CACHE,
+						std::make_pair(
+							ID_TIER_MAJOR_CACHE,
+							ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED)),
+					std::make_tuple(
+						PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
+						ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS,
+						ID_TIER_MEDIUM_CACHE,
+						std::make_pair(
+							ID_TIER_MAJOR_CACHE,
 						ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)),
 					});
 	for(uint64_t i = 0;i < cache_data.size();i++){
-		std::get<0>(cache_data[i])->set_allowed_extra(
-			std::vector<uint8_t>({std::get<1>(cache_data[i])}));
-		std::get<0>(cache_data[i])->set_medium(
+		id_tier_state_t *tier_state_ptr =
+			std::get<0>(cache_data[i]);
+		tier_state_ptr->add_allowed_extra(
+			std::get<1>(cache_data[i]));
+		tier_state_ptr->set_medium(
 			std::get<2>(cache_data[i]));
-		std::get<0>(cache_data[i])->set_tier_major(
+		tier_state_ptr->set_tier_major(
 			std::get<3>(cache_data[i]).first);
-		std::get<0>(cache_data[i])->set_tier_minor(
+		tier_state_ptr->set_tier_minor(
 			std::get<3>(cache_data[i]).second);
 	}
 }

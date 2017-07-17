@@ -71,6 +71,7 @@ public:
 	void del_id_buffer(id_t_ id);
 	ADD_DEL_VECTOR(id_buffer, id_buffer_t);
 	GET_SET(id_buffer, std::vector<id_buffer_t>);
+	ADD_DEL_VECTOR(allowed_extra, uint8_t);
 	GET_SET(allowed_extra, std::vector<uint8_t>);
 	GET_SET(last_state_refresh_micro_s, uint64_t);
 	GET_SET(refresh_interval_micro_s, uint64_t);

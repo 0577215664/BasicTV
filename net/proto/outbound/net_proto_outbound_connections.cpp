@@ -38,7 +38,7 @@ static void net_proto_initiate_direct_tcp(
 			print("exception caught in connect()", P_ERR);
 		}
 		if(socket_ptr->is_alive() == false){
-			print("couldn't connect to peer", P_ERR);
+			print("couldn't connect to peer", P_NOTE);
 		}else{
 			print("opened connection with peer " +
 			      net_proto::peer::get_breakdown(proto_peer_ptr->id.get_id()),

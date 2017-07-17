@@ -262,51 +262,54 @@ data_id_t *id_tier::mem::get_id_ptr(
 	try{
 		retval =
 			mem_helper::lookup::id(id);
-	}catch(...){
-	}
-	lookup_vector.erase(lookup_vector.end()-1);
-	if(retval != nullptr){
+	}catch(...){}
+	if(retval == nullptr){
 		std::vector<id_tier_state_t*> tier_state_vector =
 			mem_helper::lookup::tier_state(
 				tier_vector);
-			id_tier_state_t *mem_state_ptr =
+		id_tier_state_t *mem_state_ptr =
+			nullptr;
+		try{
+			mem_state_ptr =
 				mem_helper::lookup::tier_state(
 					std::vector<std::pair<uint8_t, uint8_t> >(
 						{std::make_pair(0, 0)})).at(0);
-			ASSERT(mem_state_ptr != nullptr, P_ERR);
-			for(uint64_t i = 0;i < tier_state_vector.size();i++){
-				if(tier_state_vector[i]->id.get_id() ==
-				   mem_state_ptr->id.get_id()){
-					continue;
-					// can't shift from memory to memory
-				}
-				const uint8_t tier_major =
-					tier_state_vector[i]->get_tier_major();
-				const uint8_t tier_minor =
-					tier_state_vector[i]->get_tier_minor();
-				const bool good_tier_pair =
-					std::find(
-						tier_vector.begin(),
-						tier_vector.end(),
-						std::make_pair(
-							tier_major,
-							tier_minor)) !=
-					tier_vector.end();
-				if(good_tier_pair){
-					try{
-						id_tier::operation::shift_data_to_state(
-							tier_state_vector[i],
-							mem_state_ptr,
-							{id});
-						if((retval = mem_helper::lookup::id(id)) != nullptr){
-							break;
-						}
-					}catch(...){
-						print("reading error", P_ERR);
+		}catch(...){
+			print("can't find mem_state_ptr", P_ERR);
+		}
+		ASSERT(mem_state_ptr != nullptr, P_ERR);
+		for(uint64_t i = 0;i < tier_state_vector.size();i++){
+			if(tier_state_vector[i]->get_tier_major() == 0){
+				continue;
+			}
+			const uint8_t tier_major =
+				tier_state_vector[i]->get_tier_major();
+			const uint8_t tier_minor =
+				tier_state_vector[i]->get_tier_minor();
+			const bool good_tier_pair =
+				std::find(
+					tier_vector.begin(),
+					tier_vector.end(),
+					std::make_pair(
+						tier_major,
+						tier_minor)) !=
+				tier_vector.end();
+			if(good_tier_pair){
+				try{
+					id_tier::operation::shift_data_to_state(
+						tier_state_vector[i],
+						mem_state_ptr,
+						{id});
+					if((retval = mem_helper::lookup::id(id)) != nullptr){
+						break;
 					}
+				}catch(...){
+					print("reading error", P_ERR);
 				}
 			}
+		}
 	}
+	lookup_vector.erase(lookup_vector.end()-1);
 	return retval;
 }
 

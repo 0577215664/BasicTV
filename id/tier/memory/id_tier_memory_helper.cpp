@@ -5,7 +5,11 @@ extern std::vector<data_id_t*> id_vector;
 extern std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
 
 data_id_t *mem_helper::lookup::id(id_t_ id_){
+	if(id_ == ID_BLANK_ID){
+		return nullptr;
+	}
 	for(uint64_t i = 0;i < id_vector.size();i++){
+		ASSERT(get_id_hash(id_vector[i]->get_id(true)) != blank_hash, P_WARN);
 		try{
 			const id_t_ list_id =
 				id_vector[i]->get_id(true);
@@ -19,8 +23,8 @@ data_id_t *mem_helper::lookup::id(id_t_ id_){
 			const bool param_hash_blank =
 				get_id_hash(id_) == blank_hash;
 			if(matching_nonhash){
-				if((list_hash_blank || param_hash_blank) ||
-				   matching_hash){
+				if(matching_hash ||
+				   (list_hash_blank || param_hash_blank)){
 					return id_vector[i];
 				}
 			}

@@ -496,18 +496,19 @@ std::vector<uint8_t> id_api::raw::strip_to_lowest_rules(
 std::vector<uint8_t> id_api::raw::force_to_extra(
 	std::vector<uint8_t> data,
 	uint8_t extra){
+	P_V(data.size(), P_DEBUG);
 	const uint8_t cur_extra =
 		fetch_extra(data);
-	const bool need_encrypt =
+	const bool need_decrypt =
 		(cur_extra & ID_EXTRA_ENCRYPT) &&
 		!(extra & ID_EXTRA_ENCRYPT);
-	const bool need_decrypt =
+	const bool need_encrypt =
 		!(cur_extra & ID_EXTRA_ENCRYPT) &&
 		(extra & ID_EXTRA_ENCRYPT);
-	const bool need_compress =
+	const bool need_decompress =
 		(cur_extra & ID_EXTRA_COMPRESS) &&
 		!(extra & ID_EXTRA_COMPRESS);
-	const bool need_decompress =
+	const bool need_compress =
 		!(cur_extra & ID_EXTRA_COMPRESS) &&
 		(extra & ID_EXTRA_COMPRESS);
 	if(need_decrypt){
@@ -522,6 +523,7 @@ std::vector<uint8_t> id_api::raw::force_to_extra(
 	if(need_compress){
 		data = id_api::raw::compress(data);
 	}
+	ASSERT(fetch_extra(data) == extra, P_ERR);
 	return data;
 }
 

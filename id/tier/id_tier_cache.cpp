@@ -37,9 +37,7 @@ ID_TIER_ADD_DATA(cache){
 	const mod_inc_t_ mod_inc_new =
 		id_api::raw::fetch_mod_inc(
 			data);
-	tier_state_ptr->add_id_buffer(
-		std::make_pair(id_new,
-			       mod_inc_new));
+	ASSERT(get_id_hash(id_new) != blank_hash, P_ERR);
 	bool wrote = false;
 	for(uint64_t i = 0;i < cache_state_ptr->cache_data.size();i++){
 		const id_t_ id_tmp =
@@ -63,6 +61,9 @@ ID_TIER_ADD_DATA(cache){
 		cache_state_ptr->cache_data.push_back(
 			data);
 	}
+	tier_state_ptr->add_id_buffer(
+		std::make_pair(id_new,
+			       mod_inc_new));
 }
 
 ID_TIER_DEL_ID(cache){
@@ -87,10 +88,14 @@ ID_TIER_GET_ID(cache){
 		const id_t_ id_tmp =
 			id_api::raw::fetch_id(
 				cache_state_ptr->cache_data[i]);
+		P_V_S(convert::array::id::to_hex(id_tmp), P_NOTE);
+		P_V_S(convert::array::id::to_hex(id), P_NOTE);
 		if(unlikely(id_tmp == id)){
+			print("found ID " + id_breakdown(id_tmp) + " in cache", P_DEBUG);
 			return cache_state_ptr->cache_data[i];
 		}
 	}
+	print("couldn't find ID " + id_breakdown(id) + " in cache", P_DEBUG);
 	return std::vector<uint8_t>({});
 }
 
