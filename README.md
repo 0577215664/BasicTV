@@ -1,9 +1,14 @@
 Join the IRC chat at #basictv on Freenode [here](http://webchat.freenode.net/?channels=#basictv) or the Matrix group chat at #BasicTV:matrix.org
 
+TOX: B183A4A9CC9E026DF4345EA31ACBE185ECA39656210F38736BBED62AD68DCF4F7E08A5D9960E
+Matrix: #BasicTV:matrix.org
+
+BasicTV is still under heavy development and is currently not in a working state, but everything listed below has been implemented in some fashion, and is just a matter of prioritizing finishing the code.
+
 # BasicTV
 
 ## What is it?
-BasicTV is an decentralized and anonymous Internet TV system. The entire protocol can be ran over the Tor network. Anybody can create and stream content to the network, and each node fowards data in a torrenting-like system.
+BasicTV is an decentralized and anonymous Internet TV system. Anybody can create and stream content to the network, and each node fowards data in a torrenting-like system. 
 
 BasicTV channels can have multiple audio, video, text, and numerical streams.
 
@@ -29,15 +34,12 @@ BasicTV channels can have multiple audio, video, text, and numerical streams.
 ### Numerical
 Numerical streams are streams of data samples, mostly from sensors, that are sent out on the network. Numerical streams can have units associated with them and are grouped by device, giving BasicTV the flexibility to do seamless conversions and statistical functions. Visualizations of the data can be generated on the fly and viewed as a local, non-networked, channel.
 * Live feeds from sensors from satellites and probes
-* Integration with different APIs (GPS and Google Maps)
+* Integration with different APIs (GPS)
 * Units associatable with number streams
-* Auto-deriving missing yet calculatable data
-* Math functions (log scale, derivations, integrals, statistical tests)
-* Exporting from the network for more advanced math and archiving
+* Visualizations of data
 
 ## Bitcoin and other Cryptocurrencies
-BasicTV has integration with cryptocurrencies, and planned integration with the Bitcoin blockchain directly. Peers on the network, as well as television channels, can have any number of cryptocurrency addresses associated with them, all stored and referred to in a cryptocurrency wallet set. BasicTV does not currently, or plan to ever, create or handle Bitcoin private keys. Wallets must be imported from another source. 
-
+BasicTV has integration with cryptocurrencies, and planned integration with the Bitcoin blockchain directly. Peers on the network, as well as television channels, can have any number of cryptocurrency addresses associated with them, all stored and referred to in a cryptocurrency wallet set.
 
 ## Tor and I2P Integration
 One major highlight of BasicTV is the capability of using Tor and I2P efficiently. Tor and I2P typically work by creating one connection to the network to load one page. Since BasicTV doesn't follow this monolithic connection system, it can spread the load across multiple circuits and interfaces more efficiently.
@@ -74,9 +76,3 @@ This means, as long as the ID is known to exist, it can be downloaded. You can a
 * libopus and libopusfile
 * libzstd
 * libcrypto
-
-## FAQ
-Nobody asked any questions yet, but feel free to contact me through Tox, GitHub, or Matrix
-
-TOX: 2604D78720F30EC169CDC951655F9C5577B1CBC317E918D95A693D898316524287D77EDB7ADD
-Matrix: @Dako300:matrix.org
