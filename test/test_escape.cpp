@@ -6,7 +6,7 @@ void test::escape::proper(){
 	const std::vector<uint8_t> payload =
 		true_rand_byte_vector(
 			true_rand(
-				0, 65536));
+				0, 65536*16));
 	std::pair<std::vector<uint8_t>, std::vector<uint8_t> > unescaped =
 		unescape_vector(
 			escape_vector(

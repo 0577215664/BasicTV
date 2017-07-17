@@ -214,7 +214,9 @@ void init(){
 	settings::set_setting("print_color", "true");
 
 	settings::set_setting("print_delay", "0");
-		
+
+	settings::set_setting("test_catch_all", "false");
+	
 	settings_init();
 	
 	// copy shortcut settings over to full names for in-program use

@@ -1,15 +1,9 @@
-#include "id.h"
 #include "id_set.h"
-
-/*
-  TODO: allow for individual ID lookups without expanding
-
-  TODO: actually use NBO for this
- */
+#include "id_set_uuid_list.h"
 
 const std::vector<uint8_t> seperator = {0, 0, 0, 0, 0, 0, 0, 0};
 
-std::vector<uint8_t> compact_id_set(std::vector<id_t_> id_set){
+std::vector<uint8_t> compact_id_set_uuid_list(std::vector<id_t_> id_set){
 	std::vector<std::tuple<std::vector<std::pair<uint64_t, uint8_t> >, std::array<uint8_t, 32> > > id_set_expand;
 	for(uint64_t i = 0;i < id_set.size();i++){
 		bool wrote = false;
@@ -103,7 +97,7 @@ static uint64_t find_first_seperator(std::vector<uint8_t> data){
   TODO: sanitize the inputs, make sure segfaulting isn't as easy as it is now
  */
 
-std::vector<id_t_> expand_id_set(std::vector<uint8_t> id_set){
+std::vector<id_t_> expand_id_set_uuid_list(std::vector<uint8_t> id_set){
 	std::vector<id_t_> retval;
 	std::vector<std::pair<std::vector<uint8_t>, std::array<uint8_t, 32> > > raw_read;
 	uint64_t first_seperator = 0;
@@ -154,40 +148,3 @@ std::vector<id_t_> expand_id_set(std::vector<uint8_t> id_set){
 	}
 	return retval;
 }
-
-/*
-  Again super slow, but super simple
-
-  Murphy's Law
- */
-
-std::vector<uint8_t> add_id_to_set(std::vector<uint8_t> id_set, id_t_ id){
-	std::vector<id_t_> out =
-		expand_id_set(id_set);
-	out.push_back(
-		id);
-	return compact_id_set(
-		out);
-}
-
-std::vector<uint8_t> del_id_from_set(std::vector<uint8_t> id_set, id_t_ id){	
-	std::vector<id_t_> out =
-		expand_id_set(id_set);
-	out.push_back(
-		id);
-	for(uint64_t i = 0;i < out.size();i++){
-		if(unlikely(out[i] == id)){
-			out.erase(
-				out.begin()+i);
-			i--;
-		}
-	}
-	return compact_id_set(
-		out);
-}
-
-uint64_t size_of_id_set(std::vector<uint8_t> id_set){
-	return expand_id_set(id_set).size();
-}
-
-#undef ASSERT_LENGTH

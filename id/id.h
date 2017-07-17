@@ -365,4 +365,5 @@ std::string id_breakdown(id_t_ id_);
 
 #define IS_OWNER(id) (id == get_id_hash(production_priv_key_id)
 #include "tier/id_tier.h"
+#include "set/id_set.h"
 #endif

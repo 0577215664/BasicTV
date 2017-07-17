@@ -281,12 +281,6 @@ void net_proto_socket_t::load_blocks(){
 				peer_id = inbound_std_data.peer_id;
 			}
 			P_V(block_buffer[i].second.size(), P_VAR); // temporary
-			/*
-			  NOTE: this doesn't call id_api::array::add_data, this
-			  function calls id_api::cache::add_data, which just
-			  stores the data in memory. Doesn't require the public
-			  key right away, but it does when it is requested
-			 */
 			id_api::add_data(
 				block_buffer[i].second);
 			const id_t_ inbound_id =

@@ -258,7 +258,6 @@ std::vector<std::vector<uint8_t> > id_tier::operation::get_data_from_state(
 void id_tier::operation::add_data_to_state(
 	std::vector<id_t_> state_id,
 	std::vector<std::vector<uint8_t> > data_vector){
-	
 	for(uint64_t i = 0;i < state_id.size();i++){
 		try{
 			id_tier_state_t *tier_state_ptr =
@@ -275,6 +274,9 @@ void id_tier::operation::add_data_to_state(
 						id_api::raw::force_to_extra(
 							data_vector[c],
 							tier_state_ptr->get_allowed_extra().at(0)));
+					print("added data " + id_breakdown(id_api::raw::fetch_id(data_vector[c])) + " to tier " +
+					      std::to_string(tier_state_ptr->get_tier_major()) + "." +
+					      std::to_string(tier_state_ptr->get_tier_minor()), P_DEBUG);
 				}catch(...){}
 			}
 		}catch(...){}

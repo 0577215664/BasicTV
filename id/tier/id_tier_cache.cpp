@@ -60,6 +60,7 @@ ID_TIER_ADD_DATA(cache){
 	if(wrote == false){
 		cache_state_ptr->cache_data.push_back(
 			data);
+		wrote = true;
 	}
 	tier_state_ptr->add_id_buffer(
 		std::make_pair(id_new,

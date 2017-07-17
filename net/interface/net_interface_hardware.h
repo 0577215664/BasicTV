@@ -1,7 +1,7 @@
 #ifndef NET_INTERFACE_HARDWARE_H
 #define NET_INTERFACE_HARDWARE_H
 
-#include "../../id/id_set.h"
+#include "../../id/set/id_set.h"
 
 #include "net_interface_medium.h"
 #include "net_interface_packet.h"

@@ -262,10 +262,14 @@ void net_proto_handle_request_send(T request_ptr){
 		print("sent request to peer" + net_proto::peer::get_breakdown(
 			      destination_peer_id), P_DEBUG);
 	}catch(...){
-		print("couldn't send request to peer, probably no available socket", P_DEBUG);
-		net_proto::socket::connect(
-			destination_peer_id,
-			1);
+		print("couldn't send request to peer, probably no available socket (making request)", P_SPAM);
+		try{
+			net_proto::socket::connect(
+				destination_peer_id,
+				1);
+		}catch(...){
+			print("couldn't create connection request", P_ERR);
+		}
 	}
 }
 
