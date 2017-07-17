@@ -39,12 +39,13 @@ std::pair<std::vector<uint8_t>, std::vector<uint8_t> > unescape_vector(
 	std::pair<std::vector<uint8_t>, std::vector<uint8_t> > retval;
 	std::vector<uint8_t> payload;
 
-	ASSERT(vector[0] == escape_char, P_ERR);
 	if(vector.size() <= 5){
 		return std::make_pair(
 			std::vector<uint8_t>({}),
 			vector);
 	}
+
+	ASSERT(vector[0] == escape_char, P_ERR);
 	uint32_t escaped_length =
 		NBO_32(*reinterpret_cast<uint32_t*>(
 			       &(vector[1])));
