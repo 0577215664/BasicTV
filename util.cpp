@@ -137,7 +137,7 @@ static bool print_is_sane(std::string data){
 	return true;
 }
 
-void print(std::string data, int level, const char *func){
+void print_(std::string data, int level, const char *func){
 	try{
 		print_level =
 			std::stoi(

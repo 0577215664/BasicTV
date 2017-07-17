@@ -10,6 +10,45 @@
 
 static uint64_t last_print_micro_s = 0;
 
+static std::string storage_breakdown(){
+	std::string retval;
+	std::vector<id_t_> tier_state_vector =
+		ID_TIER_CACHE_GET(
+			TYPE_ID_TIER_STATE_T);
+	for(uint64_t i = 0;i < tier_state_vector.size();i++){
+		id_tier_state_t *tier_state_ptr =
+			PTR_DATA(tier_state_vector[i],
+				 id_tier_state_t);
+		retval += "ID Tier " + convert::array::id::to_hex(tier_state_vector[i]) + " of tier " +
+			std::to_string(tier_state_ptr->get_tier_major()) + "." + std::to_string(tier_state_ptr->get_tier_minor()) + "\n";
+		std::vector<std::pair<id_t_, mod_inc_t_> > tier_state_id_buffer =
+			id_tier::lookup::id_mod_inc::from_state(
+				tier_state_ptr);
+		for(uint64_t c = 0;c < tier_state_id_buffer.size();c++){
+			try{
+				retval +=
+					std::string(16, ' ') + 
+					id_breakdown(
+						tier_state_id_buffer[c].first) +
+					"\n";
+			}catch(...){
+				P_V(get_id_uuid(tier_state_id_buffer[c].first), P_WARN);
+				hash_t_ hash =
+					get_id_hash(
+						tier_state_id_buffer[c].first);
+				P_V_S(convert::number::to_hex(
+					    std::vector<uint8_t>(
+						    hash.begin(),
+						    hash.end())),
+				    P_WARN);
+				P_V(get_id_type(tier_state_id_buffer[c].first), P_WARN);
+				print("ID is invalid", P_ERR);
+			}
+		}
+	}
+	return retval;
+}
+
 static void print_stats(uint64_t avg_iter_time){
 	const uint64_t print_stat_freq =
 		settings::get_setting_unsigned_def(
@@ -27,9 +66,9 @@ static void print_stats(uint64_t avg_iter_time){
 			"Item Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_TV_ITEM_T).size());
 		std::string avg_iter_time_ =
 			"Average Iteration Frequency: " + std::to_string(1/((long double)((long double)avg_iter_time/(long double)1000000)));
-		// print("Routine Stats\n" +
-		//       id_api::cache::breakdown() + 
-		//       avg_iter_time_, P_NOTE);
+		print("Routine Stats\n" +
+		      storage_breakdown() + 
+		      avg_iter_time_, P_NOTE);
 		last_print_micro_s =
 			cur_time_micro_s;
 	}

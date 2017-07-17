@@ -15,25 +15,38 @@ std::vector<id_t_> expand_id_set(std::vector<uint8_t> id_set){
 	if(id_set.size() <= 2){
 		return std::vector<id_t_>({});
 	}
+	std::vector<id_t_> retval;
 	switch(id_set[0]){
 	case ID_SET_SCHEME_UUID_LIST:
-		return expand_id_set_uuid_list(
-			std::vector<uint8_t>(
-				id_set.begin()+1,
-				id_set.end()));
+		retval =
+			expand_id_set_uuid_list(
+				std::vector<uint8_t>(
+					id_set.begin()+1,
+					id_set.end()));
+		break;
 	case ID_SET_SCHEME_COPY:
-		// return expand_id_set_copy(
-		// 	std::vector<uint8_t>(
-		// 		id_set.begin()+1,
-		// 		id_set.end()));
+		retval = 
+			expand_id_set_copy(
+				std::vector<uint8_t>(
+					id_set.begin()+1,
+					id_set.end()));
+		break;
 	default:
 		P_V(id_set[0], P_WARN);
 		print("invalid scheme for ID set", P_ERR);
 	}
-	return std::vector<id_t_>({});
+	for(uint64_t i = 0;i < retval.size();i++){
+		id_api::assert_valid_id(
+			retval[i]);
+	}
+	return retval;
 }
 
 std::vector<uint8_t> compact_id_set(std::vector<id_t_> id_set){
+	for(uint64_t i = 0;i < id_set.size();i++){
+		id_api::assert_valid_id(
+			id_set[i]);
+	}
 	std::vector<uint8_t> retval =
 		compact_id_set_uuid_list(
 			id_set);

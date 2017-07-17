@@ -126,5 +126,6 @@ public:
 
 extern void net_proto_requests_loop();
 
+extern std::vector<uint8_t> net_proto_request_blacklist;
 
 #endif

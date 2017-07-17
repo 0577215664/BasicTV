@@ -61,7 +61,8 @@
 extern void sleep_ms(int ms, bool force = false);
 extern int search_for_argv(std::string);
 extern std::string get_argv(int a);
-extern void print(std::string data, int level, const char *func = nullptr);
+#define print(x, y) print_((std::string)(__PRETTY_FUNCTION__) + ": " + x, y)
+extern void print_(std::string data, int level, const char *func = nullptr);
 extern long double get_mul_to_btc(std::string currency);
 extern long double get_btc_rate(std::string currency);
 extern std::vector<std::string> newline_to_vector(std::string data);

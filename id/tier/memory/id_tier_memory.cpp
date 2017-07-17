@@ -312,8 +312,15 @@ data_id_t *id_tier::mem::get_id_ptr(
 	if(retval == nullptr &&
 	   tier_vector == all_tiers){
 		// TODO: direct comparison to all_tiers doesn't consider order
-		net_proto::request::add_id(
-			id);
+		if(std::find(
+			   net_proto_request_blacklist.begin(),
+			   net_proto_request_blacklist.end(),
+			   get_id_type(id)) == net_proto_request_blacklist.end()){
+			net_proto::request::add_id(
+				id);
+		}else{
+			print("not listing net_proto_request_blacklist type in ID request vector", P_SPAM);
+		}
 	}
 	lookup_vector.erase(lookup_vector.end()-1);
 	return retval;

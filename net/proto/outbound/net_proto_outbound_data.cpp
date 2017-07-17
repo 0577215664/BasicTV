@@ -193,13 +193,12 @@ static void net_proto_fill_id_requests(){
 			try{
 				const std::vector<id_t_> id_vector =
 					proto_id_request->get_ids();
-				ASSERT_VALID_ID(id_vector);
 				const id_t_ origin_peer_id =
 					proto_id_request->get_origin_peer_id();
-				ASSERT_VALID_ID(id_vector);
 				for(uint64_t c = 0;c < id_vector.size();c++){
+					ASSERT_VALID_ID(id_vector[c]);
 					try{
-						print("ID request contains " + id_breakdown(id_vector[i]), P_DEBUG);
+						print("ID request contains " + id_breakdown(id_vector[c]), P_DEBUG);
 					}catch(...){
 						print("ID is invalid", P_NOTE);
 					}

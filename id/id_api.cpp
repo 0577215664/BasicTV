@@ -536,27 +536,28 @@ void id_api::print_id_vector(std::vector<id_t_> id_vector, uint32_t p_l){
 void id_api::assert_valid_id(id_t_ id){
 	type_t_ type =
 		get_id_type(id);
-	if(type > 0 && type < TYPE_COUNT){ // update this to match the type count
-		ASSERT(get_id_uuid(id) != 0 ||
-		       get_id_hash(id) != blank_hash, P_ERR);
-	}else if(type == 0){
-		ASSERT(get_id_uuid(id) == 0 ||
-		       get_id_hash(id) == blank_hash, P_ERR);
-	}else{
-		ASSERT(type >= TYPE_COUNT, P_ERR);
+	uuid_t_ uuid =
+		get_id_uuid(id);
+	hash_t_ hash =
+		get_id_hash(id);
+	if(id == ID_BLANK_ID){
+		return;
 	}
+	ASSERT(type <= TYPE_COUNT, P_ERR);
+	ASSERT(uuid != 0, P_ERR);
+	ASSERT(hash != blank_hash, P_ERR);
 }
 
 void id_api::assert_valid_id(std::vector<id_t_> id){
 	for(uint64_t i = 0;i < id.size();i++){
 		const hash_t_ hash =
 			get_id_hash(id[i]);
-		P_V(get_id_uuid(id[i]), P_VAR);
-		P_V_S(convert::number::to_hex(
-			    std::vector<uint8_t>(
-				    hash.begin(),
-				    hash.end())), P_VAR);
-		P_V(get_id_type(id[i]), P_VAR);
+		// P_V(get_id_uuid(id[i]), P_VAR);
+		// P_V_S(convert::number::to_hex(
+		// 	    std::vector<uint8_t>(
+		// 		    hash.begin(),
+		// 		    hash.end())), P_VAR);
+		// P_V(get_id_type(id[i]), P_VAR);
 		assert_valid_id(id[i]);
 	}
 }

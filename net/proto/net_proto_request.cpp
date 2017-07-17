@@ -11,6 +11,13 @@
   Broadcasting of them is handled inside of outbound/net_proto_outbound_data.cpp
  */
 
+std::vector<uint8_t> net_proto_request_blacklist =
+{
+	TYPE_NET_PROTO_ID_REQUEST_T,
+	TYPE_NET_PROTO_TYPE_REQUEST_T,
+	TYPE_NET_PROTO_LINKED_LIST_REQUEST_T // net_proto_con_req_t is pull, excluded
+};
+
 // routine request jargon
 static uint64_t last_request_fast_time_micro_s = 0;
 static uint64_t last_request_slow_time_micro_s = 0;
