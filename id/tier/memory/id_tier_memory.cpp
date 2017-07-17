@@ -106,18 +106,36 @@ ID_TIER_ADD_DATA(mem){
 	}
 	// initializer of data_id_t calls mem_add_id automatically
 	bool loaded = false;
-	CHECK_TYPE(tv_channel_t);
-	CHECK_TYPE(tv_frame_audio_t);
 	CHECK_TYPE(tv_frame_video_t);
+	CHECK_TYPE(tv_frame_audio_t);
+	CHECK_TYPE(tv_window_t);
+	CHECK_TYPE(tv_channel_t);
+	CHECK_TYPE(tv_menu_entry_t);
+	CHECK_TYPE(tv_menu_t);
+	CHECK_TYPE(tv_item_t);
+	
+	// net (proto and standard)
+	CHECK_TYPE(net_socket_t);
 	CHECK_TYPE(net_proto_peer_t);
-	CHECK_TYPE(net_proto_id_request_t);
+	CHECK_TYPE(net_proto_socket_t);
 	CHECK_TYPE(net_proto_type_request_t);
+	CHECK_TYPE(net_proto_id_request_t);
 	CHECK_TYPE(net_proto_linked_list_request_t);
 	CHECK_TYPE(net_proto_con_req_t);
-	CHECK_TYPE(encrypt_pub_key_t);
+
+	// IR
+	CHECK_TYPE(ir_remote_t);
+
+	// input
+	CHECK_TYPE(input_dev_standard_t);
+
+	// cryptography
 	CHECK_TYPE(encrypt_priv_key_t);
-	CHECK_TYPE(wallet_set_t);
-	CHECK_TYPE(net_socket_t);
+	CHECK_TYPE(encrypt_pub_key_t);
+
+       	CHECK_TYPE(wallet_set_t);
+
+	// Math
 	CHECK_TYPE(math_number_set_t);
 	CHECK_TYPE(net_interface_ip_address_t);
 	if(loaded == false){
