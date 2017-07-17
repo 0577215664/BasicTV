@@ -189,7 +189,7 @@ static void net_proto_fill_id_requests(){
 	 		continue;
 	 	}
 		if(net_proto_valid_request_to_fill(proto_id_request)){
-			print("filling ID request" + id_breakdown(net_proto_id_requests[i]), P_SPAM);
+			print("filling ID request" + id_breakdown(net_proto_id_requests[i]), P_DEBUG);
 			try{
 				const std::vector<id_t_> id_vector =
 					proto_id_request->get_ids();
@@ -199,9 +199,9 @@ static void net_proto_fill_id_requests(){
 				ASSERT_VALID_ID(id_vector);
 				for(uint64_t c = 0;c < id_vector.size();c++){
 					try{
-						print("ID request contains " + id_breakdown(id_vector[i]), P_SPAM);
+						print("ID request contains " + id_breakdown(id_vector[i]), P_DEBUG);
 					}catch(...){
-						print("ID is invalid", P_SPAM);
+						print("ID is invalid", P_NOTE);
 					}
 				}
 				try{
@@ -259,7 +259,8 @@ void net_proto_handle_request_send(T request_ptr){
 			std::vector<id_t_>({request_ptr->id.get_id()}),
 			destination_peer_id);
 		request_ptr->update_broadcast_time_micro_s();
-		print("sent request to peer" + net_proto::peer::get_breakdown(
+		print("sent request " + id_breakdown(request_ptr->id.get_id())
+		      + " to peer" + net_proto::peer::get_breakdown(
 			      destination_peer_id), P_DEBUG);
 	}catch(...){
 		print("couldn't send request to peer, probably no available socket (making request)", P_SPAM);

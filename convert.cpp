@@ -369,7 +369,7 @@ std::string convert::type::from(uint8_t type){
 		print("zero type, something went wrong earlier", P_WARN);
 		return "NOTYPE";
 	default:
-		P_V(type, P_VAR);
+		P_V(type, P_WARN);
 		print("invalid type, probably malicious (not zero)", P_ERR);
 		return "BADTYPE";
 	}

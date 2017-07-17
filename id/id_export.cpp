@@ -40,7 +40,6 @@ std::vector<uint8_t> data_id_t::export_data(
 	uint8_t network_rules,
 	uint8_t export_rules,
 	uint8_t peer_rules){
-	ASSERT((extra & ID_EXTRA_ENCRYPT) && (extra & ID_EXTRA_COMPRESS), P_WARN);
 	if(flags_ != 0){
 		print("we have no current use for a generic flag", P_WARN);
 	}
@@ -159,9 +158,9 @@ std::vector<uint8_t> data_id_t::export_data(
 		ID_EXPORT(peer_rules_tmp, retval);
 		ID_EXPORT(trans_size, retval);
 		id_export_raw(data_to_export, &retval);
-		print("trans_i:" + std::to_string(trans_i) + " " +
-		      "trans_size: " + std::to_string(trans_size) + " " +
-		      "data_vector[trans_i].get_flags(): " + std::to_string(data_vector[trans_i].get_flags()), P_DEBUG);
+		// print("trans_i:" + std::to_string(trans_i) + " " +
+		//       "trans_size: " + std::to_string(trans_size) + " " +
+		//       "data_vector[trans_i].get_flags(): " + std::to_string(data_vector[trans_i].get_flags()), P_DEBUG);
 	}
 	ASSERT((0b11111100 & extra) == 0, P_ERR);
 	P_V(extra, P_SPAM);

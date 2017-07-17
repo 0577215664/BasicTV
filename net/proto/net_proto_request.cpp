@@ -337,7 +337,7 @@ void net_proto::request::del_id(id_t_ id){
 		}
 	}
 	// This is defined behavior, but only in the beginning...
-	print("cannot delete request for ID I didn't request", P_WARN);
+	print("cannot delete request for ID I didn't request", P_SPAM);
 }
 
 static void net_proto_routine_request_create(
