@@ -231,6 +231,10 @@ void net_proto::request::del_slow_routine_type(std::string type){
 }
 
 void net_proto::request::add_id(id_t_ id){
+	if(PTR_ID(id, ) != nullptr){
+		print("requesting ID already in a readable tier", P_SPAM);
+		return;
+	}
 	// could probably speed this up
 	for(uint64_t i = 0;i < id_request_buffer.size();i++){
 		if(id == id_request_buffer[i]){

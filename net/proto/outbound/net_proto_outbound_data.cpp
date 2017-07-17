@@ -285,6 +285,7 @@ void net_proto_handle_request_send(T request_ptr){
 			#type);					\
 	for(uint64_t i = 0;i < request_vector.size();i++){	\
 		type *ptr = PTR_DATA(request_vector[i], type);	\
+		CONTINUE_IF_NULL(ptr, P_SPAM);			\
 		if(net_proto_valid_request_to_send(		\
 			   ptr,					\
 			   timeout_micro_s)){			\

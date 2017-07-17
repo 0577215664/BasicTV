@@ -1,6 +1,7 @@
-#include "../id/id_api.h"
 #ifndef TV_FRAME_STANDARD_H
 #define TV_FRAME_STANDARD_H
+#include "../id/id_api.h"
+#include "../net/proto/net_proto_api.h"
 #define TV_FRAME_DEFAULT_FREQ 60
 #define TV_FRAME_DEFAULT_TTL (1/TV_FRAME_DEFAULT_FREQ)
 
@@ -90,6 +91,10 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 		data_id_t *new_id_ptr =
 			PTR_ID(new_id, );
 		if(new_id_ptr != nullptr){
+			net_proto::request::add_id(
+				new_id_ptr->get_linked_list().first);
+			net_proto::request::add_id(
+				new_id_ptr->get_linked_list().second);
 			data = (T)new_id_ptr->get_ptr();
 		}else{
 			data = nullptr;
