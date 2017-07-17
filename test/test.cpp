@@ -76,6 +76,6 @@ void test_escape(){
 
 void test_suite(){
 	test_escape();
-	// test_id_subsystem();
-	// test_net();
+	test_id_subsystem();
+	test_net();
 }

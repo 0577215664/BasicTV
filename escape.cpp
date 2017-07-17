@@ -59,7 +59,6 @@ std::pair<std::vector<uint8_t>, std::vector<uint8_t> > unescape_vector(
 			vector.begin(),
 			vector.begin()+escaped_length);
 	}
-	std::raise(SIGINT);
 	for(uint64_t i = 0;i < payload.size();i++){
 		if(payload[i] == escape_char){
 			payload.erase(
@@ -71,7 +70,6 @@ std::pair<std::vector<uint8_t>, std::vector<uint8_t> > unescape_vector(
 			i--;
 		}
 	}
-	std::raise(SIGINT);
 	return std::make_pair(
 		payload, vector);
 }
