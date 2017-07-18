@@ -114,10 +114,10 @@ std::vector<std::vector<uint8_t> > wave_encode_samples_to_snippets(tv_transcode_
 		state->get_audio_prop());
 	if(state->get_audio_prop().get_bit_depth() > 8){
 		print("wave bit depth larger than eight, converting to signed samples", P_DEBUG);
-		*raw_data =
-			transcode::audio::raw::unsigned_to_signed(
-				*raw_data,
-				state->get_audio_prop().get_bit_depth());
+		// *raw_data =
+		// 	transcode::audio::raw::unsigned_to_signed(
+		// 		*raw_data,
+		// 		state->get_audio_prop().get_bit_depth());
 	}else{
 		print("wave bit depth less than or equal to eight, no conversion", P_NOTE);
 	}
@@ -247,10 +247,10 @@ std::vector<uint8_t> wave_decode_snippets_to_samples(tv_transcode_decode_state_t
 		state->get_audio_prop().get_channel_count();
 	if(*bit_depth > 8){
 		print("wave bit depth larger than eight, converting to signed samples", P_DEBUG);
-		retval =
-			transcode::audio::raw::signed_to_unsigned(
-				retval,
-				*bit_depth);
+		// retval =
+		// 	transcode::audio::raw::signed_to_unsigned(
+		// 		retval,
+		// 		*bit_depth);
 	}else{
 		// far less common
 		print("wave bit depth less than or equal to eight, no conversion", P_NOTE);

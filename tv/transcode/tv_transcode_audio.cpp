@@ -233,6 +233,7 @@ static tv_transcode_decode_state_t *pull_decode_state_from_frame_before_frame(id
 				&bit_depth,
 				&channel_count,
 				retval);
+			assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
 		}catch(...){}
 					
 	}
@@ -281,6 +282,8 @@ std::vector<std::vector<uint8_t> > transcode::audio::frames::to_codec(std::vecto
 			frame_audio_ptr->get_audio_prop().get_bit_depth();
 		uint8_t channel_count =
 			frame_audio_ptr->get_audio_prop().get_channel_count();
+
+		assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
 		P_V(sampling_freq, P_VAR);
 		P_V(bit_depth, P_VAR);
 		P_V(channel_count, P_VAR);
@@ -294,6 +297,7 @@ std::vector<std::vector<uint8_t> > transcode::audio::frames::to_codec(std::vecto
 				&bit_depth,
 				&channel_count);
 		PRINT_IF_EMPTY(samples, P_ERR);
+		assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
 		std::vector<std::vector<uint8_t> > tmp =
 			encode_codec.encode_samples_to_snippets(
 				encode_state,
@@ -426,6 +430,7 @@ std::vector<uint8_t> transcode::audio::codec::to_raw(std::vector<std::vector<uin
 	PRINT_IF_NULL(channel_count, P_ERR);
 	PRINT_IF_NULL(input_audio_prop, P_ERR);
 	PRINT_IF_EMPTY(*codec_set, P_ERR);
+	
 	audio_prop_sanity_check(*input_audio_prop);
 	tv_transcode_state_decode_codec_t decode_codec =
 		decode_codec_lookup(
@@ -441,12 +446,16 @@ std::vector<uint8_t> transcode::audio::codec::to_raw(std::vector<std::vector<uin
 			decode_codec.decode_init_state(
 				input_audio_prop);
 	}
-	return decode_codec.decode_snippets_to_samples(
+	std::vector<uint8_t> retval =
+	decode_codec.decode_snippets_to_samples(
 			input_decode_state,
 			codec_set,
 			sampling_freq,
 			bit_depth,
 			channel_count);
+	
+	assert_sane_audio_metadata(*sampling_freq, *bit_depth, *channel_count);
+	return retval;
 }
 
 std::vector<std::vector<uint8_t> > transcode::audio::raw::to_codec(std::vector<uint8_t> *raw_set,
@@ -457,6 +466,7 @@ std::vector<std::vector<uint8_t> > transcode::audio::raw::to_codec(std::vector<u
 								   tv_transcode_encode_state_t *output_encode_state){
 	PRINT_IF_NULL(output_audio_prop, P_ERR);
 	PRINT_IF_EMPTY(*raw_set, P_ERR);
+	assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
 	audio_prop_sanity_check(*output_audio_prop);
 	tv_transcode_state_encode_codec_t encode_codec =
 		encode_codec_lookup(
@@ -512,6 +522,7 @@ std::vector<uint8_t> transcode::audio::frames::to_raw(
 	P_V(*sampling_freq, P_VAR);
 	P_V(*bit_depth, P_VAR);
 	P_V(*channel_count, P_VAR);
+	assert_sane_audio_metadata(*sampling_freq, *bit_depth, *channel_count);
 	return raw_set;
 			
 }
