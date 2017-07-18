@@ -42,15 +42,21 @@ void tv_audio_prop_t::list_virtual_data(data_id_t *id){
 }
 
 void tv_audio_init(){
-	tv_audio_mixer_init();
+	if(settings::get_setting("audio") == "true"){
+		tv_audio_mixer_init();
+	}
 }
 
 void tv_audio_loop(){
-	tv_audio_mixer_loop();
+	if(settings::get_setting("audio") == "true"){
+		tv_audio_mixer_loop();
+	}
 }
 
 void tv_audio_close(){
-	tv_audio_mixer_close();
+	if(settings::get_setting("audio") == "true"){
+		tv_audio_mixer_close();
+	}
 }
 
 // void tv_audio_init(){
