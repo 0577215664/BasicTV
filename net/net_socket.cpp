@@ -208,6 +208,7 @@ void net_socket_t::connect(){
 	}
 	update_socket_set();
 	running = true;
+	NET_LOCK(thread_mutex);
 	send_thread =
 		std::move(
 			std::thread(
@@ -228,6 +229,7 @@ void net_socket_t::connect(){
 					&thread_running,
 					this));
 	}
+	NET_UNLOCK(thread_mutex);
 }
 
 void net_socket_t::update_socket_set(){
