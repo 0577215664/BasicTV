@@ -173,118 +173,6 @@ DEC_CMD(tv_audio_load_wav){
   is being ran, obviously)
  */
 
-std::vector<id_t_> console_tv_test_load_opus(std::string file){
-	std::vector<uint8_t> raw_samples;
-	int32_t ogg_opus_error;
-	OggOpusFile *opus_file =
-		op_open_file(
-			file.c_str(),
-			&ogg_opus_error);
-	if(opus_file == nullptr){
-		print("couldn't open the OGG Opus file, error code " + std::to_string(ogg_opus_error), P_ERR);
-	}
-	opus_int16 pcm[5760*2];
-	int samples_read = 0;
-	while((samples_read =
-	       op_read(opus_file,
-		       &(pcm[0]),
-		       5760*2,
-		       nullptr)) > 0){
-		raw_samples.insert(
-			raw_samples.end(),
-			(uint8_t*)(&(pcm[0])),
-			(uint8_t*)(&(pcm[0])+samples_read));
-	}
-	op_free(opus_file);
-	opus_file = nullptr;
-	
-	// Intermediate (raw to codec)
-	tv_audio_prop_t opus_audio_prop;
-	opus_audio_prop.set_format(
-		TV_AUDIO_FORMAT_WAV);
-	opus_audio_prop.set_flags(
-		TV_AUDIO_PROP_FORMAT_ONLY);
-	// opus_audio_prop.set_sampling_freq(
-	// 	48000);
-	// opus_audio_prop.set_bit_rate(
-	// 	65536);
-	// opus_audio_prop.set_channel_count(
-	// 	1);
-	// opus_audio_prop.set_bit_depth(
-	// 	16);
-	
-	// Final frame output
-	tv_audio_prop_t frame_audio_prop;
-	frame_audio_prop.set_format(
-		TV_AUDIO_FORMAT_WAV);
-	frame_audio_prop.set_flags(
-		TV_AUDIO_PROP_FORMAT_ONLY);
-	
-	// standard output properties for Opus to raw samples
-	const uint32_t sampling_freq =
-		48000;
-	const uint8_t bit_depth =
-		16;
-	const uint8_t channel_count =
-		1;
-	
-	/*
-	  to_frames with the same format SHOULD repacketize each individual
-	  frame, one at a time, until everything is finished, and do no
-	  conversions whatsoever if the outputs can be valid as the inputs
-	  (i.e. no specified output sampling freq, bit depth, or special encoder
-	  jargon)
-
-	  Right now it just decodes and encodes everything, which is OK for
-	  small loads, but becomes unreasonable very quickly
-	 */
-
-	std::vector<std::vector<uint8_t> > packetized_codec_data =
-		transcode::audio::raw::to_codec(
-			&raw_samples,
-			sampling_freq,
-			bit_depth,
-			channel_count,
-			&opus_audio_prop);
-	if(packetized_codec_data.size() == 0){
-		print("packetized_codec_data is empty", P_ERR);
-	}
-	std::vector<id_t_> retval =
-		transcode::audio::codec::to_frames(
-			&packetized_codec_data,
-			&opus_audio_prop,
-			&frame_audio_prop,
-			1000*1000);
-	id_api::linked_list::link_vector(retval); //just in case other code didn't?
-	PRINT_AUDIO_PROP(opus_audio_prop);
-	PRINT_AUDIO_PROP(frame_audio_prop);
-	const uint64_t snippet_duration =
-		frame_audio_prop.get_snippet_duration_micro_s();
-	ASSERT(snippet_duration != 0, P_ERR);
-	const uint64_t true_start_time =
-		get_time_microseconds();
-	uint64_t start_time =
-		true_start_time;
-	for(uint64_t i = 0;i < retval.size();i++){
-		tv_frame_audio_t *frame_audio =
-			PTR_DATA(retval[i],
-				 tv_frame_audio_t);
-		if(frame_audio == nullptr){
-			print("frame_audio is a nullptr", P_ERR);
-		}
-		ASSERT(frame_audio->get_packet_set().size() != 0, P_ERR);
-		frame_audio->set_start_time_micro_s(
-			start_time);
-		start_time += snippet_duration*frame_audio->get_packet_set().size();
-		P_V(start_time, P_NOTE);
-	}
-	P_V((start_time-true_start_time)/(1000000), P_NOTE);
-	if(retval.size() == 0){
-		print("frame vector is empty", P_ERR);
-	}
-	return retval;
-}
-
 DEC_CMD(tv_test_audio){
 	const std::string file =
 		registers.at(1);
@@ -300,8 +188,9 @@ DEC_CMD(tv_test_audio){
 	channel->set_description(
 		convert::string::to_bytes("BasicTV Audio Test"));
 	std::vector<id_t_> all_frame_audios =
-		console_tv_test_load_opus(
-			file);
+		console_tv_load_samples_to_frames(
+			console_tv_load_samples_from_file(
+				file));
 	item->set_tv_channel_id(
 		channel->id.get_id());
 	item->add_frame_id(

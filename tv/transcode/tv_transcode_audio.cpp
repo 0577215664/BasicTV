@@ -552,6 +552,11 @@ void assert_sane_audio_metadata(
 	uint32_t sampling_freq,
 	uint8_t bit_depth,
 	uint8_t channel_count){
+	if(bit_depth == 0 ||
+	   sampling_freq == 0 ||
+	   channel_count == 0){
+		print("one segment of audio data is zero, impossible", P_ERR);
+	}
 	if(bit_depth % 8){
 		/*
 		  Well, this can TECHNICALLY happen with insane codecs like

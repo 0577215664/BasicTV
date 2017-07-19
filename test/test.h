@@ -56,7 +56,10 @@ namespace test{
 		void xz();
 	};
 	namespace audio{
+		void wav();
 		void opus();
+		void opus_file();
+
 	};
 	namespace video{
 		// void vp9(); // so close, but yet so far...

@@ -176,35 +176,38 @@ static uint64_t wave_pull_back_eight_byte(std::vector<uint8_t> *data, uint32_t l
 
 static void sanity_check_prepend(std::vector<uint8_t> *universal_wave_prepend,
 				 uint32_t target_sampling_freq,
+				 uint32_t *sampling_freq,
 				 uint8_t target_bit_depth,
-				 uint8_t target_channel_count){
+				 uint8_t *bit_depth,
+				 uint8_t target_channel_count,
+				 uint8_t *channel_count){
 	wave_pull_back(universal_wave_prepend, "RIFF");
 	wave_pull_back(universal_wave_prepend, 4);
 	wave_pull_back(universal_wave_prepend, "WAVE");
 	wave_pull_back(universal_wave_prepend, "fmt ");
 	wave_pull_back(universal_wave_prepend, 4); // length of data section
 	wave_pull_back(universal_wave_prepend, 2); // uncompressed PCM
-	const uint64_t channel_count =
+	*channel_count =
 		wave_pull_back_eight_byte(universal_wave_prepend, 2); // channel count
-	const uint64_t sampling_freq =
+	*sampling_freq =
 		wave_pull_back_eight_byte(universal_wave_prepend, 4);
 	wave_pull_back(universal_wave_prepend, 4);
 	wave_pull_back(universal_wave_prepend, 2); // block align
-	const uint64_t bit_depth = 
+	*bit_depth = 
 		wave_pull_back_eight_byte(universal_wave_prepend, 2);
 	wave_pull_back(universal_wave_prepend, "data");
 	const bool good_samp_freq =
-		sampling_freq == target_sampling_freq;
+		*sampling_freq == target_sampling_freq;
 	const bool good_channel_count =
-		channel_count == target_channel_count;
+		*channel_count == target_channel_count;
 	const bool good_bit_depth =
-		bit_depth == target_bit_depth;
+		*bit_depth == target_bit_depth;
 	if(!(good_samp_freq && good_channel_count && good_bit_depth)){
-		P_V(sampling_freq, P_NOTE);
+		P_V(*sampling_freq, P_NOTE);
 		P_V(target_sampling_freq, P_NOTE);
-		P_V(bit_depth, P_NOTE);
+		P_V(*bit_depth, P_NOTE);
 		P_V(target_bit_depth, P_NOTE);
-		P_V(channel_count, P_NOTE);
+		P_V(*channel_count, P_NOTE);
 		P_V(target_channel_count, P_NOTE);
 		print("invalid WAVE data", P_ERR);
 	}
@@ -225,12 +228,21 @@ std::vector<uint8_t> wave_decode_snippets_to_samples(tv_transcode_decode_state_t
 	PRINT_IF_EMPTY((*wav_data)[0], P_ERR);
 	std::vector<uint8_t> retval;
 	uint64_t old_wav_data_size = 0;
+	bool invalid_data = false;
+
 	while(old_wav_data_size != wav_data->size()){
-		sanity_check_prepend(
-			&((*wav_data)[0]),
-			state->get_audio_prop().get_sampling_freq(),
-			state->get_audio_prop().get_bit_depth(),
-			state->get_audio_prop().get_channel_count());
+		try{
+			sanity_check_prepend(
+				&((*wav_data)[0]),
+				state->get_audio_prop().get_sampling_freq(),
+				sampling_freq,
+				state->get_audio_prop().get_bit_depth(),
+				bit_depth,
+				state->get_audio_prop().get_channel_count(),
+				channel_count);
+		}catch(...){
+			invalid_data = true;
+		}
 		P_V(wav_data->begin()->size(), P_VAR);
 		retval.insert(
 			retval.end(),
@@ -256,5 +268,9 @@ std::vector<uint8_t> wave_decode_snippets_to_samples(tv_transcode_decode_state_t
 		print("wave bit depth less than or equal to eight, no conversion", P_NOTE);
 	}
 	P_V(retval.size(), P_VAR);
+	// pretty useful
+	if(invalid_data){
+		print("returning WAVE data that doesn't conform to my encoding preferences, should be fine, but evidence of bad coding practice", P_NOTE);
+	}
 	return retval;
 }

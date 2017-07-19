@@ -66,20 +66,19 @@ void test::net::proto_socket::send_recv(){
 	}
 	socket_vector[1].second->set_tcp_socket(new_socket);
 	// load, export, delete, send, reload
-	for(uint64_t i = 0;i < 1000;i++){
+	// for(uint64_t i = 0;i < 1000;i++){
 		id_t_ wallet_set_id = test_create_generic_id();
 		socket_vector[0].first->send_id(wallet_set_id);
 		// checks for having it are done on read, not send, we're fine
+		sleep_ms(1000*1000);
 		ID_TIER_DESTROY(wallet_set_id);
-		usleep(1000*1000);
-		// sleep_ms(10000);
 		socket_vector[1].first->update();
 		if(PTR_ID(wallet_set_id, ) == nullptr){
 			print("net_proto_socket transcoding failed", P_ERR);
 		}else{
 			ID_TIER_DESTROY(wallet_set_id);
 		}
-	}
+	// }
 	for(uint64_t i = 0;i < created_ids.size();i++){
 		try{
 			ID_TIER_DESTROY(created_ids[i]);

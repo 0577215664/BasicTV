@@ -74,8 +74,14 @@ void test_escape(){
 	// RUN_TEST(test::escape::random);
 }
 
+void test_audio(){
+	// RUN_TEST(test::audio::wav);
+	RUN_TEST(test::audio::opus);
+}
+
 void test_suite(){
-	test_escape();
-	test_id_subsystem();
-	test_net();
+	// test_escape();
+	// test_id_subsystem();
+	// test_net();
+	test_audio();
 }

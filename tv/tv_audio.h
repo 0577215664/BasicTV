@@ -22,6 +22,7 @@
 #define TV_AUDIO_FORMAT_UNDEFINED 0
 // WAV is only used for segmenting into SDL
 #define TV_AUDIO_FORMAT_WAV 1
+#define TV_AUDIO_FORMAT_WAVE TV_AUDIO_FORMAT_WAV
 // default, works pretty well, nice licensing
 #define TV_AUDIO_FORMAT_OPUS 2
 // not used, but planned (soon enough)

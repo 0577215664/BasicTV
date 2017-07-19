@@ -37,8 +37,12 @@ static void recv_to_buffer(
 						print("couldn't add recv_buffer", P_ERR);
 					}
 					ptr->thread_mutex.unlock();
-				}else{
-					print("SDLNet_TCP_Recv failed with: " + (std::string)(SDL_GetError()), P_WARN);
+				}else{ // not a standard connection closing
+					if(recv_retval != 0){
+						print("SDLNet_TCP_Recv failed with: " + (std::string)(SDL_GetError()), P_WARN);
+					}
+					*recv_running = false;
+					break;
 				}
 			}catch(...){
 				print("exception caught in recv_to_buffer", P_WARN);
