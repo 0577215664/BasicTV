@@ -113,7 +113,7 @@ std::vector<id_t_> expand_id_set_uuid_list(std::vector<uint8_t> id_set){
 					ID_BLANK_HASH));
 			id_set.erase(
 				id_set.begin(),
-				id_set.begin()+first_seperator);
+				id_set.begin()+first_seperator+8);
 		}else{
 			if(raw_read.size() == 0){
 				print("can't add hash before first ID, this is wrong", P_ERR);

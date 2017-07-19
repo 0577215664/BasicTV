@@ -415,7 +415,8 @@ std::vector<id_t_> transcode::audio::codec::to_frames(std::vector<std::vector<ui
 			encode_codec);
 	}
 	P_V(retval.size(), P_NOTE);
-	id_api::linked_list::link_vector(retval);
+	id_api::linked_list::link_vector(
+		retval, 10);
 	return retval;
 }
 

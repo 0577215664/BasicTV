@@ -54,7 +54,9 @@ std::vector<id_t_> id_api::sort::fingerprint(std::vector<id_t_> tmp){
 	return tmp;
 }
 
-void id_api::linked_list::link_vector(std::vector<id_t_> vector){
+void id_api::linked_list::link_vector(
+	std::vector<id_t_> vector,
+	uint64_t depth){
 	switch(vector.size()){
 	case 0:
 		print("vector is empty", P_NOTE);
@@ -77,10 +79,16 @@ void id_api::linked_list::link_vector(std::vector<id_t_> vector){
 	}
 	data_id_t *first = PTR_ID(vector[0], );
 	if(first != nullptr){
+		std::vector<id_t_> depth_vector =
+			std::vector<id_t_>(
+				vector.begin(),
+				vector.begin()+(
+					(depth > vector.size()) ?
+					vector.size() : depth));
 		first->set_linked_list(
 			std::make_pair(
 				std::vector<id_t_>({}),
-				std::vector<id_t_>({vector[1]})));
+				depth_vector));
 	}else{
 		print("first entry is a nullptr, this can be fixed, but I didn't bother and this shouldn't happen anyways", P_ERR);
 	}
@@ -89,14 +97,32 @@ void id_api::linked_list::link_vector(std::vector<id_t_> vector){
 		if(id == nullptr){
 			print("can't link against an ID that doesn't exist", P_ERR);
 		}
+		std::vector<id_t_> depth_vector_backwards =
+			std::vector<id_t_>(
+				vector.begin()+i-(
+					(depth > i) ?
+					i : depth),
+				vector.begin()+i);
+		std::vector<id_t_> depth_vector_forwards =
+			std::vector<id_t_>(
+				vector.begin()+i,
+				vector.begin()+i+(
+					(depth > vector.size()-i) ?
+					vector.size()-i : depth));
 		id->set_linked_list(
 			std::make_pair(
-				std::vector<id_t_>({vector[i-1]}),
-				std::vector<id_t_>({vector[i+1]})));
+				depth_vector_backwards,
+				depth_vector_forwards));
 	}
+	std::vector<id_t_> depth_vector_backwards =
+		std::vector<id_t_>(
+			vector.end()-(
+				(depth > vector.size()) ?
+				vector.size() : depth),
+			vector.end());
 	PTR_ID(vector[vector.size()-1], )->set_linked_list(
 		std::make_pair(
-			std::vector<id_t_>({vector[vector.size()-2]}),
+			depth_vector_backwards,
 			std::vector<id_t_>({})));
 }
 

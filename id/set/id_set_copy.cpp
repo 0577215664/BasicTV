@@ -12,7 +12,7 @@ std::vector<uint8_t> compact_id_set_copy(
 			id_set[i].size());
 	}
 	memcpy(retval.data(),
-	      id_set.data(),
+	       id_set.data(),
 	       id_set.size()*sizeof(id_t_));
 	return retval;
 }
@@ -25,7 +25,7 @@ std::vector<id_t_> expand_id_set_copy(
 	memcpy(retval.data(),
 	       id_set.data(),
 	       id_set.size());
-	for(uint64_t i = 0;i < id_set.size();i++){
+	for(uint64_t i = 0;i < retval.size();i++){
 		convert::nbo::from(
 			retval[i].data(),
 			retval[i].size());

@@ -48,11 +48,11 @@ std::vector<uint8_t> compact_id_set(std::vector<id_t_> id_set){
 			id_set[i]);
 	}
 	std::vector<uint8_t> retval =
-		compact_id_set_uuid_list(
+		compact_id_set_copy(
 			id_set);
 	retval.insert(
 		retval.begin(),
-		ID_SET_SCHEME_UUID_LIST);
+		ID_SET_SCHEME_COPY);
 	return retval;
 }
 

@@ -266,6 +266,22 @@ std::pair<std::vector<id_t_>, std::vector<id_t_> > data_id_t::get_linked_list(){
 }
 
 void data_id_t::set_linked_list(std::pair<std::vector<id_t_>, std::vector<id_t_> > tmp){
+	for(uint64_t i = 0;i < tmp.first.size();i++){
+		if(tmp.first[i] == get_id()){
+			print("attempted to put myself in my own linked list", P_WARN);
+			tmp.first.erase(
+				tmp.first.begin()+i);
+			i--;
+		}
+	}
+	for(uint64_t i = 0;i < tmp.second.size();i++){
+		if(tmp.second[i] == get_id()){
+			print("attempted to put myself in my own linked list", P_WARN);
+			tmp.second.erase(
+				tmp.second.begin()+i);
+			i--;
+		}
+	}
 	linked_list.first =
 		compact_id_set(tmp.first);
 	linked_list.second =

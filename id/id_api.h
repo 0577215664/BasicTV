@@ -12,7 +12,7 @@
 namespace id_api{
 	namespace linked_list{
 		// next and previous are in the id itself, no interdependency
-		void link_vector(std::vector<id_t_> vector);
+		void link_vector(std::vector<id_t_> vector, uint64_t depth);
 
 		namespace list{
 			std::vector<id_t_> by_distance(id_t_ start_id, int64_t pos);

@@ -57,6 +57,7 @@ public:
 
 template<typename T>
 id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
+	std::vector<id_t_> request_vector;
 	while(data != nullptr){
 		const uint64_t start_time_micro_s =
 			data->get_start_time_micro_s();
@@ -68,39 +69,58 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 				end_time_micro_s);
 		id_t_ new_id = ID_BLANK_ID;
 		if(stay){
-			return data->id.get_id();
+			P_V(stay, P_VAR);
+			break;
 		}else{
 			const bool go_forward =
 				(play_time > end_time_micro_s);
 			std::pair<std::vector<id_t_>, std::vector<id_t_> > linked_list =
 				data->id.get_linked_list();
 			if(go_forward){
+				print("moving forward", P_NOTE);
 				if(linked_list.second.size() >= 1){
 					new_id = linked_list.second[0];
 				}else{
 					new_id = ID_BLANK_ID;
 				}
 			}else{
+				print("moving backwards", P_NOTE);
 				if(linked_list.first.size() >= 1){
 					new_id = linked_list.first[0];
 				}else{
 					new_id = ID_BLANK_ID;
 				}
 			}
-		}
+		} /*  */
 		data_id_t *new_id_ptr =
 			PTR_ID(new_id, );
 		if(new_id_ptr != nullptr){
-			net_proto::request::add_id(
-				new_id_ptr->get_linked_list().first);
-			net_proto::request::add_id(
-				new_id_ptr->get_linked_list().second);
+			std::pair<std::vector<id_t_>, std::vector<id_t_> >  id_pair =
+				new_id_ptr->get_linked_list();
+			id_pair.first.insert(
+				id_pair.first.end(),
+				id_pair.second.begin(),
+				id_pair.second.end());
+			for(uint64_t i = 0;i < id_pair.first.size();i++){
+				if(std::find(
+					   request_vector.begin(),
+					   request_vector.end(),
+					   id_pair.first[i]) == request_vector.end()){
+					request_vector.push_back(
+						id_pair.first[i]);
+				}
+			}
 			data = (T)new_id_ptr->get_ptr();
 		}else{
 			data = nullptr;
 		}
 	}
 	// only out that isn't valid is data = PTR_ID...
+	net_proto::request::add_id(
+		request_vector);
+	if(data != nullptr){
+		return data->id.get_id();
+	}
 	return ID_BLANK_ID;
 }
 #endif

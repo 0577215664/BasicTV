@@ -100,7 +100,7 @@ std::vector<id_t_> console_tv_load_samples_to_frames(
 	// Final frame output
 	tv_audio_prop_t frame_audio_prop;
 	frame_audio_prop.set_format(
-		TV_AUDIO_FORMAT_WAV);
+		TV_AUDIO_FORMAT_WAVE);
 	frame_audio_prop.set_flags(
 		TV_AUDIO_PROP_FORMAT_ONLY);
 	
@@ -139,7 +139,8 @@ std::vector<id_t_> console_tv_load_samples_to_frames(
 			&opus_audio_prop,
 			&frame_audio_prop,
 			1000*1000);
-	id_api::linked_list::link_vector(retval); //just in case other code didn't?
+	id_api::linked_list::link_vector(
+		retval, 10); //just in case other code didn't?
 	PRINT_AUDIO_PROP(opus_audio_prop);
 	PRINT_AUDIO_PROP(frame_audio_prop);
 	const uint64_t snippet_duration =
