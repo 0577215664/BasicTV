@@ -404,17 +404,21 @@ static void net_proto_create_id_request_loop(){
 		}
 		// This means we don't have any other peers whatsoever (probably)
 		ASSERT(preferable_peer_id != net_proto::peer::get_self_as_peer(), P_WARN);
+		bool wrote = false;
 		for(uint64_t c = 0;c < id_peer_pair.size();c++){
 			if(id_peer_pair[c].second == preferable_peer_id){
 				id_peer_pair[c].first.push_back(
 					id_request_buffer[i]);
+				wrote = true;
 				break;
 			}
 		}
-		id_peer_pair.push_back(
-			std::make_pair(
-				std::vector<id_t_>({id_request_buffer[i]}),
-				preferable_peer_id));
+		if(wrote == false){
+			id_peer_pair.push_back(
+				std::make_pair(
+					std::vector<id_t_>({id_request_buffer[i]}),
+					preferable_peer_id));
+		}
 	}
 	if(id_peer_pair.size() != 0){
 		print("sending " + std::to_string(id_peer_pair.size()) + " requests, totalling " + std::to_string(id_request_buffer.size()) + " IDs", P_NOTE);
