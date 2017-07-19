@@ -62,6 +62,9 @@ void console_t::tv_manager_load_item_to_channel(
 		console_tv_test_load_opus(file_path));
 	new_item->set_tv_channel_id(
 		convert::array::id::from_hex(channel_id));
+	new_item->set_start_time_micro_s(
+		get_time_microseconds()+std::stoi(
+			start_time_micro_s_offset));
 	print_socket("added data properly");
 	output_table =
 		console_generate_generic_id_table(
