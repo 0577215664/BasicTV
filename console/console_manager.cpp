@@ -236,6 +236,7 @@ void console_t::tv_manager_create_tv_channel(
 
 void console_t::tv_manager_play_loaded_item_live(
 	net_socket_t *console_inbound_socket){
+	std::raise(SIGINT);
 	print_socket("Item ID:");
 	const std::string item_id =
 		tv_manager_read_string(
@@ -275,7 +276,7 @@ void console_t::tv_manager_play_loaded_item_live(
 				new tv_window_t;
 		}
 	}
-	const uint64_t timestamp_offset =
+	const int64_t timestamp_offset =
 		item_ptr->get_start_time_micro_s()-get_time_microseconds();
 	print_socket("interpreted timestamp offset as " + std::to_string(timestamp_offset) + "\n");
 	window_ptr->set_timestamp_offset(
@@ -283,7 +284,7 @@ void console_t::tv_manager_play_loaded_item_live(
 	window_ptr->set_item_id(
 		item_ptr->id.get_id());
 	window_ptr->add_active_stream_id(
-		item_ptr->get_frame_id_vector()[0][0]);
+		item_ptr->get_frame_id_vector().at(0).at(0));
 	print_socket("everything should be loaded nicely now, right?\n");
 
 }

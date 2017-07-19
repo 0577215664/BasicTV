@@ -124,7 +124,8 @@ static std::vector<std::pair<id_t_, uint64_t> > tv_audio_mixer_find_frames(){
 		const id_t_ new_id =
 			tv_frame_scroll_to_time(
 				frame_audio_ptr,
-				get_time_microseconds()+window_ptr->get_timestamp_offset());
+				(int64_t)get_time_microseconds()+(int64_t)window_ptr->get_timestamp_offset());
+		P_V(window_ptr->get_timestamp_offset(), P_VAR);
 		CONTINUE_IF_TRUE(new_id == ID_BLANK_ID);
 		retval.push_back(
 			std::make_pair(new_id,
