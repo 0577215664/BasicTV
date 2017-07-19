@@ -236,8 +236,8 @@ id_t_ convert::array::id::from_hex(std::string id_){
 	while(id_[0] == ' '){
 		id_ = id_.substr(1, id_.size());
 	}
-	while(id_[id.size()-1] == ' '){
-		id_ = id_.substr(0, id_size()-1);
+	while(id_[id_.size()-1] == ' '){
+		id_ = id_.substr(0, id_.size()-1);
 	}
 	if(unlikely(id_.size() != 41*2+(2*1))){ // 2*1 for seperators
 		P_V(id_.size(), P_WARN);
