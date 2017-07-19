@@ -52,10 +52,10 @@ void data_id_t::init_list_all_data(){
 		&id, 1);
 	add_data_one_byte_vector(
 		&(linked_list.first),
-		{ID_MAX_LINKED_LIST_SIZE});
+		~0);
 	add_data_one_byte_vector(
 		&(linked_list.second),
-		{ID_MAX_LINKED_LIST_SIZE});
+		~0);
 }
 
 /*
