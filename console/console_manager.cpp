@@ -236,7 +236,6 @@ void console_t::tv_manager_create_tv_channel(
 
 void console_t::tv_manager_play_loaded_item_live(
 	net_socket_t *console_inbound_socket){
-	std::raise(SIGINT);
 	print_socket("Item ID:");
 	const std::string item_id =
 		tv_manager_read_string(

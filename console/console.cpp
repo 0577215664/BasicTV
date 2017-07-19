@@ -101,7 +101,6 @@ void console_t::execute(std::vector<std::string> cmd_vector){
 	if(shift){
 		reg_left_shift({"8"});
 	}
-	// set by LIST_CMD
 	if(!ran){
 		print_socket("invalid command\n");
 	}
@@ -140,6 +139,13 @@ void console_t::run(){
 	while((pos = std::find(working_input.begin(),
 			       working_input.end(),
 			       (uint8_t)'\n')) != working_input.end()){
+		socket =
+			PTR_DATA(socket_id,
+				 net_socket_t);
+		if(socket == nullptr){
+			print("socket is a nullptr", P_NOTE);
+			break;
+		}
 		std::string input_full(working_input.begin(),
 				       pos);
 		std::vector<std::string> cmd_vector;
