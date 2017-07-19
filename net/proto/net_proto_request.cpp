@@ -237,7 +237,6 @@ void net_proto::request::add_id(id_t_ id){
 		return;
 	}
 	if(PTR_ID(id, ) != nullptr){
-		print("requesting ID already in a readable tier", P_SPAM);
 		return;
 	}
 	// could probably speed this up

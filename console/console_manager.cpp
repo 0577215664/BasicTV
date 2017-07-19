@@ -434,22 +434,11 @@ void console_t::tv_manager_play_loaded_item_live(
 	std::vector<id_t_> window_vector =
 		ID_TIER_CACHE_GET(
 			TYPE_TV_WINDOW_T);
-	tv_window_t *window_ptr = nullptr;
-	if(window_vector.size() == 0){
-		window_ptr =
-			new tv_window_t;
-	}else{
-		if(window_vector.size() > 1){
-			print_socket("more than one window created, this is good, but we don't have full support yet\n");
-		}
-		window_ptr =
-			PTR_DATA(window_vector[0],
-				 tv_window_t);
-		if(window_ptr == nullptr){
-			window_ptr =
-				new tv_window_t;
-		}
+	for(uint64_t i = 0;i < window_vector.size();i++){
+		ID_TIER_DESTROY(window_vector[i]);
 	}
+	tv_window_t *window_ptr = 
+		new tv_window_t;
 	const int64_t timestamp_offset =
 		item_ptr->get_start_time_micro_s()-get_time_microseconds();
 	print_socket("interpreted timestamp offset as " + std::to_string(timestamp_offset) + "\n");

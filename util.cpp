@@ -167,7 +167,7 @@ void print_(std::string data, int level, const char *func){
 			func_ = func;
 		}
 		std::cout << print_color_text(print_level_text(level), level) << " "
-			  << " " << print_color_text(data, level) << std::endl;
+			  << " " << print_color_text(data, level) << "\n";
 		if(settings::get_setting_unsigned_def(
 			   "throw_level", P_CRIT) <= (uint64_t)level){
 			std::cerr << "CRITICAL ERROR" << std::endl;
