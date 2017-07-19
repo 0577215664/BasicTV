@@ -56,7 +56,7 @@ void net_interface::unbind::software_to_hardware(
 	PRINT_IF_NULL(software_dev_ptr, P_ERR);
 	PRINT_IF_NULL(hardware_dev_ptr, P_ERR);
 }
-	
+
 uint8_t net_interface::medium::from_address(id_t_ address_id){
 	// more efficient for sure
 	if(address_id == ID_BLANK_ID){
@@ -99,7 +99,7 @@ uint8_t net_interface::ip::get_address_type(std::string ip){
 std::string net_interface::ip::raw::to_readable(std::pair<std::vector<uint8_t>, uint8_t> raw){
 	std::string retval;
 	switch(raw.second){
-	case NET_INTERFACE_IP_ADDRESS_TYPE_IPV4:	
+	case NET_INTERFACE_IP_ADDRESS_TYPE_IPV4:
 		if(true){
 			ASSERT(raw.first.size() == 4, P_ERR);
 			IPaddress ipaddress;
@@ -111,30 +111,27 @@ std::string net_interface::ip::raw::to_readable(std::pair<std::vector<uint8_t>, 
 				SDLNet_ResolveIP(&ipaddress);
 		}
 		break;
-	default:
-		print("UNSUPPORTED ADDRESS TYPE", P_ERR);
+	case NET_INTERFACE_IP_ADDRESS_TYPE_IPV6:
+		ASSERT(raw.first.size() == 16, P_ERR);
+		for(uint8_t i = 0;i < 16;i+=2){
+			retval += convert::number::to_hex(
+				std::vector<uint8_t>(
+					&(raw.first[i]),
+					&(raw.first[i])+2)) + ".";
+		}
+		retval.erase(retval.end()-1,
+			     retval.end());
 		break;
-		// case NET_INTERFACE_IP_ADDRESS_TYPE_IPV6:
-	// 	ASSERT(raw.first.size() == 16, P_ERR);
-	// 	for(uint8_t i = 0;i < 16;i+=2){
-	// 		retval += convert::number::to_hex(
-	// 			std::vector<uint8_t>(
-	// 				&(raw.first[i]),
-	// 				&(raw.first[i])+2)) + ".";
-	// 	}
-	// 	retval.erase(retval.end()-1,
-	// 		     retval.end());
-	// 	break;
-	// default:
-	// 	P_V_S((char*)raw.first.data(), P_NOTE);
-	// 	print("assuming this is a domain name", P_NOTE);
-	// 	retval = (std::string)(char*)(raw.first.data());
-	// 	break;
+	default:
+		P_V_S((char*)raw.first.data(), P_NOTE);
+		print("assuming this is a domain name", P_NOTE);
+		retval = (std::string)(char*)(raw.first.data());
+		break;
 	}
 	P_V_S(retval, P_DEBUG);
 	return retval;
 }
-	
+
 std::pair<std::vector<uint8_t>, uint8_t> net_interface::ip::readable::to_raw(std::string readable){
 	std::pair<std::vector<uint8_t>, uint8_t> retval;
 	uint8_t address_type = 0;
@@ -157,6 +154,10 @@ std::pair<std::vector<uint8_t>, uint8_t> net_interface::ip::readable::to_raw(std
 		print("SDL2 doesn't support IPv6", P_ERR);
 		break;
 	case NET_INTERFACE_IP_ADDRESS_TYPE_DOMAIN:
+		retval.first =
+			std::vector<uint8_t>(
+				readable.c_str(),
+				readable.c_str()+readable.size());
 		break;
 	default:
 		print("unknwon address type", P_ERR);
