@@ -5,12 +5,11 @@
 #include "../id/id_api.h"
 #include "../math/math.h"
 
-#define NET_LOCK(x) x.lock()
+#define NET_LOCK(x) std::lock_guard<std::mutex>lock()
 #define NET_UNLOCK(x) x.unlock()
 
 static void recv_to_buffer(
 	std::vector<uint8_t> *buffer,
-	std::mutex *mutex,
 	TCPsocket *socket,
 	bool *recv_running,
 	net_socket_t *ptr){
@@ -25,37 +24,33 @@ static void recv_to_buffer(
 	      socket != nullptr &&
 	      *recv_running){
 		while(ptr->activity()){
-			NET_LOCK((*mutex));
+			NET_LOCK(ptr->thread_mutex);
 			try{
-				print("recv started", P_NOTE);
 				const int32_t recv_retval = 
 					SDLNet_TCP_Recv(
 						*socket,
 						&(recv_buffer[0]),
-						1);
-				print("recv finished", P_NOTE);
-				P_V(recv_retval, P_VAR);
+						65536);
 				if(recv_retval > 0){
 						buffer->insert(
 							buffer->end(),
 							&(recv_buffer[0]),
 							&(recv_buffer[recv_retval]));
-				}else{
+				}else if(recv_retval == -1){
 					print("SDLNet_TCP_Recv failed with: " + (std::string)(SDL_GetError()), P_WARN);
 				}
 			}catch(...){
 				print("exception caught in recv_to_buffer", P_WARN);
 			}
-			NET_UNLOCK((*mutex));
+			NET_UNLOCK(ptr->thread_mutex);
+			sleep_ms(1);
 		}
-		sleep_ms(1);
 		iterator++;
 	}
 }
 
 static void send_from_buffer(
 	std::vector<uint8_t> *buffer,
-	std::mutex *mutex,
 	TCPsocket *socket,
 	bool *send_running,
 	net_socket_t *ptr){
@@ -69,25 +64,23 @@ static void send_from_buffer(
 	while(*socket != nullptr &&
 	      socket != nullptr &&
 	      *send_running){
-		NET_LOCK((*mutex));
+		NET_LOCK(ptr->thread_mutex);
 		try{
 			send_buffer =
 				*buffer;
 			buffer->clear();
 			if(send_buffer.size() > 0){
-				print("send started", P_NOTE);
 				const int64_t sent_bytes =
 					SDLNet_TCP_Send(
 						*socket,
 						send_buffer.data(),
 						send_buffer.size());
-				print("send ended", P_NOTE);
 				send_buffer.clear();
 			}
 		}catch(...){
 			print("exception caught in send thread", P_WARN);
 		}
-		NET_UNLOCK((*mutex));
+		NET_UNLOCK(ptr->thread_mutex);
 		sleep_ms(1);
 		iterator++;
 	}
@@ -214,7 +207,6 @@ void net_socket_t::connect(){
 			std::thread(
 				send_from_buffer,
 				&send_buffer,
-				&thread_mutex,
 				&socket,
 				&thread_running,
 				this));
@@ -224,7 +216,6 @@ void net_socket_t::connect(){
 				std::thread(
 					recv_to_buffer,
 					&recv_buffer,
-					&thread_mutex,
 					&socket,
 					&thread_running,
 					this));

@@ -39,7 +39,6 @@ private:
 	std::vector<uint8_t> send_buffer;
 	std::thread send_thread;
 
-	std::mutex thread_mutex;
 	bool thread_running = true;
 	
 	uint8_t status = 0;
@@ -65,6 +64,9 @@ public:
 	net_socket_t();
 	~net_socket_t();
 
+	std::mutex thread_mutex;
+
+	
 	// general socket stuff
 	bool is_alive();
 	void connect();

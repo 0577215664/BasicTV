@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#define SEND_IF_VALID(x) if(PTR_ID(x, )){try{proto_socket_ptr->send_id(x);}catch(...){print("exception caught in transmission of id "#x" " + id_breakdown(x), P_ERR);}}else{print("can't send id " + id_breakdown(x), P_ERR);}
+#define SEND_IF_VALID(x) if(PTR_ID(x, )){try{proto_socket_ptr->send_id(x);}catch(...){print("exception caught in transmission of id "#x" " + id_breakdown(x), P_UNABLE);}}else{print("can't send id " + id_breakdown(x), P_UNABLE);}
 
 static void net_proto_initiate_direct_tcp(
 	net_proto_con_req_t *con_req,
@@ -70,7 +70,7 @@ static void net_proto_initiate_direct_tcp(
 			SEND_IF_VALID(my_peer_id);
 			SEND_IF_VALID(my_proto_peer_ptr->get_address_id());
 		}catch(...){
-			print("exception caught in initial data transmission", P_ERR);
+			print("exception caught in initial data transmission", P_SPAM);
 		}
 	}catch(...){
 		print("caught an exception in direct TCP connection attempt", P_NOTE);
