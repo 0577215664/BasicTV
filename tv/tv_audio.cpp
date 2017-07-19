@@ -107,7 +107,6 @@ void tv_audio_init(){
 		print("audio has been disabled in the settings", P_NOTE);
 	}
 }
-
 std::vector<std::tuple<id_t_, id_t_, uint64_t> > playing_now;
 
 static void tv_audio_play_frame_audio(

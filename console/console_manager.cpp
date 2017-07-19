@@ -13,6 +13,8 @@
 
 #include "../file.h"
 
+#include "../id/tier/id_tier.h"
+
 /*
   Somewhat hacky, but far better, interface for actual BasicTV functionality.
  */
@@ -231,15 +233,40 @@ void console_t::tv_manager_load_item_to_channel(
 	}
 	tv_item_t *new_item =
 		new tv_item_t;
-	new_item->add_frame_id(
+	print_socket("Item Name:");
+	std::string name =
+		tv_manager_read_string(
+			console_inbound_socket);
+	new_item->set_name(
+		std::vector<uint8_t>(
+			name.c_str(),
+			name.c_str()+name.size()));
+	print_socket("Item Desc:");
+	std::string desc =
+		tv_manager_read_string(
+			console_inbound_socket);
+	new_item->set_desc(
+		std::vector<uint8_t>(
+			desc.c_str(),
+			desc.c_str()+desc.size()));
+
+	std::vector<id_t_> frame_id_vector =
 		console_tv_load_samples_to_frames(
 			console_tv_load_samples_from_file(
-				file_path)));
+				file_path));
+	tv_frame_audio_t *frame_audio_end_ptr =
+		PTR_DATA(frame_id_vector[frame_id_vector.size()-1],
+			 tv_frame_audio_t);
+	ASSERT(frame_audio_end_ptr, P_ERR);
+	new_item->add_frame_id(
+		frame_id_vector);
 	new_item->set_tv_channel_id(
 		convert::array::id::from_hex(channel_id));
 	new_item->set_start_time_micro_s(
 		get_time_microseconds()+std::stoi(
 			start_time_micro_s_offset));
+	new_item->set_end_time_micro_s(
+		frame_audio_end_ptr->get_end_time_micro_s());
 	print_socket("added data properly");
 	output_table =
 		console_generate_generic_id_table(
@@ -342,26 +369,34 @@ void console_t::tv_manager_change_item_in_window(
 }
 
 void console_t::tv_manager_list_channels_and_items(){
-	std::vector<id_t_> channel_vector =
+	std::vector<id_t_> item_vector =
 		ID_TIER_CACHE_GET(
-			TYPE_TV_CHANNEL_T);
+			TYPE_TV_ITEM_T);
 	// uses output_table
 	output_table.clear();
-	for(uint64_t i = 0;i < channel_vector.size();i++){
+	for(uint64_t i = 0;i < item_vector.size();i++){
+		tv_item_t *item_ptr =
+			PTR_DATA(item_vector[i],
+				 tv_item_t);
+		if(item_ptr == nullptr){
+			print_socket("NULL ITEM\n");
+			continue;
+		}
 		tv_channel_t *channel =
-			PTR_DATA(channel_vector[i],
+			PTR_DATA(item_ptr->get_tv_channel_id(),
 				 tv_channel_t);
 		if(channel == nullptr){
 			print_socket("NULL CHANNEL\n");
 			continue;
 		}
 		std::vector<std::string> datum(
-		{
-			"ID: " + convert::array::id::to_hex(channel_vector[i]),
-			"Desc: " + convert::string::from_bytes(channel->get_description()),
-			"Name: " + convert::string::from_bytes(channel->get_name()),
-			"Wallet Set ID: " + convert::array::id::to_hex(channel->get_wallet_set_id())
-		});
+			{"Item ID: " + convert::array::id::to_hex(item_vector[i]),
+					"Item Name: " + convert::string::from_bytes(item_ptr->get_name()),
+					"Item Desc: " + convert::string::from_bytes(item_ptr->get_desc()),
+					"Is it Live: " + (BETWEEN(item_ptr->get_start_time_micro_s(), get_time_microseconds(), item_ptr->get_end_time_micro_s())) ? "Yes" : "No",
+					"Channel ID: " + convert::array::id::to_hex(item_ptr->get_tv_channel_id())
+					// "Wallet Set ID: " + convert::array::id::to_hex(channel->get_wallet_set_id()), // temporary
+					});
 		output_table.push_back(
 			datum);
 	}
@@ -475,7 +510,7 @@ DEC_CMD(tv_manager){
 	}
 	bool tv_manager_loop = true;
 	while(tv_manager_loop){
-		print_socket("BasicTV TV Manager\n");
+		print_socket("BasicTV TV Manager\nWARNING: tv_manager currently blocks the main thread of execution, exit when you aren't doing something useful\n");
 		tv_manager_print_options();
 		std::string read_string =
 			tv_manager_read_string(

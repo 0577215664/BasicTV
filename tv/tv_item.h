@@ -44,6 +44,9 @@ private:
 	// programs vs. the channel itself
 	id_t_ wallet_set_id = ID_BLANK_ID;
 	id_t_ tv_channel_id = ID_BLANK_ID;
+
+	std::vector<uint8_t> name;
+	std::vector<uint8_t> desc;
 public:
 	data_id_t id;
 	tv_item_t();
@@ -52,6 +55,9 @@ public:
 	GET_SET_ID(tv_channel_id);
 	GET_SET(start_time_micro_s, uint64_t);
 	GET_SET(end_time_micro_s, uint64_t);
+
+	GET_SET(name, std::vector<uint8_t>);
+	GET_SET(desc, std::vector<uint8_t>);
 	
 	std::vector<std::vector<id_t_> > get_frame_id_vector();
 	void add_frame_id(std::vector<id_t_> stream_id_vector_);

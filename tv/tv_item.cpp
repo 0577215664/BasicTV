@@ -47,6 +47,8 @@ tv_item_t::tv_item_t() : id(this, TYPE_TV_ITEM_T){
 	ADD_DATA(tv_channel_id);
 	ADD_DATA(wallet_set_id);
 	id.add_data_one_byte_vector(&frame_sets, ~0);
+	id.add_data_one_byte_vector(&name, ~0);
+	id.add_data_one_byte_vector(&desc, ~0);
 	ADD_DATA(start_time_micro_s);
 	ADD_DATA(end_time_micro_s);
 }
