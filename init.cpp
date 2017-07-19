@@ -216,6 +216,8 @@ void init(){
 	settings::set_setting("print_delay", "0");
 
 	settings::set_setting("test_catch_all", "false");
+
+	settings::set_setting("audio_playback", "ao");
 	
 	settings_init();
 	
