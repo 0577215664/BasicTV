@@ -176,17 +176,6 @@ void net_proto_socket_t::send_id(id_t_ id_){
 	if(id_tmp == nullptr){
 		print("id to send is a nullptr", P_ERR);
 	}
-	// std::vector<uint8_t> payload =
-	// 	id_api::export_id(
-	// 		id_,
-	// 		0,
-	// 		ID_EXTRA_COMPRESS | ID_EXTRA_ENCRYPT,
-	// 		ID_DATA_RULE_UNDEF,
-	// 		ID_DATA_RULE_UNDEF,
-	// 		ID_DATA_RULE_UNDEF);
-	// 		// ID_DATA_NETWORK_RULE_PUBLIC,
-	// 		// ID_DATA_EXPORT_RULE_NEVER,
-	// 		// ID_DATA_PEER_RULE_NEVER);
 	std::vector<std::vector<uint8_t> > payload =
 		id_tier::operation::get_data_from_state(
 			id_tier::state_tier::optimal_state_vector_of_tier_vector(

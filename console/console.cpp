@@ -183,6 +183,7 @@ void console_init(){
 			settings::get_setting(
 				"console_port")));
 	inbound_socket->connect();
+	ASSERT(inbound_socket->get_tcp_socket() != nullptr, P_ERR);
 	console_socket_id =
 		inbound_socket->id.get_id();
 }

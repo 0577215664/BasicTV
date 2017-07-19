@@ -7,6 +7,8 @@
 #define NET_SOCKET_H
 
 #include <SDL2/SDL_net.h>
+#include "thread"
+#include "mutex"
 
 /*
   net_socket_t: Manages network sockets. Socket is stored inside of this file. 
@@ -31,6 +33,15 @@
 
 struct net_socket_t : public net_ip_t{
 private:
+	std::vector<uint8_t> recv_buffer;
+	std::thread recv_thread;
+	
+	std::vector<uint8_t> send_buffer;
+	std::thread send_thread;
+
+	std::mutex thread_mutex;
+	bool thread_running = true;
+	
 	uint8_t status = 0;
 	std::vector<uint8_t> local_buffer;
 	// raw socket for SDL
@@ -43,7 +54,7 @@ private:
 	  inbound is throughput
 	  outbound isn't going to be created, instead we are going to name that
 	  latency and use ping/pong system
-	 */
+	*/
 	void register_inbound_data(
 		uint32_t bytes,
 		uint64_t start_time_micro_s,
@@ -56,7 +67,6 @@ public:
 
 	// general socket stuff
 	bool is_alive();
-	uint8_t get_status();
 	void connect();
 	void disconnect();
 	void reconnect();
