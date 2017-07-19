@@ -71,6 +71,8 @@ void test::net::proto_socket::send_recv(){
 		socket_vector[0].first->send_id(wallet_set_id);
 		// checks for having it are done on read, not send, we're fine
 		ID_TIER_DESTROY(wallet_set_id);
+		usleep(1000*1000);
+		// sleep_ms(10000);
 		socket_vector[1].first->update();
 		if(PTR_ID(wallet_set_id, ) == nullptr){
 			print("net_proto_socket transcoding failed", P_ERR);

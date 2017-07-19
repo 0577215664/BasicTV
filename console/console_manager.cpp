@@ -231,14 +231,69 @@ void console_t::tv_manager_create_tv_channel(
 			{channel_ptr->id.get_id()}));
 }
 
+void console_t::tv_manager_play_loaded_item_live(
+	net_socket_t *console_inbound_socket){
+	print_socket("Item ID:");
+	const std::string item_id =
+		tv_manager_read_string(
+			console_inbound_socket);
+	tv_item_t *item_ptr =
+		PTR_DATA(convert::array::id::from_hex(item_id),
+			 tv_item_t);
+	if(item_ptr == nullptr){
+		print_socket("item_ptr is a nullptr");	
+		print("item_ptr is a nullptr", P_ERR);
+	}
+	tv_channel_t *channel_ptr =
+		PTR_DATA(item_ptr->get_tv_channel_id(),
+			 tv_channel_t);
+	// technically we don't need channel_ptr, but printing out metadata
+	// is something i'd like to do real soon
+	if(channel_ptr == nullptr){
+		print_socket("channel_ptr is a nullptr\n");
+		print("channel_ptr is a nullptr", P_ERR);
+	}
+	std::vector<id_t_> window_vector =
+		ID_TIER_CACHE_GET(
+			TYPE_TV_WINDOW_T);
+	tv_window_t *window_ptr = nullptr;
+	if(window_vector.size() == 0){
+		window_ptr =
+			new tv_window_t;
+	}else{
+		if(window_vector.size() > 1){
+			print_socket("more than one window created, this is good, but we don't have full support yet\n");
+		}
+		window_ptr =
+			PTR_DATA(window_vector[0],
+				 tv_window_t);
+		if(window_ptr == nullptr){
+			window_ptr =
+				new tv_window_t;
+		}
+	}
+	const uint64_t timestamp_offset =
+		item_ptr->get_start_time_micro_s()-get_time_microseconds();
+	print_socket("interpreted timestamp offset as " + std::to_string(timestamp_offset) + "\n");
+	window_ptr->set_timestamp_offset(
+		timestamp_offset);
+	window_ptr->set_item_id(
+		item_ptr->id.get_id());
+	window_ptr->add_active_stream_id(
+		item_ptr->get_frame_id_vector()[0][0]);
+	print_socket("everything should be loaded nicely now, right?\n");
+
+}
+
 void console_t::tv_manager_print_options(){
 	const std::string tmp =
 		"(1) Load TV Item to Channel\n"
 		"(2) Play Loaded TV Item\n"
-		"(3) Change Item in Window\n"
-		"(4) List TV Channels and Items\n"
-		"(5) Create TV Channel\n"
-		"(6) Exit TV Manager\n"
+		"(3) Play Loaded TV Item from the start\n"
+		"(4) Change Item in Window\n"
+		"(5) List TV Channels and Items\n"
+		"(6) Create TV Channel\n"
+		"(7) Exit TV Manager\n"
 		"] ";
 	print_socket(tmp);
 }
@@ -270,15 +325,18 @@ DEC_CMD(tv_manager){
 			tv_manager_play_loaded_item(console_inbound_socket);
 			break;
 		case 3:
-			tv_manager_change_item_in_window(console_inbound_socket);
+			tv_manager_play_loaded_item_live(console_inbound_socket);
 			break;
 		case 4:
-			tv_manager_list_channels_and_items();
+			tv_manager_change_item_in_window(console_inbound_socket);
 			break;
 		case 5:
-			tv_manager_create_tv_channel(console_inbound_socket);
+			tv_manager_list_channels_and_items();
 			break;
 		case 6:
+			tv_manager_create_tv_channel(console_inbound_socket);
+			break;
+		case 7:
 			print_socket("closing TV manager\n");
 			tv_manager_loop = false;
 			break;

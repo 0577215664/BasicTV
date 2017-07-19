@@ -31,6 +31,8 @@
   std::pair entries
  */
 
+#include "../lock.h"
+
 struct net_socket_t : public net_ip_t{
 private:
 	std::vector<uint8_t> recv_buffer;
@@ -59,6 +61,9 @@ private:
 		uint64_t start_time_micro_s,
 		uint64_t end_time_micro_s);
 	void update_socket_set();
+
+	void create_threads();
+	void destroy_threads();
 public:
 	data_id_t id;
 	net_socket_t();
