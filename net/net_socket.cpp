@@ -78,6 +78,8 @@ static void send_from_buffer(
 						send_buffer.size());
 				if(sent_bytes < send_buffer.size()){
 					print("SDLNet_TCP_Send failed with " + (std::string)(SDL_GetError()), P_WARN);
+					*send_running = false;
+					break;
 				}else{
 					print("sent " + std::to_string(sent_bytes) + " bytes", P_DEBUG);
 				}
