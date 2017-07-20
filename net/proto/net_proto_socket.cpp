@@ -175,6 +175,12 @@ void net_proto_socket_t::send_id(id_t_ id_){
 		PTR_ID(id_, );
 	if(id_tmp == nullptr){
 		print("id to send is a nullptr", P_ERR);
+	}	
+	net_socket_t *socket_ptr =
+		PTR_DATA(socket_id,
+			 net_socket_t);
+	if(socket_ptr == nullptr){
+		print("socket is a nullptr", P_ERR);
 	}
 	std::vector<std::vector<uint8_t> > payload =
 		id_tier::operation::get_data_from_state(
@@ -191,29 +197,25 @@ void net_proto_socket_t::send_id(id_t_ id_){
 		
 			{id_});
 	ASSERT(payload.size() > 0, P_ERR);
-	id_api::raw::force_to_extra(
-		payload[0],
-		ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS);
-	if(payload.size() == 0){
-		print("exported size of ID is zero, not sending", P_NOTE);
-		return;
+	for(uint64_t i = 0;i < payload.size();i++){
+		payload[i] = id_api::raw::force_to_extra(
+			payload[i],
+			ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS);
+		if(payload[i].size() == 0){
+			print("exported size of ID is zero, not sending", P_NOTE);
+			return;
+		}
+		// can simplify to one vector, not done for debugging reasons
+		P_V(payload[i].size(), P_VAR);
+		std::vector<uint8_t> std_data_postescape =
+			escape_vector(std_data, NET_PROTO_ESCAPE);
+		std::vector<uint8_t> payload_postescape =
+			escape_vector(payload[0], NET_PROTO_ESCAPE);
+		P_V(std_data_postescape.size(), P_VAR);
+		P_V(payload_postescape.size(), P_VAR);
+		socket_ptr->send(std_data_postescape);
+		socket_ptr->send(payload_postescape);
 	}
-	net_socket_t *socket_ptr =
-		PTR_DATA(socket_id,
-			 net_socket_t);
-	if(socket_ptr == nullptr){
-		print("socket is a nullptr", P_ERR);
-	}
-	// can simplify to one vector, not done for debugging reasons
-	P_V(payload.size(), P_VAR);
-	std::vector<uint8_t> std_data_postescape =
-		escape_vector(std_data, NET_PROTO_ESCAPE);
-	std::vector<uint8_t> payload_postescape =
-		escape_vector(payload[0], NET_PROTO_ESCAPE);
-	P_V(std_data_postescape.size(), P_VAR);
-	P_V(payload_postescape.size(), P_VAR);
-	socket_ptr->send(std_data_postescape);
-	socket_ptr->send(payload_postescape);
 }
 
 void net_proto_socket_t::send_id_vector(std::vector<id_t_> id_vector){
