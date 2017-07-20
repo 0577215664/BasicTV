@@ -86,7 +86,7 @@ std::vector<id_t_> console_tv_load_samples_to_frames(
 	// Intermediate (raw to codec)
 	tv_audio_prop_t opus_audio_prop;
 	opus_audio_prop.set_format(
-		TV_AUDIO_FORMAT_WAV);
+		frame_format);
 	opus_audio_prop.set_flags(
 		TV_AUDIO_PROP_FORMAT_ONLY);
 	// opus_audio_prop.set_sampling_freq(
