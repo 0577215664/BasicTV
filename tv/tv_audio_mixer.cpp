@@ -64,6 +64,7 @@ static void tv_audio_mixer_add_and_start(std::vector<std::pair<id_t_, uint64_t> 
 			   [&tmp_id](const std::tuple<uint64_t, uint64_t, id_t_, Mix_Chunk* > &elem){
 				   return std::get<2>(elem) == tmp_id;
 			   }) == buffer.end()){
+			print("adding a buffer", P_VAR);
 			buffer.push_back(
 				std::make_tuple(
 					frame_audio_ptr->get_start_time_micro_s()+frame_vector[i].second,
@@ -126,15 +127,19 @@ static std::vector<std::pair<id_t_, uint64_t> > tv_audio_mixer_find_frames(){
 				frame_audio_ptr,
 				(int64_t)get_time_microseconds()+(int64_t)window_ptr->get_timestamp_offset());
 		P_V(window_ptr->get_timestamp_offset(), P_VAR);
-		CONTINUE_IF_TRUE(new_id == ID_BLANK_ID);
+		frame_audio_ptr =
+			PTR_DATA(new_id,
+				 tv_frame_audio_t);
+		CONTINUE_IF_NULL(frame_audio_ptr, P_WARN);
 		retval.push_back(
 			std::make_pair(new_id,
-				       window_ptr->get_timestamp_offset()));
+				       window_ptr->get_timestamp_offset()+frame_audio_ptr->get_end_time_micro_s()));
 	}
 	return retval;
 }
 
 void tv_audio_mixer_loop(){
+	Mix_Volume(-1, MIX_MAX_VOLUME);
 	tv_audio_mixer_add_and_start(
 		tv_audio_mixer_find_frames());
 	tv_audio_mixer_cleanup();
