@@ -22,14 +22,14 @@ std::vector<uint8_t> compressor::compress(std::vector<uint8_t> data,
 		// the types of data, we can work fine without that for now
 		print("type variable passed, but not used", P_SPAM);
 	}
-	// std::vector<uint8_t> retval = 
-	// 	compressor::xz::to(
-	// 		data,
-	// 		compression_level,
-	// 		0);
+	std::vector<uint8_t> retval = 
+		compressor::zstd::to(
+			data,
+			compression_level,
+			0);
 	data.insert(
 		data.begin(),
-		COMPRESS_NONE);
+		COMPRESS_ZSTD);
 	return data;
 }
 
