@@ -522,7 +522,6 @@ std::vector<uint8_t> id_api::raw::strip_to_lowest_rules(
 std::vector<uint8_t> id_api::raw::force_to_extra(
 	std::vector<uint8_t> data,
 	uint8_t extra){
-	P_V(data.size(), P_DEBUG);
 	const uint8_t cur_extra =
 		fetch_extra(data);
 	const bool need_decrypt =
