@@ -190,7 +190,8 @@ DEC_CMD(tv_test_audio){
 	std::vector<id_t_> all_frame_audios =
 		console_tv_load_samples_to_frames(
 			console_tv_load_samples_from_file(
-				file));
+				file),
+			TV_AUDIO_FORMAT_WAVE);
 	item->set_tv_channel_id(
 		channel->id.get_id());
 	item->add_frame_id(

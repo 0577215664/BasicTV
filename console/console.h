@@ -125,7 +125,6 @@ private:
 	DEF_CMD(tv_item_create);
 	DEF_CMD(tv_item_get_stream_list);
 	DEF_CMD(tv_audio_load_wav);
-
 	// tester functions
 	DEF_CMD(tv_test_audio);
 	DEF_CMD(tv_test_menu);
@@ -175,7 +174,7 @@ public:
 extern std::vector<std::vector<std::string> > console_generate_generic_id_table(std::vector<id_t_> id_vector);
 
 extern std::vector<uint8_t> console_tv_load_samples_from_file(std::string);
-extern std::vector<id_t_> console_tv_load_samples_to_frames(std::vector<uint8_t>);
+extern std::vector<id_t_> console_tv_load_samples_to_frames(std::vector<uint8_t>, uint8_t);
 
 extern void console_init();
 extern void console_loop();
