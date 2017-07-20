@@ -77,4 +77,7 @@ extern std::vector<tv_transcode_decode_state_t> decode_state_vector;
 
 extern void tv_transcode_state_update_to_frame(id_t_ frame_id);
 
+extern tv_transcode_encode_state_t *encode_search_for_state(id_t_);
+extern tv_transcode_decode_state_t *decode_search_for_state(id_t_);
+
 #endif

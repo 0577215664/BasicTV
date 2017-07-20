@@ -81,7 +81,8 @@ std::vector<uint8_t> console_tv_load_wave_file(
 }
 
 std::vector<id_t_> console_tv_load_samples_to_frames(
-	std::vector<uint8_t> raw_samples){
+	std::vector<uint8_t> raw_samples,
+	uint8_t frame_format){
 	// Intermediate (raw to codec)
 	tv_audio_prop_t opus_audio_prop;
 	opus_audio_prop.set_format(
@@ -100,7 +101,7 @@ std::vector<id_t_> console_tv_load_samples_to_frames(
 	// Final frame output
 	tv_audio_prop_t frame_audio_prop;
 	frame_audio_prop.set_format(
-		TV_AUDIO_FORMAT_WAVE);
+		frame_format);
 	frame_audio_prop.set_flags(
 		TV_AUDIO_PROP_FORMAT_ONLY);
 	
@@ -250,11 +251,22 @@ void console_t::tv_manager_load_item_to_channel(
 		std::vector<uint8_t>(
 			desc.c_str(),
 			desc.c_str()+desc.size()));
-
+	print_socket("Frame Format (OPUS or WAVE):");
+	std::string frame_format =
+		tv_manager_read_string(
+			console_inbound_socket);
+	uint8_t frame_format_byte =
+		0;
+	if(frame_format == "OPUS"){
+		frame_format_byte = TV_AUDIO_FORMAT_OPUS;
+	}else if(frame_format == "WAVE"){
+		frame_format_byte = TV_AUDIO_FORMAT_WAVE;
+	}
 	std::vector<id_t_> frame_id_vector =
 		console_tv_load_samples_to_frames(
 			console_tv_load_samples_from_file(
-				file_path));
+				file_path),
+			frame_format_byte);
 	tv_frame_audio_t *frame_audio_end_ptr =
 		PTR_DATA(frame_id_vector[frame_id_vector.size()-1],
 			 tv_frame_audio_t);

@@ -44,6 +44,7 @@ static void tv_audio_mixer_add_and_start(std::vector<std::pair<id_t_, uint64_t> 
 			TV_AUDIO_FORMAT_WAV);
 		wav_audio_prop.set_flags(
 			TV_AUDIO_PROP_FORMAT_ONLY);
+		
 		std::vector<std::vector<uint8_t> > wave_buffer =
 			transcode::audio::frames::to_codec(
 				{frame_audio_ptr->id.get_id()},
