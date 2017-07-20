@@ -27,10 +27,10 @@ std::vector<uint8_t> compressor::compress(std::vector<uint8_t> data,
 			data,
 			compression_level,
 			0);
-	data.insert(
-		data.begin(),
+	retval.insert(
+		retval.begin(),
 		COMPRESS_ZSTD);
-	return data;
+	return retval;
 }
 
 std::vector<uint8_t> compressor::decompress(std::vector<uint8_t> data){
