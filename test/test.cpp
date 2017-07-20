@@ -80,8 +80,8 @@ void test_audio(){
 }
 
 void test_suite(){
-	// test_escape();
-	// test_id_subsystem();
-	// test_net();
+	test_escape();
+	test_id_subsystem();
+	test_net();
 	test_audio();
 }
