@@ -111,8 +111,6 @@ data_id_t::~data_id_t(){
 	mem_del_id(this);
 }
 
-// is mem_del_id/mem_add_id needed anymore?
-
 id_t_ data_id_t::get_id(bool skip){
 	return id;
 }

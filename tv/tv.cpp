@@ -1,6 +1,6 @@
 #include "tv.h"
 #include "tv_video.h"
-#include "tv_audio.h"
+#include "audio/tv_audio.h"
 
 void tv_init(){
 	tv_audio_init();

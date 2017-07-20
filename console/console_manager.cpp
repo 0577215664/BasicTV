@@ -2,7 +2,7 @@
 #include "../tv/tv.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_item.h"
-#include "../tv/tv_audio.h"
+#include "../tv/audio/tv_audio.h"
 #include "../tv/tv_frame_audio.h"
 #include "../tv/tv_window.h"
 #include "../util.h"
