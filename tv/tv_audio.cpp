@@ -170,7 +170,7 @@ static void tv_audio_play_frame_audio(
 static std::vector<std::pair<id_t_, id_t_> > tv_audio_get_current_frame_audios(){
 	std::vector<id_t_> windows =
 		ID_TIER_CACHE_GET(
-			"tv_window_t");
+			TYPE_TV_WINDOW_T);
 	const uint64_t cur_timestamp_micro_s =
 		get_time_microseconds();
 	std::vector<std::pair<id_t_, id_t_> > frame_audios;
