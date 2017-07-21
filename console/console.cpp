@@ -234,7 +234,7 @@ void console_loop(){
 	console_accept_connections();
 	std::vector<id_t_> console_entries =
 		ID_TIER_CACHE_GET(
-			"console_t");
+			TYPE_CONSOLE_T);
 	for(uint64_t i = 0;i < console_entries.size();i++){
 		console_t *console_tmp =
 			PTR_DATA(console_entries[i],
