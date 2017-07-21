@@ -74,10 +74,24 @@ extern std::vector<tv_transcode_decode_state_t> decode_state_vector;
 		return nullptr;						\
 	}								\
 
-
+#define SEARCH_FOR_STATE_SIMPLE(state_type)				\
+	tv_transcode_##state_type##_state_t* state_type##_search_for_state_simple( \
+		id_t_ frame_id){					\
+		for(uint64_t i = 0;i < state_type##_state_vector.size();i++){ \
+			if(state_type##_state_vector[i].get_last_frame_id() == frame_id){ \
+				return &state_type##_state_vector[i];	\
+			}						\
+		}							\
+		print("can't find transcoding state", P_ERR);		\
+		return nullptr;						\
+	}								\
+	
 extern void tv_transcode_state_update_to_frame(id_t_ frame_id);
 
 extern tv_transcode_encode_state_t *encode_search_for_state(id_t_);
 extern tv_transcode_decode_state_t *decode_search_for_state(id_t_);
+
+extern tv_transcode_encode_state_t *encode_search_for_state_simple(id_t_);
+extern tv_transcode_decode_state_t *decode_search_for_state_simple(id_t_);
 
 #endif

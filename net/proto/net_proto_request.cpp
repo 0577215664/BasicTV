@@ -34,7 +34,8 @@ static std::vector<uint8_t> routine_request_slow_vector = {
 };
 
 // standard request jargon
-static std::vector<id_t_> id_request_buffer;
+// ID to request, number of times it has been requested
+static std::vector<std::pair<id_t_, uint64_t> > id_request_buffer;
 static std::vector<std::pair<id_t_, int64_t> > linked_list_request_buffer;
 
 net_proto_request_bare_t::net_proto_request_bare_t(){}
@@ -100,7 +101,8 @@ void net_proto_request_set_t::set_ids(std::vector<id_t_> ids_){
 			}
 		}catch(...){}
 	}
-	ids = compact_id_set(ids_);
+	ids = compact_id_set(
+		ids_, true);
 }
 
 std::vector<id_t_> net_proto_request_set_t::get_ids(){
@@ -241,8 +243,8 @@ void net_proto::request::add_id(id_t_ id){
 	}
 	// could probably speed this up
 	for(uint64_t i = 0;i < id_request_buffer.size();i++){
-		if(id == id_request_buffer[i]){
-			print("requesting ID already in request vector, should implement some form of QoS", P_SPAM);
+		if(id == std::get<0>(id_request_buffer[i])){
+			std::get<1>(id_request_buffer[i])++;
 			return;
 		}
 	}
@@ -270,15 +272,10 @@ void net_proto::request::add_id(id_t_ id){
 			return;
 		}
 	}
-	for(uint64_t i = 0;i < id_request_buffer.size();i++){
-		if(get_id_hash(id) == get_id_hash(id_request_buffer[i])){
-			id_request_buffer.insert(
-				id_request_buffer.begin()+i,
-				id);
-			break;
-		}
-	}
-	id_request_buffer.push_back(id);
+	id_request_buffer.push_back(
+		std::make_pair(
+			id,
+			1));
 }
 
 void net_proto::request::add_id(std::vector<id_t_> id){
@@ -391,14 +388,14 @@ static void net_proto_routine_request_loop(){
 }
 
 static void net_proto_create_id_request_loop(){
-	std::vector<std::pair<std::vector<id_t_>, id_t_> > id_peer_pair;
+	std::vector<std::pair<std::vector<std::pair<id_t_, uint64_t> >, id_t_> > id_peer_pair;
 	for(uint64_t i = 0;i < id_request_buffer.size();i++){
-		const id_t_ preferable_peer_id =
-			net_proto::peer::optimal_peer_for_id(
-				id_request_buffer[i]);
-		if(id_request_buffer[i] == ID_BLANK_ID){
+		if(id_request_buffer[i].first == ID_BLANK_ID){
 			continue;
 		}
+		const id_t_ preferable_peer_id =
+			net_proto::peer::optimal_peer_for_id(
+				id_request_buffer[i].first);
 		if(preferable_peer_id == ID_BLANK_ID){
 			print("preferable_peer_id is blank", P_ERR);
 		}
@@ -416,12 +413,22 @@ static void net_proto_create_id_request_loop(){
 		if(wrote == false){
 			id_peer_pair.push_back(
 				std::make_pair(
-					std::vector<id_t_>({id_request_buffer[i]}),
+					std::vector<std::pair<id_t_, uint64_t> > ({
+							id_request_buffer[i]}),
 					preferable_peer_id));
 		}
 	}
 	if(id_peer_pair.size() != 0){
 		print("sending " + std::to_string(id_peer_pair.size()) + " requests, totalling " + std::to_string(id_request_buffer.size()) + " IDs", P_NOTE);
+	}
+	for(uint64_t i = 0;i < id_peer_pair.size();i++){
+		std::sort(
+			id_peer_pair[i].first.begin(),
+			id_peer_pair[i].first.end(),
+			[](const std::pair<id_t_, uint64_t> first_elem,
+			   const std::pair<id_t_, uint64_t> second_elem){
+				return first_elem.second > second_elem.second;
+			});
 	}
 	id_request_buffer.clear();
 	const id_t_ self_peer_id =
@@ -432,8 +439,13 @@ static void net_proto_create_id_request_loop(){
 				new net_proto_id_request_t;
 			id_request_ptr->set_ttl_micro_s(
 				30*1000*1000); // TODO: should make this a setting
+			std::vector<id_t_> id_request_id_set;
+			for(uint64_t c = 0;c < id_peer_pair[i].first.size();c++){
+				id_request_id_set.push_back(
+					id_peer_pair[i].first[c].first);
+			}
 			id_request_ptr->set_ids(
-				id_peer_pair[i].first);
+				id_request_id_set);
 			id_request_ptr->set_origin_peer_id(
 				self_peer_id);
 			id_request_ptr->set_destination_peer_id(

@@ -83,19 +83,19 @@ std::vector<id_t_> console_tv_load_samples_to_frames(
 	std::vector<uint8_t> raw_samples,
 	uint8_t frame_format){
 	// Intermediate (raw to codec)
-	tv_audio_prop_t opus_audio_prop;
-	opus_audio_prop.set_format(
+	tv_audio_prop_t int_audio_prop;
+	int_audio_prop.set_format(
 		frame_format);
-	opus_audio_prop.set_flags(
+	int_audio_prop.set_flags(
 		TV_AUDIO_PROP_FORMAT_ONLY);
-	// opus_audio_prop.set_sampling_freq(
-	// 	48000);
-	// opus_audio_prop.set_bit_rate(
-	// 	65536);
-	// opus_audio_prop.set_channel_count(
-	// 	1);
-	// opus_audio_prop.set_bit_depth(
-	// 	16);
+	int_audio_prop.set_sampling_freq(
+		48000);
+	int_audio_prop.set_bit_rate(
+		65536); // only read by Opus
+	int_audio_prop.set_channel_count(
+		1);
+	int_audio_prop.set_bit_depth(
+		16);
 	
 	// Final frame output
 	tv_audio_prop_t frame_audio_prop;
@@ -129,19 +129,19 @@ std::vector<id_t_> console_tv_load_samples_to_frames(
 			sampling_freq,
 			bit_depth,
 			channel_count,
-			&opus_audio_prop);
+			&int_audio_prop);
 	if(packetized_codec_data.size() == 0){
 		print("packetized_codec_data is empty", P_ERR);
 	}
 	std::vector<id_t_> retval =
 		transcode::audio::codec::to_frames(
 			&packetized_codec_data,
-			&opus_audio_prop,
+			&int_audio_prop,
 			&frame_audio_prop,
 			1000*1000);
 	id_api::linked_list::link_vector(
-		retval, 10); //just in case other code didn't?
-	PRINT_AUDIO_PROP(opus_audio_prop);
+		retval, 1); // MOVE ME BACK TO 10 IF THIS DOESN'T WORK
+	PRINT_AUDIO_PROP(int_audio_prop);
 	PRINT_AUDIO_PROP(frame_audio_prop);
 	const uint64_t snippet_duration =
 		frame_audio_prop.get_snippet_duration_micro_s();
@@ -493,7 +493,7 @@ void console_t::tv_manager_play_loaded_item_live(
 	tv_window_t *window_ptr = 
 		new tv_window_t;
 	const int64_t timestamp_offset =
-		item_ptr->get_start_time_micro_s()-get_time_microseconds();
+		item_ptr->get_start_time_micro_s()-get_time_microseconds()-(10*1000*1000);
 	print_socket("interpreted timestamp offset as " + std::to_string(timestamp_offset) + "\n");
 	window_ptr->set_timestamp_offset_micro_s(
 		timestamp_offset);
@@ -514,7 +514,7 @@ void console_t::tv_manager_print_options(){
 	const std::string tmp =
 		"(1) Load TV Item to Channel\n"
 		"(2) Play Loaded TV Item\n"
-		"(3) Play Loaded TV Item from the start\n"
+		"(3) Play Loaded TV Item in 10 Seconds\n"
 		"(4) Change Item in Window\n"
 		"(5) List TV Channels and Items\n"
 		"(6) Create TV Channel\n"

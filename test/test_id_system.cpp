@@ -1,11 +1,12 @@
 #include "test.h"
-
 #include "../id/id_api.h"
 // type of choice
 #include "../net/proto/net_proto_request.h"
 #include "../tv/tv_item.h"
 // SHA-256 hash for ID spoofing
 #include "../encrypt/encrypt.h"
+// Linked list
+#include "../tv/tv_frame_audio.h"
 
 template <typename T>
 static void unload_nuke_reload(T ptr){
@@ -77,5 +78,53 @@ void test::id_system::id_set::proper(){
 		id_set.push_back(tmp_id);
 	}
 	P_V(hash_count, P_NOTE);
-	ASSERT(expand_id_set(compact_id_set(id_set)) == id_set, P_ERR);
+	ASSERT(expand_id_set(compact_id_set(id_set, true)) == id_set, P_ERR);
+	ASSERT(expand_id_set(compact_id_set(id_set, false)) == id_set, P_ERR);
+}
+
+void test::id_system::linked_list(){
+	std::vector<id_t_> frame_audio_vector;
+	for(uint64_t i = 0;i < 16;i++){
+		frame_audio_vector.push_back(
+			(new tv_frame_audio_t)->id.get_id());
+	}
+	for(uint64_t i = 0;i < frame_audio_vector.size();i++){
+		print("creating new linked list of depth " + std::to_string(i), P_SPAM);
+		id_api::linked_list::link_vector(
+			frame_audio_vector,
+			i);
+		for(uint64_t a = 0;a < frame_audio_vector.size();a++){
+			data_id_t *frame_id_ptr =
+				PTR_ID(frame_audio_vector[a], );
+			const std::pair<std::vector<id_t_>, std::vector<id_t_> > linked_list_ =
+				frame_id_ptr->get_linked_list();
+			frame_id_ptr->set_linked_list(
+				std::make_pair(
+					std::vector<id_t_>({}),
+					std::vector<id_t_>({})));
+			P_V(linked_list_.first.size(), P_VAR);
+			P_V(linked_list_.second.size(), P_VAR);
+			ASSERT(linked_list_.first.size() <= i, P_ERR);
+			ASSERT(linked_list_.second.size() <= i, P_ERR);			
+			if(a > i){
+				// ASSERT(linked_list_.first.size() == i, P_ERR);
+			}
+			if(a < 16-i){
+				// ASSERT(linked_list_.second.size() == i, P_ERR);
+			}
+			bool contains_itself_backwards =
+				std::find(linked_list_.first.begin(),
+					  linked_list_.first.end(),
+					  frame_id_ptr->get_id()) != linked_list_.first.end();
+			bool contains_itself_forwards =
+				std::find(linked_list_.second.begin(),
+					  linked_list_.second.end(),
+					  frame_id_ptr->get_id()) != linked_list_.second.end();
+			ASSERT(contains_itself_backwards == false, P_ERR);
+			ASSERT(contains_itself_forwards == false, P_ERR);
+		}
+	}
+	for(uint64_t i = 0;i < 16;i++){
+		ID_TIER_DESTROY(frame_audio_vector[i]);
+	}
 }

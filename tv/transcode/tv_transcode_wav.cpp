@@ -27,8 +27,7 @@ static void wave_push_back(std::vector<uint8_t> *retval, uint16_t data){
 */
 
 tv_transcode_encode_state_t *wave_encode_init_state(tv_audio_prop_t *audio_prop){
-	tv_transcode_encode_state_t *retval =
-		new tv_transcode_encode_state_t;
+	tv_transcode_encode_state_t retval;
 	audio_prop->set_format(
 		TV_AUDIO_FORMAT_WAV);
 	if(audio_prop->get_snippet_duration_micro_s() == 0){
@@ -36,56 +35,70 @@ tv_transcode_encode_state_t *wave_encode_init_state(tv_audio_prop_t *audio_prop)
 		audio_prop->set_snippet_duration_micro_s(
 			1000*1000);
 	}
-	audio_prop->set_sampling_freq(
-		48000);
-	audio_prop->set_bit_depth(
-		16);
-	audio_prop->set_channel_count(
-		1);
-	retval->set_audio_prop(*audio_prop);
-	// state_ptr is a universal wave prepend, saves a lot of time
-	const uint32_t snippet_size =
-		duration_metadata_to_chunk_size(
-			audio_prop->get_snippet_duration_micro_s(),
-			audio_prop->get_sampling_freq(),
-			audio_prop->get_bit_depth(),
-			audio_prop->get_channel_count());
-	std::vector<uint8_t> *universal_wave_prepend =
-		new std::vector<uint8_t>;
-	wave_push_back(universal_wave_prepend, "RIFF");
-	wave_push_back(universal_wave_prepend, (uint32_t)(snippet_size+36));
-	wave_push_back(universal_wave_prepend, "WAVE");
-	wave_push_back(universal_wave_prepend, "fmt ");
-	wave_push_back(universal_wave_prepend, (uint32_t)16); // length of data section
-	wave_push_back(universal_wave_prepend, (uint16_t)1); // uncompressed PCM
-	wave_push_back(universal_wave_prepend, (uint16_t)audio_prop->get_channel_count()); // channel count
-	wave_push_back(universal_wave_prepend, (uint32_t)audio_prop->get_sampling_freq());
-	wave_push_back(universal_wave_prepend, (uint32_t)(audio_prop->get_sampling_freq()*audio_prop->get_channel_count()*audio_prop->get_bit_rate()/8));
-	wave_push_back(universal_wave_prepend, (uint16_t)(audio_prop->get_channel_count()*audio_prop->get_bit_depth()/8)); // block align
-	wave_push_back(universal_wave_prepend, (uint16_t)audio_prop->get_bit_depth());
-	wave_push_back(universal_wave_prepend, "data");
-	wave_push_back(universal_wave_prepend, (uint32_t)snippet_size);
-	retval->set_state_ptr(
-		(void*)universal_wave_prepend);
 
-	return retval;
+	try{
+		audio_prop->set_sampling_freq(
+			48000);
+		audio_prop->set_bit_depth(
+			16);
+		audio_prop->set_channel_count(
+			1);
+		retval.set_audio_prop(*audio_prop);
+		// state_ptr is a universal wave prepend, saves a lot of time
+		const uint32_t snippet_size =
+			duration_metadata_to_chunk_size(
+				audio_prop->get_snippet_duration_micro_s(),
+				audio_prop->get_sampling_freq(),
+				audio_prop->get_bit_depth(),
+				audio_prop->get_channel_count());
+		std::vector<uint8_t> *universal_wave_prepend =
+			new std::vector<uint8_t>;
+		wave_push_back(universal_wave_prepend, "RIFF");
+		wave_push_back(universal_wave_prepend, (uint32_t)(snippet_size+36));
+		wave_push_back(universal_wave_prepend, "WAVE");
+		wave_push_back(universal_wave_prepend, "fmt ");
+		wave_push_back(universal_wave_prepend, (uint32_t)16); // length of data section
+		wave_push_back(universal_wave_prepend, (uint16_t)1); // uncompressed PCM
+		wave_push_back(universal_wave_prepend, (uint16_t)audio_prop->get_channel_count()); // channel count
+		wave_push_back(universal_wave_prepend, (uint32_t)audio_prop->get_sampling_freq());
+		wave_push_back(universal_wave_prepend, (uint32_t)(audio_prop->get_sampling_freq()*audio_prop->get_channel_count()*audio_prop->get_bit_rate()/8));
+		wave_push_back(universal_wave_prepend, (uint16_t)(audio_prop->get_channel_count()*audio_prop->get_bit_depth()/8)); // block align
+		wave_push_back(universal_wave_prepend, (uint16_t)audio_prop->get_bit_depth());
+		wave_push_back(universal_wave_prepend, "data");
+		wave_push_back(universal_wave_prepend, (uint32_t)snippet_size);
+		retval.set_state_ptr(
+			(void*)universal_wave_prepend);
+	}catch(std::exception &e){
+		std::cout << e.what() << std::endl;
+	}
+
+	try{
+		encode_state_vector.push_back(
+			retval);
+	}catch(std::exception &e){
+		std::cout << e.what() << std::endl;
+	}
+	
+	return &encode_state_vector[encode_state_vector.size()-1];
 }
 
 void wave_encode_close_state(tv_transcode_encode_state_t *encode_state){
-	delete (std::vector<uint8_t>*)encode_state->get_state_ptr();
-	delete encode_state;
+	if(encode_state != nullptr){
+		if(encode_state->get_state_ptr() != nullptr){
+			delete (std::vector<uint8_t>*)encode_state->get_state_ptr();
+		}
+	}
 }
 
 tv_transcode_decode_state_t *wave_decode_init_state(tv_audio_prop_t *audio_prop){
-	tv_transcode_decode_state_t *retval =
-		new tv_transcode_decode_state_t;
-	retval->set_audio_prop(*audio_prop);
-	return retval;
+	tv_transcode_decode_state_t retval;
+	retval.set_audio_prop(*audio_prop);
+	decode_state_vector.push_back(
+		retval);
+	return &decode_state_vector[decode_state_vector.size()-1];
 }
 
-void wave_decode_close_state(tv_transcode_decode_state_t *decode_state){
-	delete decode_state;
-}
+void wave_decode_close_state(tv_transcode_decode_state_t *decode_state){}
 
 
 
@@ -232,6 +245,23 @@ std::vector<uint8_t> wave_decode_snippets_to_samples(tv_transcode_decode_state_t
 
 	while(old_wav_data_size != wav_data->size()){
 		try{
+			if(state->get_audio_prop().get_sampling_freq() == 0 &&
+			   state->get_audio_prop().get_bit_depth() == 0 &&
+			   state->get_audio_prop().get_channel_count() == 0){
+				print("no sampling freq, bit depth, or channel count, assuming bitrate information of first packet", P_NOTE);
+				// not sure how well this would work with Opus...
+				tv_audio_prop_t tmp =
+					state->get_audio_prop();
+				tmp.set_sampling_freq(
+					*sampling_freq);
+				tmp.set_bit_depth(
+					*bit_depth);
+				tmp.set_channel_count(
+					*channel_count);
+				state->set_audio_prop(
+					tmp);
+			}
+			   
 			sanity_check_prepend(
 				&((*wav_data)[0]),
 				state->get_audio_prop().get_sampling_freq(),
