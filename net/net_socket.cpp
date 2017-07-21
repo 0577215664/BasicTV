@@ -24,7 +24,7 @@ static void recv_to_buffer(
 					SDLNet_TCP_Recv(
 						ptr->get_tcp_socket(),
 						&(recv_buffer[0]),
-						1);
+						65536);
 				if(recv_retval > 0){
 					ptr->thread_mutex.lock();
 					try{
