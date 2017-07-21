@@ -210,7 +210,7 @@ void net_proto_socket_t::send_id(id_t_ id_){
 		std::vector<uint8_t> std_data_postescape =
 			escape_vector(std_data, NET_PROTO_ESCAPE);
 		std::vector<uint8_t> payload_postescape =
-			escape_vector(payload[0], NET_PROTO_ESCAPE);
+			escape_vector(payload[i], NET_PROTO_ESCAPE);
 		P_V(std_data_postescape.size(), P_VAR);
 		P_V(payload_postescape.size(), P_VAR);
 		socket_ptr->send(std_data_postescape);
