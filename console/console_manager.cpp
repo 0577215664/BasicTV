@@ -141,7 +141,7 @@ std::vector<id_t_> console_tv_load_samples_to_frames(
 			&frame_audio_prop,
 			1000*1000);
 	id_api::linked_list::link_vector(
-		retval, 1); // MOVE ME BACK TO 10 IF THIS DOESN'T WORK
+		retval, 10);
 	PRINT_AUDIO_PROP(int_audio_prop);
 	PRINT_AUDIO_PROP(frame_audio_prop);
 	const uint64_t snippet_duration =
