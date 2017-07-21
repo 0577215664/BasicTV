@@ -25,7 +25,9 @@ std::vector<std::vector<id_t_> > tv_item_t::get_frame_id_vector(){
 void tv_item_t::add_frame_id(std::vector<id_t_> stream_id_vector_){
 	std::vector<uint8_t> chunk =
 		escape_vector(
-			compact_id_set(stream_id_vector_),
+			compact_id_set(
+				stream_id_vector_,
+				true),
 			0x80);
 	frame_sets.insert(
 		frame_sets.end(),

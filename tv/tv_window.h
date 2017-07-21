@@ -63,6 +63,7 @@ public:
 	void add_active_stream_id(id_t_ id_);
 	void del_active_stream_id(id_t_ id_);
 	std::vector<id_t_> get_active_streams(){return active_streams;}
+	void set_active_streams(std::vector<id_t_> active_streams_){active_streams = active_streams_;}
 	uint64_t get_x_res();
 	uint64_t get_y_res();
 };

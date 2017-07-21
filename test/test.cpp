@@ -1,12 +1,15 @@
 #include "test.h"
 
 #include "../cryptocurrency.h"
+#include "../settings.h"
 
 /*
   I almost panicked out of retardation since I thought I lost the private
   key to this Bitcoin wallet, but thankfully I found it on my old phone and
   I have a backup sitting safe in some undisclosed area.
  */
+
+static uint64_t loop_number = 1;
 
 id_t_ test_create_generic_id(){
 	wallet_set_t *wallet_set_ptr =
@@ -39,7 +42,9 @@ id_t_ test_create_generic_id(){
 	const uint64_t start_time_micro_s =				\
 		get_time_microseconds();				\
 	try{								\
-		x();							\
+		for(uint64_t i = 0;i < loop_number;i++){		\
+			x();						\
+		}							\
 		print("test " #x " finished without a caught exception by the caller", P_NOTE); \
 	}catch(...){							\
 		print("TEST " #x " FAILED", P_ERR);			\
@@ -58,15 +63,22 @@ id_t_ test_create_generic_id(){
 									\
 	}								\
 
+/*
+  all tests are ordered from most basic to most complex to avoid situations
+  where a tests fails because a more specific test that would have failed in
+  a more debugger-friendly manner hasn't ran yet
+ */
+
 void test_id_subsystem(){
-	RUN_TEST(test::id_system::transport::proper);
+	RUN_TEST(test::id_system::linked_list);
 	RUN_TEST(test::id_system::id_set::proper);
+	RUN_TEST(test::id_system::transport::proper);
 	// RUN_TEST(test::id_system::transport::import::random);
 }
 
 void test_net(){
-	RUN_TEST(test::net::proto_socket::send_recv);
 	RUN_TEST(test::net::socket::send_recv);
+	RUN_TEST(test::net::proto_socket::send_recv);
 }
 
 void test_escape(){
@@ -80,6 +92,10 @@ void test_audio(){
 }
 
 void test_suite(){
+	loop_number =
+		settings::get_setting_unsigned_def(
+			"test_loop_count", 1);
+	print("set test loop number to " + std::to_string(loop_number), P_NOTE);
 	test_escape();
 	test_id_subsystem();
 	test_net();

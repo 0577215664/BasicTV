@@ -262,7 +262,7 @@ static std::string null_if_blank_id(id_t_ id){
 
 std::vector<std::vector<std::string> > console_generate_generic_id_table(std::vector<id_t_> id_vector){
 	std::vector<std::vector<std::string> > retval;
-	retval.push_back({"ID", "Type", "Prev Linked List", "Next Linked List", "Mod. Inc."});
+	retval.push_back({"ID", "Type", "Prev Linked List", "Prev Linked List Length", "Next Linked List", "Next Linked List Length", "Mod. Inc."});
 	for(uint64_t i = 0;i < id_vector.size();i++){
 		std::vector<std::string> tmp_vector;
 		tmp_vector.push_back(convert::array::id::to_hex(id_vector[i]));
@@ -284,8 +284,14 @@ std::vector<std::vector<std::string> > console_generate_generic_id_table(std::ve
 				null_if_blank_id(
 					linked_list_data.first[0]));
 			tmp_vector.push_back(
+				std::to_string(
+					linked_list_data.first.size()));
+			tmp_vector.push_back(
 				null_if_blank_id(
 					linked_list_data.second[0]));
+			tmp_vector.push_back(
+				std::to_string(
+					linked_list_data.second.size()));
 			tmp_vector.push_back(
 				std::to_string(id_ptr->get_mod_inc()));
 		}else{

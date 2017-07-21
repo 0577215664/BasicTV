@@ -97,11 +97,7 @@ static void audio_decode_post_check(
 		*state = nullptr;
 		*fresh_state = false;
 	}
-}
-
-std::vector<tv_transcode_encode_state_t> encode_states;
-std::vector<tv_transcode_decode_state_t> decode_states;
-	
+}	
 
 tv_transcode_state_encode_codec_t encode_codec_lookup(uint8_t format){
 	for(uint64_t i = 0;i < CODEC_ENCODE_COUNT;i++){
@@ -133,113 +129,6 @@ void audio_prop_sanity_check(tv_audio_prop_t audio_prop){
 	}
 }
 
-/*
-  We don't need a codec_state_ref. A setting is going to be made (something like
-  [CODEC]_max_snippets_to_correct or something), setting the max distance
-  backwards we will look in a linked list before we decide updating the
-  state to the current frame would be pointless and we are better off 
-  rewinding in the linked list by a few frames, encoding a new state with
-  [CODEC]_max_snippets_correction (or something like that) and pulling
-  the target encoded data directly from that.
-
-  Ideally, the program should only have one function decode with one state,
-  and one function encode with the other state, so we don't run into
-  situations where we have to encode/decode the same data twice
- */
-
-#pragma message("pull_encode_state_from_frame_at_frame doesn't push new frame data to update the state, really should")
-
-#pragma message("make encode search limits into settings instead of macros")
-
-// 16 is pretty large, honestly
-#define STATE_SEARCH_LIMIT 16
-
-/*
-  1. Go as far back as reasonably possible in frame_id's linked list 
-     (reasonably possible is STATE_SEARCH_LIMIT, soon to be a formal setting)
-  2. Search through all states until we find a match to last_frame_id
-    a. If we find a match (has to be in STATE_SEARCH_LIMIT, parameter to 
-       by_distance_until_match), we add the frames in order to preserve the
-       state
-    b. If we do not find a match within STATE_SEARCH_LIMIT, then we just create
-       a new state and let some (unimplemented) garbage collection take care
-       of destroying the old state
-
-  This function pretty much encodes everything up to, but NOT INCLUDING
-  frame_id, since we like frame_id and we can't disregard the encoded
-  output (we aren't updating the state anymore)
- */
-
-static tv_transcode_decode_state_t *pull_decode_state_from_frame_before_frame(id_t_ frame_id){
-	tv_transcode_decode_state_t *retval = nullptr;
-	std::vector<id_t_> backwards_list =
-		id_api::linked_list::list::by_distance(
-			frame_id,
-			-STATE_SEARCH_LIMIT);
-	std::vector<id_t_> ids_to_load;
-	for(uint64_t i = 0;i < decode_states.size();i++){
-		auto frame_pos =
-			std::find(backwards_list.begin(),
-				  backwards_list.end(),
-				  decode_states[i].get_last_frame_id());
-		if(frame_pos != backwards_list.end()){
-			print("found an encoding match", P_NOTE);
-			ids_to_load =
-				std::vector<id_t_>(
-					frame_pos+1,
-					backwards_list.end());
-			retval = &decode_states[i];
-			break;
-		}
-	}
-	if(retval == nullptr){
-		print("couldn't find a current valid state, populating ids_to_load accordingly", P_DEBUG);
-		tv_frame_audio_t *frame_audio_ptr =
-			PTR_DATA(frame_id,
-				 tv_frame_audio_t);
-		ASSERT(frame_audio_ptr != nullptr, P_ERR);
-		tv_transcode_state_decode_codec_t decode_codec =
-			decode_codec_lookup(
-				frame_audio_ptr->get_audio_prop().get_format());
-		tv_audio_prop_t input_audio_prop =
-			frame_audio_ptr->get_audio_prop();
-		retval =
-			decode_codec.decode_init_state(
-				&input_audio_prop);
-		ids_to_load =
-			backwards_list;
-	}
-	for(uint64_t i = 0;i < ids_to_load.size();i++){
-		// we don't actually use the data, just update
-		// the state to reflect the passed
-		try{
-			tv_frame_audio_t *frame_audio_ptr =
-				PTR_DATA(ids_to_load[i],
-					 tv_frame_audio_t);
-			ASSERT(frame_audio_ptr != nullptr, P_ERR);
-			// Does FEC help out when the packet we are
-			// looking for isn't the packet that's lost?
-			std::vector<std::vector<uint8_t> > packet_set =
-				frame_audio_ptr->get_packet_set();
-			tv_audio_prop_t input_audio_prop =
-				frame_audio_ptr->get_audio_prop();
-			uint32_t sampling_freq = 0;
-			uint8_t bit_depth = 0;
-			uint8_t channel_count = 0;
-			transcode::audio::codec::to_raw(
-				&packet_set,
-				&input_audio_prop,
-				&sampling_freq,
-				&bit_depth,
-				&channel_count,
-				retval);
-			assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
-		}catch(...){}
-					
-	}
-	return retval;
-}
-
 static tv_audio_prop_t pull_audio_prop_from_id(id_t_ id){
 	tv_frame_audio_t *frame_audio_ptr =
 		PTR_DATA(id, tv_frame_audio_t);
@@ -266,71 +155,88 @@ std::vector<std::vector<uint8_t> > transcode::audio::frames::to_codec(
 		encode_codec_lookup(
 			output_audio_prop->get_format());
 	tv_transcode_decode_state_t *decode_state =
-		decode_search_for_state(
-			frame_set[0]);
+		nullptr;
+
+	try{
+		data_id_t *frame_set_start_ptr =
+			PTR_ID(frame_set[0], );
+		const std::pair<std::vector<id_t_>, std::vector<id_t_> > linked_list =
+			frame_set_start_ptr->get_linked_list();
+		if(linked_list.first.size() > 0){
+			decode_state =
+				decode_search_for_state_simple(
+					linked_list.first[linked_list.first.size()-1]);
+		}
+	}catch(...){}
 	if(decode_state == nullptr){
-		
+		print("creating new decoding state for frames", P_NOTE);
+		// creator function auto-lists it if it needs it
+		// (i don't think WAVE does yet, probably should)
 		decode_state =
 			decode_codec.decode_init_state(
-				output_audio_prop);
+				&input_audio_prop);
 		decode_state->set_start_frame_id(
 			frame_set[0]);
-		decode_state->set_last_frame_id(
-			frame_set[0]);
+	}else{
+		print("found and using a stable and correct state for frames", P_NOTE);
 	}
 	tv_transcode_encode_state_t *encode_state =
 		encode_codec.encode_init_state(
 			output_audio_prop);
 	for(uint64_t i = 0;i < frame_set.size();i++){
-		tv_frame_audio_t *frame_audio_ptr =
-			PTR_DATA(frame_set[i],
-				 tv_frame_audio_t);
-		CONTINUE_IF_NULL(frame_audio_ptr, P_WARN);
-		audio_prop_sanity_check(
-			frame_audio_ptr->get_audio_prop());
-		uint32_t sampling_freq =
-			frame_audio_ptr->get_audio_prop().get_sampling_freq();
-		uint8_t bit_depth =
-			frame_audio_ptr->get_audio_prop().get_bit_depth();
-		uint8_t channel_count =
-			frame_audio_ptr->get_audio_prop().get_channel_count();
+		try{
+			tv_frame_audio_t *frame_audio_ptr =
+				PTR_DATA(frame_set[i],
+					 tv_frame_audio_t);
+			CONTINUE_IF_NULL(frame_audio_ptr, P_WARN);
+			audio_prop_sanity_check(
+				frame_audio_ptr->get_audio_prop());
+			uint32_t sampling_freq =
+				frame_audio_ptr->get_audio_prop().get_sampling_freq();
+			uint8_t bit_depth =
+				frame_audio_ptr->get_audio_prop().get_bit_depth();
+			uint8_t channel_count =
+				frame_audio_ptr->get_audio_prop().get_channel_count();
 
-		assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
-		P_V(sampling_freq, P_VAR);
-		P_V(bit_depth, P_VAR);
-		P_V(channel_count, P_VAR);
-		std::vector<std::vector<uint8_t> > frame_packet_set =
-			frame_audio_ptr->get_packet_set();
-		std::vector<uint8_t> samples =
-			decode_codec.decode_snippets_to_samples(
-				decode_state,
-				&frame_packet_set,
-				&sampling_freq,
-				&bit_depth,
-				&channel_count);
-		decode_state->set_last_frame_id(
-			frame_set[i]);
-		PRINT_IF_EMPTY(samples, P_ERR);
-		assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
-		std::vector<std::vector<uint8_t> > tmp =
-			encode_codec.encode_samples_to_snippets(
-				encode_state,
-				&samples,
-				sampling_freq,
-				bit_depth,
+			assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
+			P_V(sampling_freq, P_VAR);
+			P_V(bit_depth, P_VAR);
+			P_V(channel_count, P_VAR);
+			std::vector<std::vector<uint8_t> > frame_packet_set =
+				frame_audio_ptr->get_packet_set();
+			std::vector<uint8_t> samples =
+				decode_codec.decode_snippets_to_samples(
+					decode_state,
+					&frame_packet_set,
+					&sampling_freq,
+					&bit_depth,
+					&channel_count);
+			decode_state->set_last_frame_id(
+				frame_set[i]);
+			PRINT_IF_EMPTY(samples, P_ERR);
+			assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
+			std::vector<std::vector<uint8_t> > tmp =
+				encode_codec.encode_samples_to_snippets(
+					encode_state,
+					&samples,
+					sampling_freq,
+					bit_depth,
+					channel_count);
+			PRINT_IF_EMPTY(tmp, P_ERR);
+			print("TODO: sanity check outputs for uncomputed samples", P_WARN);
+			retval.insert(
+				retval.end(),
+				tmp.begin(),
+				tmp.end());
+			output_audio_prop->set_sampling_freq(
+				sampling_freq);
+			output_audio_prop->set_bit_depth(
+				bit_depth);
+			output_audio_prop->set_channel_count(
 				channel_count);
-		PRINT_IF_EMPTY(tmp, P_ERR);
-		print("TODO: sanity check outputs for uncomputed samples", P_WARN);
-		retval.insert(
-			retval.end(),
-			tmp.begin(),
-			tmp.end());
-		output_audio_prop->set_sampling_freq(
-			sampling_freq);
-		output_audio_prop->set_bit_depth(
-			bit_depth);
-		output_audio_prop->set_channel_count(
-			channel_count);
+		}catch(std::exception &e){
+			print("exception thrown in frame to codec conversion", P_ERR);
+		}
 	}
 	encode_codec.encode_close_state(encode_state);
 	encode_state = nullptr;
@@ -411,6 +317,7 @@ std::vector<id_t_> transcode::audio::codec::to_frames(std::vector<std::vector<ui
 			&fresh_encode_state,
 			encode_codec,
 			output_audio_prop);
+
 		print("work on me later", P_CRIT);
 
 		for(uint64_t i = 0;i < codec_set->size();i++){

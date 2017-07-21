@@ -13,6 +13,8 @@
 
 #include "tv_audio_mixer.h"
 
+// When I get a proper audio sink setup going, just torch this entire file
+
 // libao > SDL_audio
 
 static uint32_t output_sampling_rate = 0;
@@ -40,6 +42,34 @@ void tv_audio_prop_t::list_virtual_data(data_id_t *id){
 	id->add_data_raw(&snippet_duration_micro_s, sizeof(snippet_duration_micro_s));
 	id->add_data_eight_byte_vector(&encoder_flags, ~0);
 }
+
+// static std::thread playing_thread;
+// static std::mutex playing_mutex;
+static std::vector<std::tuple<id_t_, id_t_, uint64_t, uint64_t, std::vector<uint8_t>, bool> > playing_now;
+// static std::vector<std::tuple<id_t_, id_t_, uint64_t> > playing_now;
+
+
+// static void tv_audio_play_wave_file(){
+// 	while(true){
+// 		const uint64_t timestamp =
+// 			get_time_microseconds();
+// 		playing_mutex.lock();
+// 		for(uint64_t i = 0;i < playing_now.size();i++){
+// 			if(unlikely(
+// 				   BETWEEN(
+// 					   std::get<2>(playing_now[i]),
+// 					   timestamp,
+// 					   std::get<3>(playing_now[i])))
+// 			   && std::get<5>(playing_now[i]) == false){
+// 				ao_play(ao_device_ptr,
+// 					(char*)std::get<4>(playing_now[i]).data(),
+// 					std::get<4>(playing_now[i]).size());
+// 				std::get<5>(playing_now[i]) = true; // played
+// 			}
+// 		}
+// 		playing_mutex.unlock();
+// 	}
+// }
 
 void tv_audio_ao_init(){
 	if(settings::get_setting("audio") == "true"){
@@ -84,11 +114,13 @@ void tv_audio_ao_init(){
 		ASSERT(ao_format.channels == output_channel_count, P_ERR);
 		ASSERT(ao_format.rate == output_sampling_rate, P_ERR);
 		ASSERT(ao_format.byte_format = AO_FMT_NATIVE, P_ERR);
+		// playing_thread =
+		// 	std::move(
+		// 		std::thread(tv_audio_play_wave_file));
 	}else{
 		print("audio has been disabled in the settings", P_NOTE);
 	}
 }
-std::vector<std::tuple<id_t_, id_t_, uint64_t> > playing_now;
 
 static void tv_audio_play_frame_audio(
         std::pair<id_t_, id_t_> audio_data){
@@ -109,6 +141,7 @@ static void tv_audio_play_frame_audio(
 	uint32_t sampling_freq = 0;
 	uint8_t bit_depth = 0;
 	uint8_t channel_count = 0;
+	print("decoding " + convert::array::id::to_hex(audio_data.second), P_NOTE);
 	std::vector<uint8_t> raw =
 		transcode::audio::frames::to_raw(
 			{audio_data.second},
@@ -118,12 +151,20 @@ static void tv_audio_play_frame_audio(
 	P_V(sampling_freq, P_VAR);
 	P_V(bit_depth, P_VAR);
 	P_V(channel_count, P_VAR);
-	ao_play(ao_device_ptr, (char*)raw.data(), raw.size());
+	// playing_mutex.lock();
+	
 	playing_now.push_back(
 		std::make_tuple(
 			audio_data.first,
 			audio_data.second,
-			frame_audio_ptr->get_end_time_micro_s() + window_ptr->get_timestamp_offset()));
+			frame_audio_ptr->get_start_time_micro_s() + window_ptr->get_timestamp_offset(),
+			frame_audio_ptr->get_end_time_micro_s() + window_ptr->get_timestamp_offset(),
+			raw,
+			false));
+	ao_play(ao_device_ptr,
+		(char*)std::get<4>(playing_now[playing_now.size()-1]).data(),
+		std::get<4>(playing_now[playing_now.size()-1]).size());
+	// playing_mutex.unlock();
 }
 
 static std::vector<std::pair<id_t_, id_t_> > tv_audio_get_current_frame_audios(){
@@ -161,6 +202,11 @@ static std::vector<std::pair<id_t_, id_t_> > tv_audio_get_current_frame_audios()
 					audio_frame_tmp,
 					play_time);
 			if(curr_id != ID_BLANK_ID){
+				// don't set it to a non-live one
+				window->set_active_streams(
+					{curr_id}); // probably speed this up A LOT
+			}
+			if(curr_id != ID_BLANK_ID){
 				frame_audios.push_back(
 					std::make_pair(
 						windows[i],
@@ -177,6 +223,7 @@ void tv_audio_ao_loop(){
 	if(settings::get_setting("audio") == "true"){
 		std::vector<std::pair<id_t_, id_t_> > current_frame_audios =
 			tv_audio_get_current_frame_audios();
+		ASSERT(current_frame_audios.size() <= 1, P_ERR); // temporary
 		for(uint64_t i = 0;i < current_frame_audios.size();i++){
 			tv_audio_play_frame_audio(
 				current_frame_audios[i]);

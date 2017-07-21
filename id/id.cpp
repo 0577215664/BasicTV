@@ -261,8 +261,10 @@ std::string id_breakdown(id_t_ id_){
 
 std::pair<std::vector<id_t_>, std::vector<id_t_> > data_id_t::get_linked_list(){
 	return std::make_pair(
-		expand_id_set(linked_list.first),
-		expand_id_set(linked_list.second));
+		expand_id_set(
+			linked_list.first), // preserves order
+		expand_id_set(
+			linked_list.second));
 }
 
 void data_id_t::set_linked_list(std::pair<std::vector<id_t_>, std::vector<id_t_> > tmp){
@@ -283,7 +285,11 @@ void data_id_t::set_linked_list(std::pair<std::vector<id_t_>, std::vector<id_t_>
 		}
 	}
 	linked_list.first =
-		compact_id_set(tmp.first);
+		compact_id_set(
+			tmp.first,
+			true);
 	linked_list.second =
-		compact_id_set(tmp.second);
+		compact_id_set(
+			tmp.second,
+			true);
 }

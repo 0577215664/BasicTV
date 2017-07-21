@@ -34,6 +34,7 @@ namespace test{
 		namespace id_set{
 			void proper();
 		};
+		void linked_list();
 	};
 	namespace net{
 		namespace proto_socket{

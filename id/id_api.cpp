@@ -57,6 +57,8 @@ std::vector<id_t_> id_api::sort::fingerprint(std::vector<id_t_> tmp){
 void id_api::linked_list::link_vector(
 	std::vector<id_t_> vector,
 	uint64_t depth){
+	id_api::assert_valid_id(
+		vector);
 	switch(vector.size()){
 	case 0:
 		print("vector is empty", P_NOTE);
@@ -77,53 +79,43 @@ void id_api::linked_list::link_vector(
 	default:
 		break;
 	}
-	data_id_t *first = PTR_ID(vector[0], );
-	if(first != nullptr){
-		std::vector<id_t_> depth_vector =
-			std::vector<id_t_>(
-				vector.begin(),
-				vector.begin()+(
-					(depth > vector.size()) ?
-					vector.size() : depth));
-		first->set_linked_list(
-			std::make_pair(
-				std::vector<id_t_>({}),
-				depth_vector));
-	}else{
-		print("first entry is a nullptr, this can be fixed, but I didn't bother and this shouldn't happen anyways", P_ERR);
-	}
-	for(uint64_t i = 1;i < vector.size()-1;i++){
+	for(uint64_t i = 0;i < vector.size();i++){
 		data_id_t *id = PTR_ID(vector[i], );
 		if(id == nullptr){
 			print("can't link against an ID that doesn't exist", P_ERR);
 		}
-		std::vector<id_t_> depth_vector_backwards =
-			std::vector<id_t_>(
-				vector.begin()+i-(
-					(depth > i) ?
-					i : depth),
-				vector.begin()+i);
-		std::vector<id_t_> depth_vector_forwards =
-			std::vector<id_t_>(
-				vector.begin()+i,
-				vector.begin()+i+(
-					(depth > vector.size()-i) ?
-					vector.size()-i : depth));
+		std::vector<id_t_> forward;
+		std::vector<id_t_> backward;
+		for(uint64_t c = 1;c <= depth;c++){
+			try{
+				forward.push_back(
+					vector.at(i+c));
+			}catch(...){}
+			try{
+				backward.insert(
+					backward.begin(),
+					vector.at(i-c));
+			}catch(...){}
+		}
+		if(i > 0){
+			ASSERT(backward.size() > 0, P_ERR);
+		}
+		if(i < vector.size()-1){
+			ASSERT(forward.size() > 0, P_ERR);
+		}
+		if(backward.size() >= 1){
+			ASSERT(i != 0, P_ERR);
+			ASSERT(backward[backward.size()-1] == vector[i-1], P_ERR);
+		}
+		if(forward.size() >= 1){
+			ASSERT(i != vector.size()-1, P_ERR);
+			ASSERT(forward[0] == vector[i+1], P_ERR);
+		}
 		id->set_linked_list(
 			std::make_pair(
-				depth_vector_backwards,
-				depth_vector_forwards));
+				backward,
+				forward));
 	}
-	std::vector<id_t_> depth_vector_backwards =
-		std::vector<id_t_>(
-			vector.end()-(
-				(depth > vector.size()) ?
-				vector.size() : depth),
-			vector.end());
-	PTR_ID(vector[vector.size()-1], )->set_linked_list(
-		std::make_pair(
-			depth_vector_backwards,
-			std::vector<id_t_>({})));
 }
 
 /*

@@ -15,6 +15,10 @@ SEARCH_FOR_STATE(encode);
 
 SEARCH_FOR_STATE(decode);
 
+SEARCH_FOR_STATE_SIMPLE(encode);
+
+SEARCH_FOR_STATE_SIMPLE(decode);
+
 // TODO: should optimize this for searching for the previous
 // For example, possibly pass prev_frame_id to encode_search_for_state,
 // since that would be the last_frame_id (saving linked list lookups if

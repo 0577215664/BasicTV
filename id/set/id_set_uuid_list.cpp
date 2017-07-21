@@ -1,7 +1,7 @@
 #include "id_set.h"
 #include "id_set_uuid_list.h"
 
-const std::vector<uint8_t> seperator = {0, 0, 0, 0, 0, 0, 0, 0};
+const std::vector<uint8_t> seperator = {0, 0, 0, 0, 0, 0, 0, 1};
 
 std::vector<uint8_t> compact_id_set_uuid_list(std::vector<id_t_> id_set){
 	std::vector<std::tuple<std::vector<std::pair<uint64_t, uint8_t> >, std::array<uint8_t, 32> > > id_set_expand;
@@ -86,7 +86,7 @@ static uint64_t find_first_seperator(std::vector<uint8_t> data){
 		   data[i+4] == 0 &&
 		   data[i+5] == 0 &&
 		   data[i+6] == 0 &&
-		   data[i+7] == 0){
+		   data[i+7] == 1){
 			return i;
 		}
 	}

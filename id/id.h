@@ -213,12 +213,12 @@ typedef std::pair<std::vector<id_t_>, std::vector<id_t_> > linked_list_data_t;
   3. ID vector transmission never worked right in the first place	
  */
 
-extern std::vector<id_t_> expand_id_set(std::vector<uint8_t>);
-extern std::vector<uint8_t> compact_id_set(std::vector<id_t_>);
+extern std::vector<id_t_> expand_id_set(std::vector<uint8_t>, uint8_t*);
+extern std::vector<uint8_t> compact_id_set(std::vector<id_t_>, uint8_t);
 
 #define GET_SET_ID_VECTOR(data_to_set)					\
 	std::vector<id_t_> get_##data_to_set(){return expand_id_set(data_to_set);} \
-	void set_##data_to_set(std::vector<id_t_> tmp){data_to_set = compact_id_set(tmp);} \
+	void set_##data_to_set(std::vector<id_t_> tmp){data_to_set = compact_id_set(tmp, true);} \
 	void set_##data_to_set(std::vector<uint8_t> tmp){data_to_set = tmp;} \
 	void add_##data_to_set(id_t_ tmp){data_to_set = add_id_to_set(data_to_set, tmp);} \
 	void del_##data_to_set(id_t_ tmp){data_to_set = del_id_from_set(data_to_set, tmp);} \
