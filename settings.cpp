@@ -10,6 +10,17 @@ static std::vector<std::pair<std::string, std::string> > settings_vector;
  */
 
 void settings::set_setting(std::string a, std::string b){
+	auto pos =
+		std::find_if(
+			settings_vector.begin(),
+			settings_vector.end(),
+			[&a](const std::pair<std::string, std::string> elem){
+				return elem.first == a;
+			});
+	if(pos != settings_vector.end()){
+		settings_vector.erase(
+			pos);
+	}
 	settings_vector.push_back(std::make_pair(a, b));
 }
 
@@ -62,8 +73,7 @@ void settings::set_settings(std::string settings_file){
 			print("importing external file", P_NOTICE);
 			set_settings(var);
 		}
-		settings_vector.push_back(
-			std::make_pair(setting, var));
+		set_setting(setting, var);
 	}
 	for(int32_t i = 1;i < argc-1;i++){
 		const uint32_t argv_len =
@@ -75,11 +85,7 @@ void settings::set_settings(std::string settings_file){
 					argv_len-2);
 			const std::string value =
 				argv[i+1];
-			print("appending setting from argv: " + curr_setting + " == " + value, P_SPAM);
-			settings_vector.push_back(
-				std::make_pair(
-					curr_setting,
-					value));
+			set_setting(curr_setting, value);
 			i++; // skip over the value
 		}
 	}
@@ -94,26 +100,27 @@ std::string settings::get_setting(std::string setting){
 	std::string retval;
 	bool found = false;
 	for(unsigned int i = 0;i < settings_vector.size();i++){
-		if(settings_vector[i].first == setting){
+		if(unlikely(settings_vector[i].first == setting)){
 			retval = settings_vector[i].second;
 			found = true;
-			// don't break, later values can
-			// override previous values
+			std::pair<std::string, std::string> tmp_settings =
+				settings_vector[i];
+			settings_vector.erase(
+				settings_vector.begin()+i);
+			settings_vector.insert(
+				settings_vector.begin(),
+				tmp_settings);
+			break;
 		}
 	}
-	if(!found){
+	if(unlikely(!found)){
 		throw std::runtime_error("setting " + setting + " not found");
 	}
 	return retval;
 }
 
 void settings::set_default_setting(std::string setting, std::string value){
-	for(uint64_t i = 0;i < settings_vector.size();i++){
-		if(settings_vector[i].first == setting){
-			return;
-		}
-	}
-	settings_vector.push_back(std::make_pair(setting, value));
+	set_setting(setting, value);
 }
 
 uint64_t settings::get_setting_unsigned_def(std::string settings, uint64_t default_val){
