@@ -23,9 +23,7 @@ void console_t::print_socket(std::string str){
 	net_socket_t *socket =
 		PTR_DATA_FAST(socket_id,
 			      net_socket_t);
-	if(socket == nullptr){
-		print("socket is a nullptr, should have cleaned up refs", P_NOTE);
-	}
+	PRINT_IF_NULL(socket, P_UNABLE);
 	try{
 		socket->send(str);
 	}catch(...){
