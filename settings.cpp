@@ -103,13 +103,13 @@ std::string settings::get_setting(std::string setting){
 		if(unlikely(settings_vector[i].first == setting)){
 			retval = settings_vector[i].second;
 			found = true;
-			std::pair<std::string, std::string> tmp_settings =
-				settings_vector[i];
-			settings_vector.erase(
-				settings_vector.begin()+i);
-			settings_vector.insert(
-				settings_vector.begin(),
-				tmp_settings);
+			// std::pair<std::string, std::string> tmp_settings =
+			// 	settings_vector[i];
+			// settings_vector.erase(
+			// 	settings_vector.begin()+i);
+			// settings_vector.insert(
+			// 	settings_vector.begin(),
+			// 	tmp_settings);
 			break;
 		}
 	}
