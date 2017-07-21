@@ -98,7 +98,7 @@ static void tv_audio_mixer_add_and_start(std::vector<std::pair<id_t_, uint64_t> 
 				tv_frame_audio_t *cache_frame_audio_ptr =
 					PTR_DATA(tmp_id,
 						 tv_frame_audio_t);
-				PRINT_IF_NULL(cache_frame_audio_ptr, P_WARN); // bad state handling means it's gonna sound like crap for Opus
+				CONTINUE_IF_NULL(cache_frame_audio_ptr, P_WARN); // bad state handling means it's gonna sound like crap for Opus
 				std::vector<std::vector<uint8_t> > wave_buffer;
 				// try{
 				// 	if(cache_frame_audio_ptr->get_audio_prop().get_format() == TV_AUDIO_FORMAT_WAVE &&
