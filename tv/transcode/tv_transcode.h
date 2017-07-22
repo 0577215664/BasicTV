@@ -5,7 +5,7 @@
 #include "../../util.h"
 #include "../../convert.h"
 
-#include "../../tv/tv_audio.h"
+#include "../../tv/audio/tv_audio.h"
 #include "../../tv/tv_frame_audio.h"
 #include "../../tv/tv_video.h"
 #include "../../tv/tv_frame_video.h"

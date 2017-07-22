@@ -44,7 +44,7 @@ private:
 	id_t_ item_id = ID_BLANK_ID;
 	/*
 	  FIRST: ID of the tv_frame_audio_t
-	  SECOND: ID of the tv_audio_playback_state_t
+	  SECOND: ID of the tv_sink_audio_t
 	  THIRD: List of mappings from codec-channels to absolute channels
 	*/
 	std::vector<std::tuple<id_t_,

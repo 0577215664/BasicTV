@@ -2,7 +2,6 @@
 #include "../tv/tv.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_item.h"
-#include "../tv/audio/tv_audio.h"
 #include "../tv/tv_frame_audio.h"
 #include "../tv/tv_window.h"
 #include "../util.h"
@@ -324,12 +323,18 @@ void console_t::tv_manager_play_loaded_item(
 	const uint64_t timestamp_offset =
 		std::stoi(time_offset_micro_s_str);
 	print_socket("interpreted timestamp offset as " + std::to_string(timestamp_offset) + "\n");
-	window_ptr->set_timestamp_offset(
+	window_ptr->set_timestamp_offset_micro_s(
 		timestamp_offset);
 	window_ptr->set_item_id(
 		item_ptr->id.get_id());
-	window_ptr->add_active_stream_id(
-		item_ptr->get_frame_id_vector()[0][0]);
+	// TODO: actually make a prompt for making TV sink states (especially
+	// when RTSP gets going)
+	window_ptr->set_active_streams(
+		std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({
+				std::make_tuple(
+					item_ptr->get_frame_id_vector()[0][0],
+					ID_TIER_CACHE_GET(TYPE_TV_SINK_STATE_T).at(0),
+					std::vector<uint8_t>({}))}));
 	print_socket("everything should be loaded nicely now, right?\n");
 }
 
@@ -478,12 +483,17 @@ void console_t::tv_manager_play_loaded_item_live(
 	const int64_t timestamp_offset =
 		item_ptr->get_start_time_micro_s()-get_time_microseconds();
 	print_socket("interpreted timestamp offset as " + std::to_string(timestamp_offset) + "\n");
-	window_ptr->set_timestamp_offset(
+	window_ptr->set_timestamp_offset_micro_s(
 		timestamp_offset);
 	window_ptr->set_item_id(
 		item_ptr->id.get_id());
-	window_ptr->add_active_stream_id(
-		item_ptr->get_frame_id_vector().at(0).at(0));
+	 window_ptr->set_active_streams(
+		 std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({
+				 std::make_tuple(
+					 item_ptr->get_frame_id_vector().at(0).at(0),
+					 ID_TIER_CACHE_GET(TYPE_TV_SINK_STATE_T).at(0),
+					 std::vector<uint8_t>({}))
+					 }));
 	print_socket("everything should be loaded nicely now, right?\n");
 
 }

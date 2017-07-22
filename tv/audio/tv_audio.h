@@ -1,7 +1,7 @@
-#include "../id/id.h"
 #ifndef TV_AUDIO_H
 #define TV_AUDIO_H
-#include "../util.h"
+#include "../../id/id.h"
+#include "../../util.h"
 #include <SDL2/SDL_mixer.h>
 #include <algorithm> // std::reverse
 
@@ -101,10 +101,4 @@ public:
 	P_V((audio_prop).get_bit_depth(), P_VAR);			\
 	P_V((audio_prop).get_channel_count(), P_VAR);			\
 	
-extern tv_audio_prop_t gen_format_only_audio_prop(uint8_t fmt);
-
-extern std::vector<id_t_> tv_audio_load_wav(id_t_ channel_id, uint64_t start_time_micro_s, std::string file);
-extern void tv_audio_init();
-extern void tv_audio_loop();
-extern void tv_audio_close();
 #endif

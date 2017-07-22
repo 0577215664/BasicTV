@@ -70,7 +70,7 @@ This means, as long as the ID is known to exist, it can be downloaded. You can a
 ## Dependencies
 * SDL2
 * SDL2_net
-* libao
+* PortAudio
 * libcurl
 * libvpx
 * libopus and libopusfile

@@ -15,7 +15,7 @@ void state_sanity_check(T state){
 		print("state is a nullptr", P_ERR);
 	}
 	if(state->get_state_ptr() == nullptr){
-		print("state_ptr is a nullptr",P_ERR);
+		print("state_ptr is a nullptr", P_ERR);
 	}
 }
 

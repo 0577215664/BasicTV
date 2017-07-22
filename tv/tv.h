@@ -14,4 +14,6 @@ extern void tv_loop();
 extern void tv_close();
 
 #include "tv_api.h"
+#include "sink/tv_sink.h"
+#include "sink/audio/tv_sink_audio_hardware.h"
 #endif

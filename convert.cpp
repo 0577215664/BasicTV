@@ -308,6 +308,7 @@ uint8_t convert::type::to(std::string type){
 	CONV_CHECK_TYPE("tv_item_t", TYPE_TV_ITEM_T);
 	CONV_CHECK_TYPE("net_interface_ip_address_t", TYPE_NET_INTERFACE_IP_ADDRESS_T);
 	CONV_CHECK_TYPE("id_tier_state_t", TYPE_ID_TIER_STATE_T);
+	CONV_CHECK_TYPE("tv_sink_state_t", TYPE_TV_SINK_STATE_T);
 	P_V_S(type, P_WARN);
 	print("unknown type has been passed, returning zero", P_ERR);
 	return 0;
@@ -369,6 +370,8 @@ std::string convert::type::from(uint8_t type){
 		return "net_interface_ip_address_t";
 	case TYPE_ID_TIER_STATE_T:
 		return "id_tier_state_t";
+	case TYPE_TV_SINK_STATE_T:
+		return "tv_sink_state_t";
 	case 0:
 		print("zero type, something went wrong earlier", P_WARN);
 		return "NOTYPE";
