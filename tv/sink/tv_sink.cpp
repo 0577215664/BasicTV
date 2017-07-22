@@ -76,6 +76,7 @@ std::vector<id_t_> tv::sink::state::pull(
 
 void tv::sink::state::push(
 	tv_sink_state_t *sink_state_ptr,
+	int64_t window_offset_micro_s,
 	std::vector<id_t_> data){
 	PRINT_IF_NULL(sink_state_ptr, P_ERR);
 	tv_sink_medium_t sink_medium =
@@ -83,14 +84,17 @@ void tv::sink::state::push(
 			sink_state_ptr->get_medium());
 	sink_medium.push(
 		sink_state_ptr,
+		window_offset_micro_s,
 		data);
 }
 
 void tv::sink::state::push(
 	id_t_ sink_state_id,
+	int64_t window_offset_micro_s,
 	std::vector<id_t_> data){
 	push(PTR_DATA(sink_state_id,
 		      tv_sink_state_t),
+	     window_offset_micro_s,
 	     data);
 }
 

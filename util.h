@@ -62,7 +62,7 @@ extern void sleep_ms(int ms, bool force = false);
 extern int search_for_argv(std::string);
 extern std::string get_argv(int a);
 #define print(x, y) print_((std::string)(__PRETTY_FUNCTION__) + ": " + x, y)
-extern void print_(std::string data, int level, const char *func = nullptr);
+extern void print_(std::string data, uint64_t level);
 extern long double get_mul_to_btc(std::string currency);
 extern long double get_btc_rate(std::string currency);
 extern std::vector<std::string> newline_to_vector(std::string data);
@@ -161,6 +161,8 @@ void prefetch_range(void* addr, uint32_t range);
 std::string to_hex(uint8_t s);
 
 std::string get_readable_time(uint64_t time_micro_s);
+
+extern void update_print_level();
 
 #endif
 #include "convert.h"

@@ -220,6 +220,8 @@ void init(){
 	settings::set_setting("audio_playback", "ao");
 	
 	settings_init();
+
+	update_print_level();
 	
 	// copy shortcut settings over to full names for in-program use
 	// most calls still need console_port

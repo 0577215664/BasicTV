@@ -245,23 +245,6 @@ std::vector<uint8_t> wave_decode_snippets_to_samples(tv_transcode_decode_state_t
 
 	while(old_wav_data_size != wav_data->size()){
 		try{
-			if(state->get_audio_prop().get_sampling_freq() == 0 &&
-			   state->get_audio_prop().get_bit_depth() == 0 &&
-			   state->get_audio_prop().get_channel_count() == 0){
-				print("no sampling freq, bit depth, or channel count, assuming bitrate information of first packet", P_NOTE);
-				// not sure how well this would work with Opus...
-				tv_audio_prop_t tmp =
-					state->get_audio_prop();
-				tmp.set_sampling_freq(
-					*sampling_freq);
-				tmp.set_bit_depth(
-					*bit_depth);
-				tmp.set_channel_count(
-					*channel_count);
-				state->set_audio_prop(
-					tmp);
-			}
-			   
 			sanity_check_prepend(
 				&((*wav_data)[0]),
 				state->get_audio_prop().get_sampling_freq(),
@@ -271,7 +254,26 @@ std::vector<uint8_t> wave_decode_snippets_to_samples(tv_transcode_decode_state_t
 				state->get_audio_prop().get_channel_count(),
 				channel_count);
 		}catch(...){
-			invalid_data = true;
+			// if(state->get_audio_prop().get_sampling_freq() == 0 &&
+			//    state->get_audio_prop().get_bit_depth() == 0 &&
+			//    state->get_audio_prop().get_channel_count() == 0){
+			print("no sampling freq, bit depth, and/or channel count, assuming bitrate information of first packet", P_NOTE);
+			tv_audio_prop_t tmp =
+				state->get_audio_prop();
+			tmp.set_sampling_freq(
+				*sampling_freq);
+			tmp.set_bit_depth(
+				*bit_depth);
+			tmp.set_channel_count(
+				*channel_count);
+			P_V(*sampling_freq, P_DEBUG);
+			P_V(*bit_depth, P_DEBUG);
+			P_V(*channel_count, P_DEBUG);
+			state->set_audio_prop(
+				tmp);
+			// }else{
+			// 	print("state mis-match, weird", P_NOTE);
+			// }
 		}
 		P_V(wav_data->begin()->size(), P_VAR);
 		retval.insert(

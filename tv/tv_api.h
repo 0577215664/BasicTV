@@ -38,9 +38,11 @@ namespace tv{
 				uint8_t mapping);
 			void push(
 				id_t_ state_id,
+				int64_t window_offset_micro_s,
 				std::vector<id_t_> data);
 			void push(
 				tv_sink_state_t *state_ptr,
+				int64_t window_offset_micro_s,
 				std::vector<id_t_> data);
 		};
 	};

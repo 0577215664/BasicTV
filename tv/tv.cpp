@@ -75,10 +75,19 @@ void tv_loop(){
 		ASSERT(sink_state_ptr->get_frame_type() ==
 		       TV_FRAME_TYPE_AUDIO, P_ERR);
 		CONTINUE_IF_NULL(sink_state_ptr, P_WARN);
-		std::vector<id_t_> frames_to_load =
-			id_api::linked_list::list::by_distance(
-				latest_id,
-				10); // matches default frame linked list
+		if(latest_id != ID_BLANK_ID){
+			data_id_t *data_id_ptr =
+				PTR_ID(latest_id, );
+			std::vector<id_t_> ids_to_push =
+				data_id_ptr->get_linked_list().second;
+			ids_to_push.insert(
+				ids_to_push.begin(),
+				latest_id);
+			tv::sink::state::push(
+				sink_state_ptr,
+				window_offset,
+				ids_to_push);
+		}
 		
 	}
 }

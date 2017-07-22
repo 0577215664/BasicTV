@@ -429,6 +429,9 @@ std::vector<uint8_t> transcode::audio::frames::to_raw(
 			frame_set,
 			&output_audio_prop);
 	PRINT_IF_EMPTY(codec_set, P_ERR);
+	P_V(output_audio_prop.get_sampling_freq(), P_DEBUG);
+	P_V(output_audio_prop.get_bit_depth(), P_DEBUG);
+	P_V(output_audio_prop.get_channel_count(), P_DEBUG);
 	std::vector<uint8_t> raw_set =
 		transcode::audio::codec::to_raw(
 			&codec_set,
@@ -436,12 +439,17 @@ std::vector<uint8_t> transcode::audio::frames::to_raw(
 			sampling_freq,
 			bit_depth,
 			channel_count);
+	P_V(output_audio_prop.get_sampling_freq(), P_DEBUG);
+	P_V(output_audio_prop.get_bit_depth(), P_DEBUG);
+	P_V(output_audio_prop.get_channel_count(), P_DEBUG);
+
+	P_V(*sampling_freq, P_DEBUG);
+	P_V(*bit_depth, P_DEBUG);
+	P_V(*channel_count, P_DEBUG);
+
 	PRINT_IF_EMPTY(raw_set, P_ERR);
 	P_V(codec_set.size(), P_VAR);
 	P_V(raw_set.size(), P_VAR);
-	P_V(*sampling_freq, P_VAR);
-	P_V(*bit_depth, P_VAR);
-	P_V(*channel_count, P_VAR);
 	assert_sane_audio_metadata(*sampling_freq, *bit_depth, *channel_count);
 	return raw_set;
 			

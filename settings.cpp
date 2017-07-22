@@ -10,18 +10,14 @@ static std::vector<std::pair<std::string, std::string> > settings_vector;
  */
 
 void settings::set_setting(std::string a, std::string b){
-	auto pos =
-		std::find_if(
-			settings_vector.begin(),
-			settings_vector.end(),
-			[&a](const std::pair<std::string, std::string> elem){
-				return elem.first == a;
-			});
-	if(pos != settings_vector.end()){
-		settings_vector.erase(
-			pos);
+	for(uint64_t i = 0;i < settings_vector.size();i++){
+		if(settings_vector[i].first == a){
+			settings_vector[i].second = b;
+			return;
+		}
 	}
-	settings_vector.push_back(std::make_pair(a, b));
+	settings_vector.push_back(
+		std::make_pair(a, b));
 }
 
 void settings::set_settings(std::string settings_file){

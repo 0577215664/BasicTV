@@ -54,7 +54,7 @@ public:
 #define TV_SINK_MEDIUM_INIT(medium) tv_sink_state_t *tv_sink_##medium##_init()
 #define TV_SINK_MEDIUM_CLOSE(medium) void tv_sink_##medium##_close(tv_sink_state_t* state_ptr)
 #define TV_SINK_MEDIUM_PULL(medium) std::vector<id_t_> tv_sink_##medium##_pull(tv_sink_state_t* state_ptr, uint8_t mapping)
-#define TV_SINK_MEDIUM_PUSH(medium) void tv_sink_##medium##_push(tv_sink_state_t *state_ptr, std::vector<id_t_> frames)
+#define TV_SINK_MEDIUM_PUSH(medium) void tv_sink_##medium##_push(tv_sink_state_t *state_ptr, int64_t window_offset_micro_s, std::vector<id_t_> frames)
 
 // TODO: bind the mappings to this once things start working
 
@@ -72,6 +72,7 @@ public:
 		uint8_t mapping) = nullptr;
 	void (*push)(
 		tv_sink_state_t *state_ptr,
+		int64_t window_offset_micro_s,
 		std::vector<id_t_> frames) = nullptr;
 };
 
