@@ -83,42 +83,45 @@ void tv_loop(){
 				PTR_ID(latest_id, );
 			std::vector<id_t_> ids_to_push =
 				data_id_ptr->get_linked_list().second;
+			ids_to_push.insert(
+				ids_to_push.begin(),
+				latest_id);
+			uint64_t old_size = ~0;
+			// finds last ID in the list we have an ID for, and
+			// gets the end of that ID until we have no more growth
+			// sanity checks on whether we have the individual IDs
+			// are handled inside of tv::sink::state::push (more
+			// specifically, ATM, the audio_hardware push)
+			while(ids_to_push.size() < tv_forward_buffer &&
+			      ids_to_push.size() != old_size){
+				old_size = ids_to_push.size();
+				data_id_t *frame_id_ptr =
+					nullptr;
+				for(int64_t c = ids_to_push.size()-1;c >= 0;c--){
+					frame_id_ptr =
+						PTR_ID(ids_to_push[c], );
+					if(frame_id_ptr != nullptr){
+						break;
+					}
+				}
+				std::vector<id_t_> linked_list_forward =
+					frame_id_ptr->get_linked_list().second;
+				ids_to_push.insert(
+					ids_to_push.end(),
+					linked_list_forward.begin(),
+					linked_list_forward.end());
+			}
+			if(ids_to_push.size() > tv_forward_buffer){
+				ids_to_push.erase(
+					ids_to_push.begin()+tv_forward_buffer,
+					ids_to_push.end());
+			}
 			net_proto::request::add_id(
 				ids_to_push);
-			uint64_t old_size = ~0;
-			if(ids_to_push.size() > 0){
-				while(ids_to_push.size() < tv_forward_buffer &&
-				      ids_to_push.size() != old_size){
-					old_size = ids_to_push.size();
-					data_id_t *frame_id_ptr =
-						nullptr;
-					for(int64_t c = ids_to_push.size()-1;c >= 0;c--){
-						frame_id_ptr =
-							PTR_ID(ids_to_push[c], );
-						if(frame_id_ptr != nullptr){
-							break;
-						}
-					}
-					std::vector<id_t_> linked_list_forward =
-						frame_id_ptr->get_linked_list().second;
-					ids_to_push.insert(
-						ids_to_push.end(),
-						linked_list_forward.begin(),
-						linked_list_forward.end());
-				}
-				if(ids_to_push.size() > tv_forward_buffer){
-					ids_to_push.erase(
-						ids_to_push.begin()+tv_forward_buffer,
-						ids_to_push.end());
-				}
-				ids_to_push.insert(
-					ids_to_push.begin(),
-					latest_id);
-				tv::sink::state::push(
-					sink_state_ptr,
-					window_offset,
-					ids_to_push);
-			}
+			tv::sink::state::push(
+				sink_state_ptr,
+				window_offset,
+				ids_to_push);
 		}
 		
 	}
