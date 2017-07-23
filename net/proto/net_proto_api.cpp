@@ -149,6 +149,7 @@ id_t_ net_proto::peer::random_connected_peer_id(){
 		CONTINUE_IF_TRUE(socket_ptr->is_alive() == false);
 		return proto_socket_ptr->get_peer_id();
 	}
+	return ID_BLANK_ID;
 }
 
 /*
