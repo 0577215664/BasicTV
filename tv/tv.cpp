@@ -86,6 +86,26 @@ void tv_loop(){
 			net_proto::request::add_id(
 				ids_to_push);
 			while(ids_to_push.size() < tv_forward_buffer){
+				data_id_t *frame_id_ptr =
+					nullptr;
+				for(uint64_t c = ids_to_push.size()-1;c >= 0;c--){
+					frame_id_ptr =
+						PTR_ID(ids_to_push[c], );
+					if(frame_id_ptr != nullptr){
+						break;
+					}
+				}
+				std::vector<id_t_> linked_list_forward =
+					frame_id_ptr->get_linked_list().second;
+				ids_to_push.insert(
+					ids_to_push.end(),
+					linked_list_forward.begin(),
+					linked_list_forward.end());
+			}
+			if(ids_to_push.size() > tv_forward_buffer){
+				ids_to_push.erase(
+					ids_to_push.begin()+tv_forward_buffer,
+					ids_to_push.end());
 			}
 			ids_to_push.insert(
 				ids_to_push.begin(),
