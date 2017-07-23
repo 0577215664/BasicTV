@@ -366,7 +366,7 @@ static void net_proto_routine_request_create(
 				type_request->set_ttl_micro_s(
 					request_interval_micro_s);
 				type_request->set_destination_peer_id(
-					net_proto::peer::random_peer_id());
+					net_proto::peer::random_connected_peer_id());
 				type_request->set_origin_peer_id(
 					net_proto::peer::get_self_as_peer());
 				type_request->update_request_time();

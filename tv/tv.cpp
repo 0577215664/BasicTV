@@ -92,7 +92,7 @@ void tv_loop(){
 					old_size = ids_to_push.size();
 					data_id_t *frame_id_ptr =
 						nullptr;
-					for(uint64_t c = ids_to_push.size()-1;c >= 0;c--){
+					for(int64_t c = ids_to_push.size()-1;c >= 0;c--){
 						frame_id_ptr =
 							PTR_ID(ids_to_push[c], );
 						if(frame_id_ptr != nullptr){
