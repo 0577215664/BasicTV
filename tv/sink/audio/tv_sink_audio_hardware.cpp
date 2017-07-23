@@ -2,8 +2,8 @@
 #include "../../tv_frame_audio.h"
 #include "../../tv_api.h"
 #include "../../transcode/tv_transcode.h"
-
 #include "../../tv.h"
+#include "../../../settings.h"
 
 #include <portaudio.h>
 
@@ -48,7 +48,6 @@ static int tv_sink_audio_hardware_callback(
 				break;
 			}
 		}
-		P_V(start_playback_iter, P_DEBUG);
 		if(start_playback_iter >= 0){
 			// TODO: write this to output directly when finished
 			std::vector<uint8_t> data_to_push;
@@ -67,7 +66,6 @@ static int tv_sink_audio_hardware_callback(
 						std::get<2>(playback_vector[start_playback_iter]).begin(),
 						std::get<2>(playback_vector[start_playback_iter]).end());
 					if(playback_vector.size() >= start_playback_iter+1){
-						print("ran out of playback_vector items", P_DEBUG);
 						break;
 					}else{
 						playback_vector.erase(
@@ -80,7 +78,6 @@ static int tv_sink_audio_hardware_callback(
 			memcpy(output,
 			       data_to_push.data(),
 			       data_to_push.size());
-			// should have called start_playback_tier
 			ASSERT(data_to_push.size() > 0, P_ERR);
 			ASSERT(data_to_push.size() == bytes_to_write, P_WARN);
 		}
@@ -122,13 +119,17 @@ TV_SINK_MEDIUM_INIT(audio_hardware){
 		output_parameters.hostApiSpecificStreamInfo =
 			nullptr;
 
+		const uint64_t chunk_size =
+			settings::get_setting_unsigned_def(
+				"tv_sink_audio_hardware_chunk_size", 8192);
+		// 8192 is a bit much, but needed for the callback (std::vector)
 		const int32_t stream_retval =
 			Pa_OpenStream(
 				&stream,
 				nullptr,
 				&output_parameters,
 				48000,
-				4096,
+				chunk_size,
 				paClipOff,
 				tv_sink_audio_hardware_callback,
 				nullptr);
