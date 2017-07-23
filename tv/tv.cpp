@@ -72,6 +72,11 @@ void tv_loop(){
 			print("ID type given isn't a valid frame type", P_WARN);
 			continue;
 		}
+		std::tuple<id_t_, id_t_, std::vector<uint8_t> > new_stream_data =
+			active_streams[0];
+		std::get<0>(new_stream_data) = latest_id;
+		window_ptr->set_active_streams(
+			std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({new_stream_data}));
 		tv_sink_state_t *sink_state_ptr =
 			PTR_DATA(std::get<1>(active_streams[0]),
 				 tv_sink_state_t);
