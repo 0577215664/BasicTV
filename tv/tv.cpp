@@ -72,18 +72,17 @@ void tv_loop(){
 			print("ID type given isn't a valid frame type", P_WARN);
 			continue;
 		}
-		std::tuple<id_t_, id_t_, std::vector<uint8_t> > new_stream_data =
-			active_streams[0];
-		std::get<0>(new_stream_data) = latest_id;
-		window_ptr->set_active_streams(
-			std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({new_stream_data}));
-		tv_sink_state_t *sink_state_ptr =
-			PTR_DATA(std::get<1>(active_streams[0]),
-				 tv_sink_state_t);
-		ASSERT(sink_state_ptr->get_frame_type() ==
-		       TV_FRAME_TYPE_AUDIO, P_ERR);
-		CONTINUE_IF_NULL(sink_state_ptr, P_WARN);
 		if(latest_id != ID_BLANK_ID){
+			std::tuple<id_t_, id_t_, std::vector<uint8_t> > new_stream_data =
+				active_streams[0];
+			window_ptr->set_active_streams(
+				std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({new_stream_data}));
+			tv_sink_state_t *sink_state_ptr =
+				PTR_DATA(std::get<1>(active_streams[0]),
+					 tv_sink_state_t);
+			ASSERT(sink_state_ptr->get_frame_type() ==
+			       TV_FRAME_TYPE_AUDIO, P_ERR);
+			CONTINUE_IF_NULL(sink_state_ptr, P_WARN);
 			data_id_t *data_id_ptr =
 				PTR_ID(latest_id, );
 			std::vector<id_t_> ids_to_push =
