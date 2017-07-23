@@ -3,13 +3,13 @@
 #include "sink/tv_sink.h"
 
 #include "tv_window.h"
-
 #include "tv_frame_audio.h"
 #include "tv_frame_video.h"
 #include "tv_frame_standard.h"
 
 #include "../util.h"
 #include "../id/id_api.h"
+#include "../settings.h"
 
 void tv_init(){
 	// auto-initializes the PortAudio system since this is the first
@@ -30,6 +30,9 @@ void tv_loop(){
 	std::vector<id_t_> window_vector =
 		ID_TIER_CACHE_GET(
 			TYPE_TV_WINDOW_T);
+	const uint64_t tv_forward_buffer =
+		settings::get_setting_unsigned_def(
+			"tv_forward_buffer", 10);
 	for(uint64_t i = 0;i < window_vector.size();i++){
 		tv_window_t *window_ptr =
 			PTR_DATA(window_vector[i],
@@ -80,6 +83,10 @@ void tv_loop(){
 				PTR_ID(latest_id, );
 			std::vector<id_t_> ids_to_push =
 				data_id_ptr->get_linked_list().second;
+			net_proto::request::add_id(
+				ids_to_push);
+			while(ids_to_push.size() < tv_forward_buffer){
+			}
 			ids_to_push.insert(
 				ids_to_push.begin(),
 				latest_id);

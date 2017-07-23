@@ -188,7 +188,7 @@ std::vector<std::vector<uint8_t> > transcode::audio::frames::to_codec(
 			tv_frame_audio_t *frame_audio_ptr =
 				PTR_DATA(frame_set[i],
 					 tv_frame_audio_t);
-			CONTINUE_IF_NULL(frame_audio_ptr, P_WARN);
+			PRINT_IF_NULL(frame_audio_ptr, P_ERR);
 			audio_prop_sanity_check(
 				frame_audio_ptr->get_audio_prop());
 			uint32_t sampling_freq =

@@ -18,7 +18,6 @@ static bool pa_init = false;
 // broadcast time
 static std::mutex playback_lock;
 static std::vector<std::tuple<uint64_t, uint64_t, std::vector<uint8_t> > > playback_vector;
-static uint64_t playback_call_count = 0;
 
 static int tv_sink_audio_hardware_callback(
 	const void *input,
@@ -52,22 +51,27 @@ static int tv_sink_audio_hardware_callback(
 			// TODO: write this to output directly when finished
 			std::vector<uint8_t> data_to_push;
 			while(data_to_push.size() < bytes_to_write){
-				if(std::get<2>(playback_vector[start_playback_iter]).size() > bytes_to_write){
+				const uint64_t data_push_size =
+					data_to_push.size();
+				if(std::get<2>(playback_vector[start_playback_iter]).size() > bytes_to_write-data_to_push.size()){
 					data_to_push.insert(
 						data_to_push.end(),
 						std::get<2>(playback_vector[start_playback_iter]).begin(),
-						std::get<2>(playback_vector[start_playback_iter]).begin()+bytes_to_write);
+						std::get<2>(playback_vector[start_playback_iter]).begin()+bytes_to_write-data_push_size);
 					std::get<2>(playback_vector[start_playback_iter]).erase(
 						std::get<2>(playback_vector[start_playback_iter]).begin(),
-						std::get<2>(playback_vector[start_playback_iter]).begin()+bytes_to_write);
+						std::get<2>(playback_vector[start_playback_iter]).begin()+bytes_to_write-data_push_size);
 				}else{
-					data_to_push.insert(
+					const uint64_t copy_amount =
+						(std::get<2>(playback_vector[start_playback_iter]).size() > bytes_to_write-data_push_size) ?
+						 bytes_to_write-data_push_size : std::get<2>(playback_vector[start_playback_iter]).size();
+						 data_to_push.insert(
 						data_to_push.end(),
 						std::get<2>(playback_vector[start_playback_iter]).begin(),
-						std::get<2>(playback_vector[start_playback_iter]).end());
-					if(playback_vector.size() >= start_playback_iter+1){
+						std::get<2>(playback_vector[start_playback_iter]).begin()+copy_amount);
+					if(playback_vector.size() <= start_playback_iter+1){
 						break;
-					}else{
+					}else if(copy_amount == std::get<2>(playback_vector[start_playback_iter]).size()){
 						playback_vector.erase(
 							playback_vector.begin()+start_playback_iter);
 						// automatically put us at the next one
@@ -121,7 +125,8 @@ TV_SINK_MEDIUM_INIT(audio_hardware){
 
 		const uint64_t chunk_size =
 			settings::get_setting_unsigned_def(
-				"tv_sink_audio_hardware_chunk_size", 8192);
+				"tv_sink_audio_hardware_chunk_size",
+				8192);
 		// 8192 is a bit much, but needed for the callback (std::vector)
 		const int32_t stream_retval =
 			Pa_OpenStream(
@@ -183,6 +188,19 @@ TV_SINK_MEDIUM_PUSH(audio_hardware){
 	}
 	const std::vector<id_t_> push_history =
 		state_ptr->get_push_history();
+	// we have to have the frames for them to be cataloged as played
+	for(uint64_t i = 0;i < frames.size();i++){
+		if(PTR_ID(frames[i], ) == nullptr){
+			print("can't attempt frame decoding on the first"
+			      "and following frames we don't have, chopping"
+			      "off " + std::to_string(frames.size()-i) + " frames",
+			      P_WARN);
+			frames.erase(
+				frames.begin()+i,
+				frames.end());
+			break;
+		}
+	}
 	for(uint64_t i = 0;i < push_history.size();i++){
 		for(uint64_t c = 0; c < frames.size();c++){
 			if(push_history[i] == frames[c]){
