@@ -24,6 +24,8 @@ basictv: $(SRC:.cpp=.o)
 	@$(CXX) $^ -o $@ $(LDLIBS)
 	@echo -e "LD\t$@"
 
+fast: basictv
+
 clean:
 	$(RM) $(SRC:.cpp=.o) basictv
 	$(RM) -r $(DEP)
