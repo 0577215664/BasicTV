@@ -65,7 +65,7 @@ void tv_loop(){
 			}
 			break;
 		case TYPE_TV_FRAME_VIDEO_T:
-			print("no formal video support exitts yet", P_WARN);
+			print("no formal video support exists yet", P_WARN);
 			continue;
 			break;
 		default:
@@ -85,35 +85,40 @@ void tv_loop(){
 				data_id_ptr->get_linked_list().second;
 			net_proto::request::add_id(
 				ids_to_push);
-			while(ids_to_push.size() < tv_forward_buffer){
-				data_id_t *frame_id_ptr =
-					nullptr;
-				for(uint64_t c = ids_to_push.size()-1;c >= 0;c--){
-					frame_id_ptr =
-						PTR_ID(ids_to_push[c], );
-					if(frame_id_ptr != nullptr){
-						break;
+			uint64_t old_size = ~0;
+			if(ids_to_push.size() > 0){
+				while(ids_to_push.size() < tv_forward_buffer &&
+				      ids_to_push.size() != old_size){
+					old_size = ids_to_push.size();
+					data_id_t *frame_id_ptr =
+						nullptr;
+					for(uint64_t c = ids_to_push.size()-1;c >= 0;c--){
+						frame_id_ptr =
+							PTR_ID(ids_to_push[c], );
+						if(frame_id_ptr != nullptr){
+							break;
+						}
 					}
+					std::vector<id_t_> linked_list_forward =
+						frame_id_ptr->get_linked_list().second;
+					ids_to_push.insert(
+						ids_to_push.end(),
+						linked_list_forward.begin(),
+						linked_list_forward.end());
 				}
-				std::vector<id_t_> linked_list_forward =
-					frame_id_ptr->get_linked_list().second;
+				if(ids_to_push.size() > tv_forward_buffer){
+					ids_to_push.erase(
+						ids_to_push.begin()+tv_forward_buffer,
+						ids_to_push.end());
+				}
 				ids_to_push.insert(
-					ids_to_push.end(),
-					linked_list_forward.begin(),
-					linked_list_forward.end());
+					ids_to_push.begin(),
+					latest_id);
+				tv::sink::state::push(
+					sink_state_ptr,
+					window_offset,
+					ids_to_push);
 			}
-			if(ids_to_push.size() > tv_forward_buffer){
-				ids_to_push.erase(
-					ids_to_push.begin()+tv_forward_buffer,
-					ids_to_push.end());
-			}
-			ids_to_push.insert(
-				ids_to_push.begin(),
-				latest_id);
-			tv::sink::state::push(
-				sink_state_ptr,
-				window_offset,
-				ids_to_push);
 		}
 		
 	}
