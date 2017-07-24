@@ -28,7 +28,7 @@ static void id_import_raw(
 	uint64_t size,
 	std::vector<uint8_t> *vector){
 	if(flags & ID_DATA_BYTE_VECTOR){
-		print("reading as a byte vector", P_SPAM);
+		// print("reading as a byte vector", P_SPAM);
 		std::vector<uint8_t> *local_vector =
 			(std::vector<uint8_t>*)var;
 		// not the fastest
@@ -43,7 +43,7 @@ static void id_import_raw(
 			flags,
 			size);
 	}else if(flags & ID_DATA_EIGHT_BYTE_VECTOR){
-		print("reading as an eight byte vector", P_SPAM);
+		// print("reading as an eight byte vector", P_SPAM);
 		std::vector<uint64_t> *local_vector =
 			(std::vector<uint64_t>*)var;
 		local_vector->clear();
@@ -57,7 +57,7 @@ static void id_import_raw(
 			flags,
 			size);
 	}else if(flags & ID_DATA_BYTE_VECTOR_VECTOR){
-		print("reading as a byte vector vector", P_SPAM);
+		// print("reading as a byte vector vector", P_SPAM);
 		std::vector<std::vector<uint8_t> > *local_vector =
 			(std::vector<std::vector<uint8_t> >*)(var);
 		local_vector->clear();
@@ -78,7 +78,7 @@ static void id_import_raw(
 			0,
 			sizeof(transport_size_t),
 			false);
-		P_V(elem_count, P_VAR);
+		// P_V(elem_count, P_VAR);
 		for(uint64_t i = 0;i < elem_count;i++){
 			transport_size_t trans_size = 0;
 			id_import_raw_real(
@@ -98,11 +98,11 @@ static void id_import_raw(
 				tmp);
 		}
 	}else{
-		print("using a simple read", P_SPAM);
+		// print("using a simple read", P_SPAM);
 		if(flags & ID_DATA_ID){
 			ASSERT(size%sizeof(id_t_) == 0, P_ERR);
 		}
-		P_V(size, P_VAR);
+		// P_V(size, P_VAR);
 		memset(var, 0, size);
 		id_import_raw_real(
 			vector,
@@ -157,8 +157,8 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 		ID_IMPORT(export_rules_tmp);
 		ID_IMPORT(peer_rules_tmp);
 		ID_IMPORT(trans_size);
-		P_V(trans_i, P_SPAM);
-		P_V(trans_size, P_SPAM);
+		// P_V(trans_i, P_SPAM);
+		// P_V(trans_size, P_SPAM);
 		const bool valid_entry =
 			trans_i < data_vector.size();
 		if(unlikely(!valid_entry)){

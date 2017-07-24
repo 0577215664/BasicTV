@@ -9,7 +9,10 @@ data_id_t *mem_helper::lookup::id(id_t_ id_){
 		return nullptr;
 	}
 	for(uint64_t i = 0;i < id_vector.size();i++){
-		ASSERT(get_id_hash(id_vector[i]->get_id(true)) != blank_hash, P_WARN);
+		if(get_id_hash(id_vector[i]->get_id(true)) == blank_hash){
+			P_V_S(id_breakdown(id_vector[i]->get_id(true)), P_NOTE);
+			ASSERT(get_id_hash(id_vector[i]->get_id(true)) != blank_hash, P_WARN);
+		}
 		try{
 			const id_t_ list_id =
 				id_vector[i]->get_id(true);

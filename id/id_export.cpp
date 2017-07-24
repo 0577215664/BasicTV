@@ -45,7 +45,7 @@ std::vector<uint8_t> data_id_t::export_data(
 		extra &= ~ID_EXTRA_ENCRYPT;
 	}
 	if(get_id_hash(id) != get_id_hash(
-		   net_proto::peer::get_self_as_peer())){
+		   production_priv_key_id)){
 		std::raise(SIGINT);
 		print("can't export somebody else's modified data", P_ERR);
 	}

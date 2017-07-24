@@ -68,7 +68,7 @@ static mod_inc_t_ mod_inc_from_id_buffer(
 			return std::get<1>(id_buffer[i]);
 		}
 	}
-	print("no mod_inc available", P_ERR);
+	print("no mod_inc available", P_UNABLE);
 	return 0;
 }
 

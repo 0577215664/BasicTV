@@ -71,42 +71,47 @@ static void bootstrap_production_priv_key_id(){
 		priv_key =
 			PTR_DATA(key_pair.first,
 				 encrypt_priv_key_t);
-		if(priv_key == nullptr){
-			print("priv_key is a nullptr", P_ERR);
-		}
+		ASSERT(priv_key != nullptr, P_ERR);
 		pub_key =
 			PTR_DATA(key_pair.second,
 				 encrypt_pub_key_t);
-		if(pub_key == nullptr){
-			print("pub_key is a nullptr", P_ERR);
-		}
+		ASSERT(pub_key != nullptr, P_ERR);
 		priv_key->set_pub_key_id(key_pair.second);
-		production_priv_key_id = priv_key->id.get_id();
 	}else if(all_private_keys.size() == 1){
 		if(all_public_keys.size() == 0){
 			print("no public keys can possibly match private key, error in loading?", P_CRIT);
 		}
-		production_priv_key_id = all_private_keys[0];
 		P_V_S(convert::array::id::to_hex(all_private_keys[0]), P_VAR);
 		priv_key = PTR_DATA(all_private_keys[0], encrypt_priv_key_t);
-		P_V_S(convert::array::id::to_hex(all_public_keys[0]), P_VAR);
-		pub_key = PTR_DATA(all_public_keys[0], encrypt_pub_key_t);
+		pub_key = PTR_DATA(priv_key->get_pub_key_id(), encrypt_pub_key_t);
 	}else if(all_private_keys.size() > 1){
 		print("I have more than one private key, make a prompt to choose one", P_ERR);
 	}
+	ASSERT(priv_key != nullptr, P_ERR);
+	ASSERT(pub_key != nullptr, P_ERR);
 	const hash_t_ hash =
 		encrypt_api::hash::sha256::gen_raw(
 			pub_key->get_encrypt_key().second);
 	std::vector<data_id_t*> id_vector =
 		mem_helper::get_data_id_vector();
+	priv_key->set_pub_key_id(
+		pub_key->id.get_id()); // hash changes
+	production_priv_key_id =
+		priv_key->id.get_id();
 	for(uint64_t i = 0;i < id_vector.size();i++){
 		id_t_ id_tmp =
 			id_vector[i]->get_id();
-		ASSERT(get_id_hash(id_tmp) == blank_hash, P_ERR);
+		if(get_id_hash(id_tmp) != blank_hash){
+			// pre-loaded into memory
+			// possibly another private key?
+			continue;
+		}
 		set_id_hash(&id_tmp, hash);
 		id_vector[i]->set_id(id_tmp);
 		P_V_S(id_breakdown(id_vector[i]->get_id()), P_NOTE);
 	}
+	priv_key->set_pub_key_id(
+		pub_key->id.get_id()); // hash changes
 	production_priv_key_id =
 		priv_key->id.get_id();
 }

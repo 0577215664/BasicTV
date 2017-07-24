@@ -17,8 +17,8 @@ std::vector<std::pair<uint8_t, uint8_t> > all_tiers = {
 	{ID_TIER_MAJOR_MEM, 0},
 	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED},
 	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED},
-	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED},
-	{ID_TIER_MAJOR_DISK, 0}
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED}//,
+	// {ID_TIER_MAJOR_DISK, 0}
 };
 
 std::vector<id_tier_medium_t> id_tier_medium = {
@@ -216,7 +216,9 @@ void id_tier::operation::shift_data_to_state(
 					first_medium.get_id(
 						start_state_ptr->id.get_id(),
 						(*id_vector)[i]);
-				ASSERT(shift_payload.size() > 0, P_ERR);
+				if(shift_payload.size() == 0){
+					continue;
+				}
 				if(get_id_hash((*id_vector)[i]) ==
 				   get_id_hash(production_priv_key_id)){
 					// can't re-encrypt data we don't have
@@ -250,7 +252,7 @@ void id_tier::operation::shift_data_to_state(
 				print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (get)", P_WARN);
 			}
 		}else{
-			print("we don't have that ID in the buffer at all, can't shift", P_WARN);
+			print("we don't have the ID " + id_breakdown((*id_vector)[i]) + " in the buffer at all, can't shift", P_WARN);
 		}
 	}
 }
@@ -458,7 +460,9 @@ static void id_tier_init_cache(){
 void id_tier_init(){
 	// memory is handled in-line in init() for private key loading
 	id_tier_init_cache();
-	id_tier_init_disk();
+	// disk seems to be working fine, but tier shfiting code doesn't
+	// debug it with cache tiers first, then enable disk
+	// id_tier_init_disk();
 }
 
 #define COPY_UP 1
