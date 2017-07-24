@@ -48,8 +48,6 @@ void set_id_type(id_t_ *id, type_t_ type){
 }
 
 void data_id_t::init_list_all_data(){
-	add_data_id(
-		&id, 1);
 	add_data_one_byte_vector(
 		&(linked_list.first),
 		~0);
