@@ -5,7 +5,7 @@ CPPFLAGS = -DDEBUG
 SRC = $(shell find . -name '*.cpp')
 DEP = .depend
 
-all: basictv
+all: debug
 
 %.o: %.cpp
 	@mkdir -p $(DEP)/$(@D)
@@ -15,6 +15,12 @@ all: basictv
 basictv: $(SRC:.cpp=.o)
 	@$(CXX) $^ -o $@ $(LDLIBS)
 	@echo -e "LD\t$@"
+
+debug: CXXFLAGS += -O0 -g
+fast: CXXFLAGS += -Ofast -march=native
+
+debug: basictv
+fast: basictv
 
 clean:
 	$(RM) $(SRC:.cpp=.o) basictv
