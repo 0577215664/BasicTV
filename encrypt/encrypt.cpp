@@ -7,10 +7,12 @@ encrypt_key_t::encrypt_key_t(){}
 encrypt_key_t::~encrypt_key_t(){}
 
 void encrypt_key_t::list_virtual_data(data_id_t *id){
-	id->add_data_one_byte_vector(&key,
-				     65536);
-	id->add_data_raw(&encryption_scheme,
-			 1);
+	id->add_data_one_byte_vector(
+		&key,
+		~0);
+	id->add_data_raw(
+		&encryption_scheme,
+		1);
 }
 
 void encrypt_key_t::set_encrypt_key(std::vector<uint8_t> key_,
@@ -35,6 +37,7 @@ encrypt_pub_key_t::~encrypt_pub_key_t(){}
 
 encrypt_priv_key_t::encrypt_priv_key_t() : id(this, TYPE_ENCRYPT_PRIV_KEY_T){
 	list_virtual_data(&id);
+	id.add_data_id(&pub_key_id, 1);
 	id.set_lowest_global_flag_level(
 		ID_DATA_NETWORK_RULE_NEVER,
 		ID_DATA_EXPORT_RULE_ALWAYS,

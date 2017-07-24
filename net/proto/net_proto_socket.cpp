@@ -185,18 +185,9 @@ void net_proto_socket_t::send_id(id_t_ id_){
 	std::vector<std::vector<uint8_t> > payload =
 		id_tier::operation::get_data_from_state(
 			id_tier::state_tier::optimal_state_vector_of_tier_vector(
-				std::vector<std::pair<uint8_t, uint8_t> > ({
-						std::make_pair(ID_TIER_MAJOR_MEM,
-							       0),
-							std::make_pair(ID_TIER_MAJOR_CACHE,
-								       ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED),
-							std::make_pair(ID_TIER_MAJOR_CACHE,
-								       ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED),
-							std::make_pair(ID_TIER_MAJOR_CACHE,
-								       ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)})),
-		
+			        all_tiers),
 			{id_});
-	ASSERT(payload.size() > 0, P_ERR);
+	ASSERT(payload.size() > 0, P_UNABLE);
 	for(uint64_t i = 0;i < payload.size();i++){
 		payload[i] = id_api::raw::force_to_extra(
 			payload[i],

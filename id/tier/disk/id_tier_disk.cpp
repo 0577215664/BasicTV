@@ -26,23 +26,30 @@ std::vector<std::pair<id_t_, mod_inc_t_> > gen_id_buffer(
 	for(uint64_t i = 0;i < all_files.size();i++){
 		// TODO: if this exists in a directory with an underscore,
 		// it'll falsely register everything and read it in.
-		uint64_t underscore_pos =
-			all_files[i].find_last_of(
-				'_');
-		if(underscore_pos == std::string::npos){
+		std::string id_component;
+		std::string mod_inc_component;
+		try{
+			uint64_t underscore_pos =
+				all_files[i].find_last_of(
+					'_');
+			if(underscore_pos == std::string::npos){
+				continue;
+			}
+			uint64_t last_slash_pos =
+				all_files[i].find_last_of('/');
+			ASSERT(last_slash_pos != std::string::npos, P_ERR);
+			id_component =
+				all_files[i].substr(
+					last_slash_pos+1,
+					underscore_pos-last_slash_pos-1);
+			mod_inc_component =
+				all_files[i].substr(
+					underscore_pos+1,
+					all_files[i].size());
+		}catch(...){}
+		if(id_component == "" || mod_inc_component == ""){
 			continue;
 		}
-		uint64_t last_slash_pos =
-			all_files[i].find_last_of('/');
-		ASSERT(last_slash_pos != std::string::npos, P_ERR);
-		std::string id_component =
-			all_files[i].substr(
-				last_slash_pos+1,
-				underscore_pos-last_slash_pos-1);
-		std::string mod_inc_component =
-			all_files[i].substr(
-				underscore_pos+1,
-				all_files[i].size());
 		P_V_S(id_component, P_DEBUG);
 		P_V_S(mod_inc_component, P_DEBUG);
 		retval.push_back(
@@ -61,7 +68,7 @@ static mod_inc_t_ mod_inc_from_id_buffer(
 			return std::get<1>(id_buffer[i]);
 		}
 	}
-	print("no mod_inc available", P_ERR);
+	print("no mod_inc available", P_UNABLE);
 	return 0;
 }
 

@@ -328,7 +328,8 @@ data_id_t *id_tier::mem::get_id_ptr(
 			}
 		}
 		if(retval == nullptr &&
-		   tier_vector == all_tiers){
+		   tier_vector == all_tiers &&
+		   production_priv_key_id != ID_BLANK_ID){
 			// TODO: direct comparison to all_tiers doesn't consider order
 			if(std::find(
 				   net_proto_request_blacklist.begin(),
@@ -343,6 +344,9 @@ data_id_t *id_tier::mem::get_id_ptr(
 	}catch(...){
 	}
 	lookup_vector.erase(lookup_vector.end()-1);
+	if(retval == nullptr){
+		std::raise(SIGINT);
+	}
 	return retval;
 }
 

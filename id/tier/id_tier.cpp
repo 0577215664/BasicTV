@@ -17,8 +17,8 @@ std::vector<std::pair<uint8_t, uint8_t> > all_tiers = {
 	{ID_TIER_MAJOR_MEM, 0},
 	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED},
 	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED},
-	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED},
-	{ID_TIER_MAJOR_DISK, 0}
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED}//,
+	// {ID_TIER_MAJOR_DISK, 0}
 };
 
 std::vector<id_tier_medium_t> id_tier_medium = {
@@ -194,12 +194,13 @@ void id_tier::operation::shift_data_to_state(
 			   get_id_type((*id_vector)[i])) != memory_locked.end()){
 			// can't leave memory because it is needed for core
 			// functionality (id_tier_state_t only at the moment)
+			print("can't remove id_tier_state_t, needed for core function", P_DEBUG);
 			continue;
 		}
 		if(start_state_ptr->get_tier_major() == 0 &&
 		   get_id_hash((*id_vector)[i]) !=
 		   get_id_hash(production_priv_key_id)){
-			// can't take any data from tier 0 we don't own
+			print("can't export data from tier 0 we can't encrypt", P_DEBUG);
 			continue;
 		}
 		if(std::find(
@@ -215,7 +216,9 @@ void id_tier::operation::shift_data_to_state(
 					first_medium.get_id(
 						start_state_ptr->id.get_id(),
 						(*id_vector)[i]);
-				ASSERT(shift_payload.size() > 0, P_ERR);
+				if(shift_payload.size() == 0){
+					continue;
+				}
 				if(get_id_hash((*id_vector)[i]) ==
 				   get_id_hash(production_priv_key_id)){
 					// can't re-encrypt data we don't have
@@ -248,6 +251,8 @@ void id_tier::operation::shift_data_to_state(
 			}catch(...){
 				print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (get)", P_WARN);
 			}
+		}else{
+			print("we don't have the ID " + id_breakdown((*id_vector)[i]) + " in the buffer at all, can't shift", P_WARN);
 		}
 	}
 }
@@ -455,7 +460,9 @@ static void id_tier_init_cache(){
 void id_tier_init(){
 	// memory is handled in-line in init() for private key loading
 	id_tier_init_cache();
-	id_tier_init_disk();
+	// disk seems to be working fine, but tier shfiting code doesn't
+	// debug it with cache tiers first, then enable disk
+	// id_tier_init_disk();
 }
 
 #define COPY_UP 1
@@ -502,6 +509,9 @@ static std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
 	for(uint64_t a = 0;a < first_id_buffer.size();a++){
 		bool found = false;
 		const id_t_ a_id = std::get<0>(first_id_buffer[a]);
+		if(get_id_type(a_id) == TYPE_ID_TIER_STATE_T){
+			continue;
+		}
 		for(uint64_t b = 0;b < second_id_buffer.size();b++){
 			if(std::get<0>(second_id_buffer[b]) == a_id){
 				const mod_inc_t_ a_mod_inc =
@@ -524,12 +534,13 @@ static std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
 							second_id,
 							COPY_DOWN));
 				}
+				break;
 			}
 		}
 		if(found == false){ // push it down if it isn't already there
 			retval.push_back(
 				std::make_tuple(
-					std::get<0>(first_id_buffer[a]),
+					a_id,
 					first_id,
 					second_id,
 					COPY_UP));
@@ -577,6 +588,8 @@ void id_tier_loop(){
 					// let shift_data_to_state handle a lot
 					// of the rules
 					// print("couldn't shift data over", P_SPAM);
+				}else{
+					print("shifted data from tier " + id_breakdown(from_id) + " to " + id_breakdown(to_id), P_SPAM);
 				}
 			}
 		}
