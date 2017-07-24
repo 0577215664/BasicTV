@@ -114,8 +114,18 @@ id_t_ data_id_t::get_id(bool skip){
 }
 
 void data_id_t::set_id(id_t_ id_){
+	// del/add keeps cache in check
+	ASSERT(get_id_type(id) == get_id_type(id_), P_ERR);
+	const bool deletable =
+		get_id_type(id) != TYPE_ID_TIER_STATE_T;
+	if(deletable){
+		mem_del_id(this);
+	}
 	set_id_uuid(&id, get_id_uuid(id_));
 	set_id_hash(&id, get_id_hash(id_));
+	if(deletable){
+		mem_add_id(this);
+	}
 }
 
 std::string data_id_t::get_type(){
