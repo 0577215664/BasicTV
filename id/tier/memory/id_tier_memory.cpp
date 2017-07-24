@@ -344,9 +344,6 @@ data_id_t *id_tier::mem::get_id_ptr(
 	}catch(...){
 	}
 	lookup_vector.erase(lookup_vector.end()-1);
-	if(retval == nullptr){
-		std::raise(SIGINT);
-	}
 	return retval;
 }
 

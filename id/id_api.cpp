@@ -396,7 +396,6 @@ mod_inc_t_ id_api::raw::fetch_mod_inc(std::vector<uint8_t> data){
 	const uint64_t size = sizeof(retval);
 	fetch_size_sanity_check(start+size, data.size());
 	generic_fetch((uint8_t*)&retval, start, size, data.data());
-	P_V_B(retval, P_VAR);
 	return retval;
 }
 

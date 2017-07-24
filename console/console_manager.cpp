@@ -392,6 +392,12 @@ void console_t::tv_manager_list_channels_and_items(){
 			TYPE_TV_ITEM_T);
 	// uses output_table
 	output_table.clear();
+	output_table.push_back(
+		{"Item ID",
+				"Name",
+				"Desc",
+				"Live?",
+				"Channel ID"});
 	for(uint64_t i = 0;i < item_vector.size();i++){
 		tv_item_t *item_ptr =
 			PTR_DATA(item_vector[i],
@@ -408,11 +414,11 @@ void console_t::tv_manager_list_channels_and_items(){
 			continue;
 		}
 		std::vector<std::string> datum(
-			{"Item ID: " + convert::array::id::to_hex(item_vector[i]),
-					"Item Name: " + convert::string::from_bytes(item_ptr->get_name()),
-					"Item Desc: " + convert::string::from_bytes(item_ptr->get_desc()),
-					"Is it Live: " + (BETWEEN(item_ptr->get_start_time_micro_s(), get_time_microseconds(), item_ptr->get_end_time_micro_s())) ? "Yes" : "No",
-					"Channel ID: " + convert::array::id::to_hex(item_ptr->get_tv_channel_id())
+			{convert::array::id::to_hex(item_vector[i]),
+					convert::string::from_bytes(item_ptr->get_name()),
+					convert::string::from_bytes(item_ptr->get_desc()),
+					(BETWEEN(item_ptr->get_start_time_micro_s(), get_time_microseconds(), item_ptr->get_end_time_micro_s())) ? "Yes" : "No",
+					convert::array::id::to_hex(item_ptr->get_tv_channel_id())
 					// "Wallet Set ID: " + convert::array::id::to_hex(channel->get_wallet_set_id()), // temporary
 					});
 		output_table.push_back(
