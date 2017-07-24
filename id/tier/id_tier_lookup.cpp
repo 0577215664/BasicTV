@@ -135,6 +135,10 @@ std::vector<id_t_> id_tier::lookup::type::from_state(
 				tmp.end());
 		}catch(...){}
 	}
+	std::sort(retval.begin(), retval.end());
+	auto last = std::unique(retval.begin(), retval.end());
+	retval.erase(
+		last, retval.end());
 	return retval;
 }
 
@@ -157,6 +161,10 @@ std::vector<id_t_> id_tier::lookup::type::from_tier(
 				tmp.end());
 		}catch(...){}
 	}
+	std::sort(retval.begin(), retval.end());
+	auto last = std::unique(retval.begin(), retval.end());
+	retval.erase(
+		last, retval.end());
 	return retval;
 }
 		

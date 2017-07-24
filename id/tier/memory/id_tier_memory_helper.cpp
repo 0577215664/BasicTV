@@ -28,6 +28,14 @@ data_id_t *mem_helper::lookup::id(id_t_ id_){
 					get_id_hash(id_) == blank_hash;
 				if(matching_hash ||
 				   (list_hash_blank || param_hash_blank)){
+					// data_id_t *retval =
+					// 	id_vector[i];
+					// std::swap(
+					// 	id_vector[0],
+					// 	id_vector[i]);
+					// std::swap(
+					// 	id_buffer[0],
+					// 	id_buffer[i]);
 					return id_vector[i];
 				}
 			}
