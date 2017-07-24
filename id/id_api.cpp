@@ -497,6 +497,8 @@ std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 		ID_IMPORT(export_rules_tmp);
 		ID_IMPORT(peer_rules_tmp);
 		ID_IMPORT(trans_size);
+		trans_size =
+			NBO_32(trans_size);
 		const bool network_allows =
 			std::find(network_rules.begin(),
 				  network_rules.end(),
