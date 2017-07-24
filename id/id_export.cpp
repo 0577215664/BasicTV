@@ -46,7 +46,6 @@ std::vector<uint8_t> data_id_t::export_data(
 	std::vector<uint8_t> retval;
 	if(encrypt_blacklist_type(
 		   get_id_type(id))){
-		print("forcing no encryption on basis of encryption blacklist", P_SPAM);
 		extra &= ~ID_EXTRA_ENCRYPT;
 	}
 	if(get_id_hash(id) != get_id_hash(
