@@ -354,17 +354,34 @@ static void generic_fetch(uint8_t *ptr, uint64_t start, uint64_t size, uint8_t *
 #pragma warning("only memory is used with the new tier system at the moment")
 
 void id_api::add_data(std::vector<uint8_t> data){
+	// TODO: shuld inbound data be loaded directly into here?
+	std::vector<std::pair<uint8_t, uint8_t> > tier_vector;
+	switch(id_api::raw::fetch_extra(data)){
+	case (ID_EXTRA_ENCRYPT | ID_EXTRA_COMPRESS):
+		tier_vector.push_back(
+			std::make_pair(
+				ID_TIER_MAJOR_CACHE,
+				ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED));
+		break;
+	case (ID_EXTRA_COMPRESS):
+		tier_vector.push_back(
+			std::make_pair(
+				ID_TIER_MAJOR_CACHE,
+				ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED));
+		break;
+	case 0:
+		tier_vector.push_back(
+			std::make_pair(
+				ID_TIER_MAJOR_CACHE,
+				ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED));
+		break;
+	default:
+		print("invalid extra flag for data type", P_ERR);
+	}
+	// at the moment, there should only be one state for each tier
 	id_tier::operation::add_data_to_state(
 		id_tier::state_tier::optimal_state_vector_of_tier_vector(
-			std::vector<std::pair<uint8_t, uint8_t> > ({
-					std::make_pair(ID_TIER_MAJOR_MEM,
-						       0),
-						std::make_pair(ID_TIER_MAJOR_CACHE,
-							       ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED),
-						std::make_pair(ID_TIER_MAJOR_CACHE,
-							       ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED),
-						std::make_pair(ID_TIER_MAJOR_CACHE,
-							       ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)})),
+			tier_vector),
 		{data});
 }
 
