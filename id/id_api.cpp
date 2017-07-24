@@ -491,7 +491,9 @@ std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 	uint8_t network_rules_tmp = 0;
 	uint8_t export_rules_tmp = 0;
 	uint8_t peer_rules_tmp = 0;
-	while(data.size() > sizeof(transport_i_t) + sizeof(transport_size_t)){
+	const uint64_t metadata_size =
+		sizeof(trans_i)+(sizeof(uint8_t)*3)+sizeof(transport_size_t);
+	while(data.size()-vector_pos > metadata_size){
 		ID_SHIFT(trans_i);
 		ID_IMPORT(network_rules_tmp);
 		ID_IMPORT(export_rules_tmp);
@@ -499,6 +501,10 @@ std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 		ID_IMPORT(trans_size);
 		trans_size =
 			NBO_32(trans_size);
+		ASSERT((network_rules_tmp & 0b11111000) == 0, P_ERR);
+		ASSERT((export_rules_tmp & 0b11111000) == 0, P_ERR);
+		ASSERT((peer_rules_tmp & 0b11111000) == 0, P_ERR);
+		ASSERT(trans_size+vector_pos <= data.size(), P_ERR);
 		const bool network_allows =
 			std::find(network_rules.begin(),
 				  network_rules.end(),
@@ -514,13 +520,10 @@ std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 		if(!(network_allows &&
 		     export_allows &&
 		     peer_allows)){
-			if(data.size() < vector_pos+trans_size){
-				print("invalid trans_size", P_ERR);
-			}
+			vector_pos -= metadata_size;
 			data.erase(
 				data.begin()+vector_pos,
-				data.begin()+vector_pos+trans_size);
-			vector_pos -= trans_size;
+				data.begin()+vector_pos+trans_size+metadata_size);
 		}
 	}
 	return data;
