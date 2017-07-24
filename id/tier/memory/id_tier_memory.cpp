@@ -277,21 +277,17 @@ data_id_t *id_tier::mem::get_id_ptr(
 	try{
 		retval =
 			mem_helper::lookup::id(id);
-	}catch(...){}
-	if(retval == nullptr){
+		if(retval != nullptr){
+			lookup_vector.erase(lookup_vector.end()-1);
+			return retval;
+		}
 		std::vector<id_tier_state_t*> tier_state_vector =
 			mem_helper::lookup::tier_state(
 				tier_vector);
 		id_tier_state_t *mem_state_ptr =
-			nullptr;
-		try{
-			mem_state_ptr =
-				mem_helper::lookup::tier_state(
-					std::vector<std::pair<uint8_t, uint8_t> >(
-						{std::make_pair(0, 0)})).at(0);
-		}catch(...){
-			print("can't find mem_state_ptr", P_ERR);
-		}
+			mem_helper::lookup::tier_state(
+				std::vector<std::pair<uint8_t, uint8_t> >(
+					{std::make_pair(0, 0)})).at(0);
 		ASSERT(mem_state_ptr != nullptr, P_ERR);
 		for(uint64_t i = 0;i < tier_state_vector.size();i++){
 			if(tier_state_vector[i]->get_tier_major() == 0){
@@ -310,32 +306,41 @@ data_id_t *id_tier::mem::get_id_ptr(
 						tier_minor)) !=
 				tier_vector.end();
 			if(good_tier_pair){
-				try{
-					id_tier::operation::shift_data_to_state(
-						tier_state_vector[i],
-						mem_state_ptr,
-						{id});
-					if((retval = mem_helper::lookup::id(id)) != nullptr){
-						break;
-					}
-				}catch(...){
-					print("reading error", P_ERR);
+				print("attempting loading " + id_breakdown(id) + " from tier " + std::to_string(tier_major) + "." + std::to_string(tier_minor), P_SPAM);
+				// TODO: could probably re-order this
+				std::vector<id_t_> shift_payload(
+					{id});
+				id_tier::operation::shift_data_to_state(
+					tier_state_vector[i],
+					mem_state_ptr,
+					&shift_payload);
+				if(shift_payload.size() != 0){
+					print("couldn't shift from non-memory tier to memory tier", P_WARN);
+					continue;
 				}
+				if((retval = mem_helper::lookup::id(id)) != nullptr){
+					break;
+				}
+			}else{
+				P_V(tier_major, P_NOTE);
+				P_V(tier_minor, P_NOTE);
+				print("ID lookup opted to exclude a tier", P_WARN);
 			}
 		}
-	}
-	if(retval == nullptr &&
-	   tier_vector == all_tiers){
-		// TODO: direct comparison to all_tiers doesn't consider order
-		if(std::find(
-			   net_proto_request_blacklist.begin(),
-			   net_proto_request_blacklist.end(),
-			   get_id_type(id)) == net_proto_request_blacklist.end()){
-			net_proto::request::add_id(
-				id);
-		}else{
-			print("not listing net_proto_request_blacklist type in ID request vector", P_SPAM);
+		if(retval == nullptr &&
+		   tier_vector == all_tiers){
+			// TODO: direct comparison to all_tiers doesn't consider order
+			if(std::find(
+				   net_proto_request_blacklist.begin(),
+				   net_proto_request_blacklist.end(),
+				   get_id_type(id)) == net_proto_request_blacklist.end()){
+				net_proto::request::add_id(
+					id);
+			}else{
+				print("not listing net_proto_request_blacklist type in ID request vector", P_SPAM);
+			}
 		}
+	}catch(...){
 	}
 	lookup_vector.erase(lookup_vector.end()-1);
 	return retval;

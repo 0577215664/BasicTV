@@ -130,11 +130,11 @@ namespace id_tier{
 		void shift_data_to_state(
 			id_t_ start_state_id,
 			id_t_ end_state_id,
-			std::vector<id_t_> id_vector);
+			std::vector<id_t_> *id_vector);
 		void shift_data_to_state(
 			id_tier_state_t *start_state_ptr,
 			id_tier_state_t *end_state_ptr,
-			std::vector<id_t_> id_vector);
+			std::vector<id_t_> *id_vector);
 		std::vector<std::tuple<id_t_, uint8_t, uint8_t> > valid_state_with_id(
 			id_t_ id);
 		uint8_t fix_extra_flags_for_state(

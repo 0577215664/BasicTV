@@ -154,7 +154,7 @@ std::vector<std::tuple<id_t_, uint8_t, uint8_t> > id_tier::operation::valid_stat
 void id_tier::operation::shift_data_to_state(
 	id_t_ start_state_id,
 	id_t_ end_state_id,
-	std::vector<id_t_> id_vector){
+	std::vector<id_t_> *id_vector){
 	shift_data_to_state(
 		PTR_DATA(start_state_id, id_tier_state_t),
 		PTR_DATA(end_state_id, id_tier_state_t),
@@ -164,7 +164,7 @@ void id_tier::operation::shift_data_to_state(
 void id_tier::operation::shift_data_to_state(
 	id_tier_state_t *start_state_ptr,
 	id_tier_state_t *end_state_ptr,
-	std::vector<id_t_> id_vector){
+	std::vector<id_t_> *id_vector){
 
 	ASSERT(start_state_ptr != nullptr, P_ERR);
 	ASSERT(end_state_ptr != nullptr, P_ERR);
@@ -176,13 +176,19 @@ void id_tier::operation::shift_data_to_state(
 		id_tier::lookup::ids::from_state(
 			end_state_ptr);
 	
-	for(uint64_t i = 0;i < id_vector.size();i++){
+	for(uint64_t i = 0;i < id_vector->size();i++){
 		if(std::find(
 			   memory_locked.begin(),
 			   memory_locked.end(),
-			   get_id_type(id_vector[i])) != memory_locked.end()){
-			// id_tier_state_t probably
-			print("can't export ID based on memory-locked status " + convert::type::from(get_id_type(id_vector[i])), P_SPAM);
+			   get_id_type((*id_vector)[i])) != memory_locked.end()){
+			// can't leave memory because it is needed for core
+			// functionality (id_tier_state_t only at the moment)
+			continue;
+		}
+		if(start_state_ptr->get_tier_major() == 0 &&
+		   get_id_hash((*id_vector)[i]) !=
+		   get_id_hash(production_priv_key_id)){
+			// can't take any data from tier 0 we don't own
 			continue;
 		}
 		id_tier_medium_t first_medium =
@@ -194,7 +200,7 @@ void id_tier::operation::shift_data_to_state(
 		if(std::find(
 			   first_buffer.begin(),
 			   first_buffer.end(),
-			   id_vector[i]) != first_buffer.end()){
+			   (*id_vector)[i]) != first_buffer.end()){
 			print("found ID in first medium state", P_DEBUG);
 			std::vector<uint8_t> shift_payload;
 			try{
@@ -204,9 +210,9 @@ void id_tier::operation::shift_data_to_state(
 				shift_payload =
 					first_medium.get_id(
 						start_state_ptr->id.get_id(),
-						id_vector[i]);
+						(*id_vector)[i]);
 				ASSERT(shift_payload.size() > 0, P_ERR);
-				if(get_id_hash(id_vector[i]) ==
+				if(get_id_hash((*id_vector)[i]) ==
 				   get_id_hash(production_priv_key_id)){
 					// can't re-encrypt data we don't have
 					shift_payload =
@@ -226,11 +232,13 @@ void id_tier::operation::shift_data_to_state(
 					second_medium.add_data(
 						end_state_ptr->id.get_id(),
 						shift_payload);
+					id_vector->erase(
+						id_vector->begin()+i);
 				}catch(...){
-					print("couldn't shift id " + id_breakdown(id_vector[i]) + " over to new device (set)", P_WARN);
+					print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (set)", P_WARN);
 				}
 			}catch(...){
-				print("couldn't shift id " + id_breakdown(id_vector[i]) + " over to new device (get)", P_WARN);
+				print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (get)", P_WARN);
 			}
 		}
 	}
@@ -463,10 +471,18 @@ void id_tier_loop(){
 				default:
 					print("invalid copy setting", P_ERR);
 				}
+				std::vector<id_t_> shift_operation(
+					{std::get<0>(move_logic[a])});
 				id_tier::operation::shift_data_to_state(
 					from_id,
 					to_id,
-					std::vector<id_t_>({std::get<0>(move_logic[a])}));
+					&shift_operation);
+				if(shift_operation.size() == 1){
+					// completely normal behavior, since we
+					// let shift_data_to_state handle a lot
+					// of the rules
+					// print("couldn't shift data over", P_SPAM);
+				}
 			}
 		}
 	}
