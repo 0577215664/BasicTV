@@ -50,15 +50,11 @@
 
 static void bootstrap_production_priv_key_id(){
 	std::vector<id_t_> all_public_keys =
-		id_tier::lookup::type::from_tier(
-			std::vector<std::pair<uint8_t, uint8_t> > ({
-					std::make_pair(ID_TIER_MAJOR_MEM, 0)}),
+		ID_TIER_CACHE_GET(
 			TYPE_ENCRYPT_PUB_KEY_T);
 	std::vector<id_t_> all_private_keys =
-		id_tier::lookup::type::from_tier(
-			std::vector<std::pair<uint8_t, uint8_t> > ({
-					std::make_pair(ID_TIER_MAJOR_MEM, 0)}),
-			TYPE_ENCRYPT_PUB_KEY_T);
+		ID_TIER_CACHE_GET(
+			TYPE_ENCRYPT_PRIV_KEY_T);
 	encrypt_priv_key_t *priv_key = nullptr;
 	encrypt_pub_key_t *pub_key = nullptr;
 	if(all_private_keys.size() == 0){
