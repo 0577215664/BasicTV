@@ -1,11 +1,11 @@
-CXXFLAGS += -Wall -Wextra -std=c++14 -Wno-unused-function -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -Wcast-align -Wswitch-default -Wunreachable-code -I/usr/include/opus -I/usr/local/include/opus
-LDLIBS = -lcurl -lSDL2_net -lSDL2 -lz -lcrypto -lopus -lzstd -lopusfile -rdynamic -pthread -lportaudio
+CXXFLAGS += -Wall -Wextra -std=c++14 -Wno-unused-function -O0 -g -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -Wcast-align -Wswitch-default -Wunreachable-code `pkg-config portaudio-2.0 opus opusfile SDL2_net sdl2 libcurl zlib openssl libzstd --cflags`
+LDLIBS = `pkg-config portaudio-2.0 opus opusfile SDL2_net sdl2 libcurl zlib openssl libzstd --libs` -rdynamic -pthread
 CPPFLAGS = -DDEBUG
 
 SRC = $(shell find . -name '*.cpp')
 DEP = .depend
 
-all: debug
+all: basictv
 
 %.o: %.cpp
 	@mkdir -p $(DEP)/$(@D)
@@ -13,15 +13,8 @@ all: debug
 	@echo -e "CXX\t$<"
 
 basictv: $(SRC:.cpp=.o)
-	@echo CXXFLAGS=${CXXFLAGS}
 	@$(CXX) $^ -o $@ $(LDLIBS)
 	@echo -e "LD\t$@"
-
-debug: CXXFLAGS +=-O0 -g
-fast: CXXFLAGS += -Ofast -march=native
-
-debug: basictv
-fast: basictv
 
 clean:
 	$(RM) $(SRC:.cpp=.o) basictv
