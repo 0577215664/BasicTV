@@ -206,7 +206,6 @@ void id_tier::operation::shift_data_to_state(
 			   first_buffer.begin(),
 			   first_buffer.end(),
 			   (*id_vector)[i]) != first_buffer.end()){
-			print("found ID in first medium state", P_DEBUG);
 			std::vector<uint8_t> shift_payload;
 			try{
 				std::vector<uint8_t> allowed_extra =
