@@ -4,6 +4,11 @@
 #include "id_tier_cache.h"
 #include "disk/id_tier_disk.h"
 
+// default directory relies on HOME path
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
 std::vector<type_t_> memory_locked = {
 	TYPE_ID_TIER_STATE_T
 };
@@ -175,7 +180,13 @@ void id_tier::operation::shift_data_to_state(
 	std::vector<id_t_> second_buffer =
 		id_tier::lookup::ids::from_state(
 			end_state_ptr);
-	
+
+	id_tier_medium_t first_medium =
+		id_tier::get_medium(
+			start_state_ptr->get_medium());
+	id_tier_medium_t second_medium =
+		id_tier::get_medium(
+			end_state_ptr->get_medium());
 	for(uint64_t i = 0;i < id_vector->size();i++){
 		if(std::find(
 			   memory_locked.begin(),
@@ -191,12 +202,6 @@ void id_tier::operation::shift_data_to_state(
 			// can't take any data from tier 0 we don't own
 			continue;
 		}
-		id_tier_medium_t first_medium =
-			id_tier::get_medium(
-				start_state_ptr->get_medium());
-		id_tier_medium_t second_medium =
-			id_tier::get_medium(
-				end_state_ptr->get_medium());
 		if(std::find(
 			   first_buffer.begin(),
 			   first_buffer.end(),
@@ -224,6 +229,10 @@ void id_tier::operation::shift_data_to_state(
 							std::vector<uint8_t>({}));
 				} // don't care, can't reconstruct
 				// TODO: can probably decrypt and check, blacklist against DDoS?
+				if(shift_payload.size() == 0){
+					// probably set to completely non-exportable
+					continue;
+				}
 				shift_payload =
 					id_api::raw::force_to_extra(
 						shift_payload,
@@ -360,7 +369,94 @@ void id_tier_state_t::del_id_buffer(id_t_ id_){
 
 
 // creation of tier states happens in the main init()
+
+static void id_tier_init_disk(){
+	id_tier_medium_t disk_medium_ptr =
+		id_tier::get_medium(
+			ID_TIER_MEDIUM_DISK);
+	id_tier_state_t *tier_state_ptr =
+		PTR_DATA(disk_medium_ptr.init_state(), id_tier_state_t);
+	tier_state_ptr->add_allowed_extra(
+		ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS);
+	tier_state_ptr->set_medium(
+		ID_TIER_MEDIUM_DISK);
+	tier_state_ptr->set_tier_major(
+		ID_TIER_MAJOR_DISK);
+	tier_state_ptr->set_tier_minor(
+		0);
+
+	id_tier_disk_state_t *disk_state_ptr =
+		reinterpret_cast<id_tier_disk_state_t*>(
+			tier_state_ptr->get_payload());
+	ASSERT(disk_state_ptr != nullptr, P_ERR);
+
+#ifdef __linux
+	struct passwd *pw = getpwuid(getuid());
+	const std::string home_path =
+		pw->pw_dir;
+#else
+	const std::string home_path =
+		"";
+#endif
+	const std::string full_path =
+		home_path + "/.BasicTV/";
+	P_V_S(full_path, P_VAR);
+	disk_state_ptr->path =
+		convert::string::to_bytes(
+			full_path);
+	disk_medium_ptr.update_cache(
+		tier_state_ptr->id.get_id());
+}
+
+static void id_tier_init_cache(){
+	id_tier_medium_t cache_medium_ptr =
+		id_tier::get_medium(
+			ID_TIER_MEDIUM_CACHE);
+	// can have a vector of std::pair<uint8_t> (allowed extra), but
+	// the cache is set up so there's only one extra configuration per
+	// minor tier
+	std::vector<std::tuple<id_tier_state_t*, uint8_t, uint8_t, std::pair<uint8_t, uint8_t> > > cache_data =
+		std::vector<std::tuple<id_tier_state_t*, uint8_t, uint8_t, std::pair<uint8_t, uint8_t> > >({
+				std::make_tuple(
+					PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
+					0,
+					ID_TIER_MEDIUM_CACHE,
+					std::make_pair(
+						ID_TIER_MAJOR_CACHE,
+						ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED)),
+					std::make_tuple(
+						PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
+						ID_EXTRA_COMPRESS,
+						ID_TIER_MEDIUM_CACHE,
+						std::make_pair(
+							ID_TIER_MAJOR_CACHE,
+							ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED)),
+					std::make_tuple(
+						PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
+						ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS,
+						ID_TIER_MEDIUM_CACHE,
+						std::make_pair(
+							ID_TIER_MAJOR_CACHE,
+							ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)),
+					});
+	for(uint64_t i = 0;i < cache_data.size();i++){
+		id_tier_state_t *tier_state_ptr =
+			std::get<0>(cache_data[i]);
+		tier_state_ptr->add_allowed_extra(
+			std::get<1>(cache_data[i]));
+		tier_state_ptr->set_medium(
+			std::get<2>(cache_data[i]));
+		tier_state_ptr->set_tier_major(
+			std::get<3>(cache_data[i]).first);
+		tier_state_ptr->set_tier_minor(
+			std::get<3>(cache_data[i]).second);
+	}
+}
+
 void id_tier_init(){
+	// memory is handled in-line in init() for private key loading
+	id_tier_init_cache();
+	id_tier_init_disk();
 }
 
 #define COPY_UP 1

@@ -14,10 +14,6 @@
 
 #include "id/tier/disk/id_tier_disk.h" // direct writing path
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-
 /*
   All information imported has the SHA256 hash of the public key. It follows
   the following rules:
@@ -135,91 +131,6 @@ static id_tier_state_t* bootstrap_id_tier_mem(){
 	return memory_ptr;
 }
 
-// don't need pointers to this since we can do all lookups, mem can't at the
-// time of creation
-static void bootstrap_id_tier_cache(){
-	id_tier_medium_t cache_medium_ptr =
-		id_tier::get_medium(
-			ID_TIER_MEDIUM_CACHE);
-	// can have a vector of std::pair<uint8_t> (allowed extra), but
-	// the cache is set up so there's only one extra configuration per
-	// minor tier
-	std::vector<std::tuple<id_tier_state_t*, uint8_t, uint8_t, std::pair<uint8_t, uint8_t> > > cache_data =
-		std::vector<std::tuple<id_tier_state_t*, uint8_t, uint8_t, std::pair<uint8_t, uint8_t> > >({
-				std::make_tuple(
-					PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
-					0,
-					ID_TIER_MEDIUM_CACHE,
-					std::make_pair(
-						ID_TIER_MAJOR_CACHE,
-						ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED)),
-					std::make_tuple(
-						PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
-						ID_EXTRA_COMPRESS,
-						ID_TIER_MEDIUM_CACHE,
-						std::make_pair(
-							ID_TIER_MAJOR_CACHE,
-							ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED)),
-					std::make_tuple(
-						PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
-						ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS,
-						ID_TIER_MEDIUM_CACHE,
-						std::make_pair(
-							ID_TIER_MAJOR_CACHE,
-							ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)),
-					});
-	for(uint64_t i = 0;i < cache_data.size();i++){
-		id_tier_state_t *tier_state_ptr =
-			std::get<0>(cache_data[i]);
-		tier_state_ptr->add_allowed_extra(
-			std::get<1>(cache_data[i]));
-		tier_state_ptr->set_medium(
-			std::get<2>(cache_data[i]));
-		tier_state_ptr->set_tier_major(
-			std::get<3>(cache_data[i]).first);
-		tier_state_ptr->set_tier_minor(
-			std::get<3>(cache_data[i]).second);
-	}
-}
-
-static void bootstrap_id_tier_disk(){
-	id_tier_medium_t disk_medium_ptr =
-		id_tier::get_medium(
-			ID_TIER_MEDIUM_DISK);
-	id_tier_state_t *tier_state_ptr =
-		PTR_DATA(disk_medium_ptr.init_state(), id_tier_state_t);
-	tier_state_ptr->add_allowed_extra(
-		ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS);
-	tier_state_ptr->set_medium(
-		ID_TIER_MEDIUM_DISK);
-	tier_state_ptr->set_tier_major(
-		ID_TIER_MAJOR_DISK);
-	tier_state_ptr->set_tier_minor(
-		0);
-
-	id_tier_disk_state_t *disk_state_ptr =
-		reinterpret_cast<id_tier_disk_state_t*>(
-			tier_state_ptr->get_payload());
-	ASSERT(disk_state_ptr != nullptr, P_ERR);
-
-#ifdef __linux
-	struct passwd *pw = getpwuid(getuid());
-	const std::string home_path =
-		pw->pw_dir;
-#else
-	const std::string home_path =
-		"";
-#endif
-	const std::string full_path =
-		home_path + "/.BasicTV/";
-	P_V_S(full_path, P_VAR);
-	disk_state_ptr->path =
-		convert::string::to_bytes(
-			full_path);
-	disk_medium_ptr.update_cache(
-		tier_state_ptr->id.get_id());
-}
-
 #define SHORT_TO_FULL(short_, full) try{settings::set_setting(full, settings::get_setting(short_));}catch(...){}
 
 void init(){
@@ -275,36 +186,20 @@ void init(){
 	SHORT_TO_FULL("bsip", "net_proto_ip_tcp_bootstrap_ip");
 	SHORT_TO_FULL("bsp", "net_proto_ip_tcp_bootstrap_port");
 	SHORT_TO_FULL("df", "data_folder");
-	
-	
-	/*
-	  Using "~" doesn't work with C++, so get the information from getenv()
 
-	  TODO: convert the input string from settings.cfg to this
-
-	  TODO: use getuid and that stuff when getenv doesn't work (?)
-	 */
-	
-	
 	id_tier_state_t *tier_state_ptr =
 		bootstrap_id_tier_mem();
+	id_tier_init(); // private keys are reachable at this point
 	bootstrap_production_priv_key_id();
 	id_tier_mem_regen_state_cache();
 	id_tier_mem_update_state_cache(
 		tier_state_ptr);
-	// should probably move these over to id_tier_init()
-	bootstrap_id_tier_cache();
-	bootstrap_id_tier_disk();
-	
-	
-	// SDL2_net throws a SIGPIPE on client disconnects, I seriously need to
-	// upgrade to something better
-	signal(SIGPIPE, SIG_IGN);
-	
+
+	signal(SIGPIPE, SIG_IGN); // SDL2_net
+
 	tv_init();
 	input_init();
 	net_proto_init();
 	console_init();
-	// id_tier_init();
 }
 

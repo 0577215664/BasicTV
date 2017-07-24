@@ -493,6 +493,7 @@ std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 	uint8_t peer_rules_tmp = 0;
 	const uint64_t metadata_size =
 		sizeof(trans_i)+(sizeof(uint8_t)*3)+sizeof(transport_size_t);
+	uint32_t remaining_count = 0;
 	while(data.size()-vector_pos > metadata_size){
 		ID_SHIFT(trans_i);
 		ID_IMPORT(network_rules_tmp);
@@ -524,9 +525,16 @@ std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 			data.erase(
 				data.begin()+vector_pos,
 				data.begin()+vector_pos+trans_size+metadata_size);
+		}else{
+			remaining_count++;
 		}
 	}
-	return data;
+	if(remaining_count == 0){
+		// no sense in exporting just the packet metadata
+		return std::vector<uint8_t>({});
+	}else{
+		return data;
+	}
 
 }
 

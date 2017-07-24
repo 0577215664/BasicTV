@@ -133,7 +133,7 @@ std::vector<uint8_t> data_id_t::export_data(
 			if(data_vector[i].get_flags() & ID_DATA_ID){
 				length *= sizeof(id_t_);
 			}
-			P_V(data_vector[i].get_length(), P_SPAM);
+			// P_V(data_vector[i].get_length(), P_SPAM);
 			data_to_export =
 				std::vector<uint8_t>(
 					(uint8_t*)data_vector[i].get_ptr(),
@@ -163,7 +163,7 @@ std::vector<uint8_t> data_id_t::export_data(
 		//       "data_vector[trans_i].get_flags(): " + std::to_string(data_vector[trans_i].get_flags()), P_DEBUG);
 	}
 	ASSERT((0b11111100 & extra) == 0, P_ERR);
-	P_V(extra, P_SPAM);
+	// P_V(extra, P_SPAM);
 	if(extra & ID_EXTRA_COMPRESS){
 		retval = id_api::raw::compress(retval);
 	}
