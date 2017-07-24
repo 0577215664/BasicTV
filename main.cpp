@@ -83,6 +83,7 @@ int main(int argc_, char **argv_){
 			input_loop();
 			net_proto_loop();
 			console_loop();
+			// id_tier_loop();
 		}catch(...){}
 
 		// main loop specific stuff

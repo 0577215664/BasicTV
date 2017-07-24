@@ -34,13 +34,14 @@
 // expose more nitty gritties to the user later on
 #define ID_TIER_DESTROY(id_) (id_tier::operation::del_id_from_state(id_tier::state_tier::optimal_state_vector_of_tier_vector(all_tiers), {id_}))
 
+// All of these can throw on errors
 
 #define ID_TIER_INIT_STATE(medium) id_t_ id_tier_##medium##_init_state()
 #define ID_TIER_DEL_STATE(medium) void id_tier_##medium##_del_state(id_t_ state_id)
 #define ID_TIER_ADD_DATA(medium) void id_tier_##medium##_add_data(id_t_ state_id, std::vector<uint8_t> data)
 #define ID_TIER_DEL_ID(medium) void id_tier_##medium##_del_id(id_t_ state_id, id_t_ id)
 #define ID_TIER_GET_ID(medium) std::vector<uint8_t> id_tier_##medium##_get_id(id_t_ state_id, id_t_ id)
-#define ID_TIER_GET_ID_MOD_INC(medium) mod_inc_t_ id_tier_##medium##_get_id_mod_inc(id_t_ state_id, id_t_ id)
+#define ID_TIER_UPDATE_CACHE(medium) void id_tier_##medium##_update_cache(id_t_ state_id)
 
 typedef std::pair<id_t_, mod_inc_t_> id_buffer_t;
 
@@ -61,7 +62,7 @@ public:
 	data_id_t id;
 	id_tier_state_t();
 	~id_tier_state_t();
-	bool is_allowed_extra(extra_t_ extra_);
+	bool is_allowed_extra(extra_t_ extra_, id_t_ id);
 	GET_SET(medium, uint8_t);
 	GET_SET(tier_major, uint8_t);
 	GET_SET(tier_minor, uint8_t);
@@ -85,20 +86,20 @@ public:
 	void (*add_data)(id_t_ state_id, std::vector<uint8_t> data) = nullptr;
 	void (*del_id)(id_t_ state_id, id_t_ id) = nullptr;
 	std::vector<uint8_t> (*get_id)(id_t_ state_id, id_t_ id) = nullptr;
-	mod_inc_t_ (*get_id_mod_inc)(id_t_ state_id, id_t_ id) = nullptr;
+	void (*update_cache)(id_t_ state_id) = nullptr;
 	id_tier_medium_t(
 		id_t_ (*init_state_)(),
 		void (*del_state_)(id_t_ state_id),
 		void (*add_data_)(id_t_, std::vector<uint8_t>),
 		void (*del_id_)(id_t_, id_t_),
 		std::vector<uint8_t> (*get_id_)(id_t_, id_t_),
-		mod_inc_t_ (*get_id_mod_inc_)(id_t_, id_t_)){
+		void (*update_cache_)(id_t_)){
 		init_state = init_state_;
 		del_state = del_state_;
 		add_data = add_data_;
 		del_id = del_id_;
 		get_id = get_id_;
-		get_id_mod_inc = get_id_mod_inc_;
+		update_cache = update_cache_;
 	}
 };
 
@@ -199,7 +200,8 @@ extern void id_tier_init();
 extern void id_tier_loop();
 extern void id_tier_close();
 
-extern std::vector<id_tier_medium_t> id_tier_mediums;	
+extern std::vector<id_tier_medium_t> id_tier_mediums;
+extern std::vector<type_t_> memory_locked;
 
 extern std::vector<std::pair<uint8_t, uint8_t> > all_tiers;
 

@@ -12,6 +12,12 @@
 #include "id/tier/memory/id_tier_memory_helper.h"
 #include "id/tier/memory/id_tier_memory_special.h"
 
+#include "id/tier/disk/id_tier_disk.h" // direct writing path
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
 /*
   All information imported has the SHA256 hash of the public key. It follows
   the following rules:
@@ -160,7 +166,7 @@ static void bootstrap_id_tier_cache(){
 						ID_TIER_MEDIUM_CACHE,
 						std::make_pair(
 							ID_TIER_MAJOR_CACHE,
-						ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)),
+							ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)),
 					});
 	for(uint64_t i = 0;i < cache_data.size();i++){
 		id_tier_state_t *tier_state_ptr =
@@ -174,6 +180,44 @@ static void bootstrap_id_tier_cache(){
 		tier_state_ptr->set_tier_minor(
 			std::get<3>(cache_data[i]).second);
 	}
+}
+
+static void bootstrap_id_tier_disk(){
+	id_tier_medium_t disk_medium_ptr =
+		id_tier::get_medium(
+			ID_TIER_MEDIUM_DISK);
+	id_tier_state_t *tier_state_ptr =
+		PTR_DATA(disk_medium_ptr.init_state(), id_tier_state_t);
+	tier_state_ptr->add_allowed_extra(
+		ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS);
+	tier_state_ptr->set_medium(
+		ID_TIER_MEDIUM_DISK);
+	tier_state_ptr->set_tier_major(
+		ID_TIER_MAJOR_DISK);
+	tier_state_ptr->set_tier_minor(
+		0);
+
+	id_tier_disk_state_t *disk_state_ptr =
+		reinterpret_cast<id_tier_disk_state_t*>(
+			tier_state_ptr->get_payload());
+	ASSERT(disk_state_ptr != nullptr, P_ERR);
+
+#ifdef __linux
+	struct passwd *pw = getpwuid(getuid());
+	const std::string home_path =
+		pw->pw_dir;
+#else
+	const std::string home_path =
+		"";
+#endif
+	const std::string full_path =
+		home_path + "/.BasicTV/";
+	P_V_S(full_path, P_VAR);
+	disk_state_ptr->path =
+		convert::string::to_bytes(
+			full_path);
+	disk_medium_ptr.update_cache(
+		tier_state_ptr->id.get_id());
 }
 
 #define SHORT_TO_FULL(short_, full) try{settings::set_setting(full, settings::get_setting(short_));}catch(...){}
@@ -248,8 +292,10 @@ void init(){
 	id_tier_mem_regen_state_cache();
 	id_tier_mem_update_state_cache(
 		tier_state_ptr);
+	// should probably move these over to id_tier_init()
 	bootstrap_id_tier_cache();
-
+	bootstrap_id_tier_disk();
+	
 	
 	// SDL2_net throws a SIGPIPE on client disconnects, I seriously need to
 	// upgrade to something better
@@ -259,6 +305,6 @@ void init(){
 	input_init();
 	net_proto_init();
 	console_init();
-	id_tier_init();
+	// id_tier_init();
 }
 

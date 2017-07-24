@@ -92,6 +92,8 @@ ID_TIER_ADD_DATA(mem){
 	GET_TIER_STATE();
 	ASSERT(tier_state_ptr->is_allowed_extra(
 		       id_api::raw::fetch_extra(
+			       data),
+		       id_api::raw::fetch_id(
 			       data)), P_ERR);
 	id_t_ id = ID_BLANK_ID;
 	type_t_ type = 0;
@@ -229,7 +231,7 @@ ID_TIER_GET_ID(mem){
 		// be stored encrypted on the cache
 		P_V_S(id_breakdown(id), P_VAR);
 		P_V_S(id_breakdown(production_priv_key_id), P_VAR);
-		print("cannot/shouldn't supply data I do not own directly from memory, refer to tier 1 or higher", P_ERR);
+		print("cannot/shouldn't supply data I do not own directly from memory, refer to tier 1 or higher", P_UNABLE);
 	}
 	for(uint64_t i = 0;i < id_vector.size();i++){
 		if(id_vector[i]->get_id() == id){
@@ -240,13 +242,8 @@ ID_TIER_GET_ID(mem){
 	return std::vector<uint8_t>({});
 }
 
-ID_TIER_GET_ID_MOD_INC(mem){
-	for(uint64_t i = 0;i < id_buffer.size();i++){
-		if(id_buffer[i].first == id){
-			return id_buffer[i].second;
-		}
-	}
-	return 0;
+ID_TIER_UPDATE_CACHE(mem){
+	return;
 }
 
 /*

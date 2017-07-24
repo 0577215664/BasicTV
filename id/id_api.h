@@ -60,12 +60,12 @@ namespace id_api{
 		std::vector<uint8_t> force_to_extra(
 			std::vector<uint8_t> data,
 			uint8_t extra);
-		
-		std::vector<uint8_t> strip_to_lowest_rules(
+	        
+		std::vector<uint8_t> strip_to_only_rules(
 			std::vector<uint8_t> data,
-			uint8_t network_rules,
-			uint8_t export_rules,
-			uint8_t peer_rules);
+			std::vector<uint8_t> network_rules,
+			std::vector<uint8_t> export_rules,
+			std::vector<uint8_t> peer_rules);
 	};
 };
 
