@@ -130,6 +130,28 @@ id_t_ net_proto::peer::random_peer_id(){
 	return ID_BLANK_ID;
 }
 
+id_t_ net_proto::peer::random_connected_peer_id(){
+	std::vector<id_t_> proto_socket_vector =
+		ID_TIER_CACHE_GET(
+			TYPE_NET_PROTO_SOCKET_T);
+	std::random_shuffle(
+		proto_socket_vector.begin(),
+		proto_socket_vector.end());
+	for(uint64_t i = 0;i < proto_socket_vector.size();i++){
+		net_proto_socket_t *proto_socket_ptr =
+			PTR_DATA(proto_socket_vector[i],
+				 net_proto_socket_t);
+		CONTINUE_IF_NULL(proto_socket_ptr, P_WARN);
+		net_socket_t *socket_ptr =
+			PTR_DATA(proto_socket_ptr->get_socket_id(),
+				 net_socket_t);
+		CONTINUE_IF_NULL(socket_ptr, P_WARN);
+		CONTINUE_IF_TRUE(socket_ptr->is_alive() == false);
+		return proto_socket_ptr->get_peer_id();
+	}
+	return ID_BLANK_ID;
+}
+
 /*
   The holepunching stuff here should also be abstracted out as a requirement
   for connection initiation, but it works fine for here for now
@@ -219,8 +241,8 @@ id_t_ net_proto::peer::optimal_peer_for_id(id_t_ id){
 			return proto_peer_vector[i];
 		}
 	}
-	print("no matching hash found on network, returning random", P_NOTE);
-	return random_peer_id();
+	print("no matching hash found on network, returning random connected", P_WARN);
+	return random_connected_peer_id();
 }
 
 /*

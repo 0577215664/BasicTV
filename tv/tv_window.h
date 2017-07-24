@@ -41,31 +41,29 @@
 
 struct tv_window_t{
 private:
-	uint8_t pos = TV_WINDOW_CT;
-	int64_t timestamp_offset = 0;
 	id_t_ item_id = ID_BLANK_ID;
 	/*
-	  I like the idea of using entries instead of IDs (lookup overhead), but
-	  resizing the vector ruins that
-	 */
-	std::vector<id_t_> active_streams;
+	  FIRST: ID of the tv_frame_audio_t
+	  SECOND: ID of the tv_sink_audio_t
+	  THIRD: List of mappings from codec-channels to absolute channels
+	*/
+	std::vector<std::tuple<id_t_,
+		id_t_,
+		std::vector<uint8_t> > > active_streams;
+	int64_t timestamp_offset_micro_s = 0;
 public:
 	data_id_t id;
 	tv_window_t();
 	~tv_window_t();
-	void set_pos(uint8_t pos_);
-	uint8_t get_pos();
-	void set_item_id(id_t_ channel_id_);
-	id_t_ get_item_id();
-	void set_timestamp_offset(int64_t timestamp_offset_);
-	int64_t get_timestamp_offset(){return timestamp_offset;}
-	// generated from the position
-	void add_active_stream_id(id_t_ id_);
-	void del_active_stream_id(id_t_ id_);
-	std::vector<id_t_> get_active_streams(){return active_streams;}
-	void set_active_streams(std::vector<id_t_> active_streams_){active_streams = active_streams_;}
-	uint64_t get_x_res();
-	uint64_t get_y_res();
+	GET_SET_ID(item_id);
+	GET_SET(timestamp_offset_micro_s, int64_t);
+	std::vector<std::tuple<id_t_,
+		id_t_,
+		std::vector<uint8_t> > > get_active_streams();
+	void set_active_streams(
+		std::vector<std::tuple<id_t_,
+		id_t_,
+		std::vector<uint8_t> > > active_streams_);
 };
 
 #endif

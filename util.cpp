@@ -82,8 +82,6 @@ static std::string print_level_text(int level){
 	return fix_to_length(retval, P_V_LEV_LEN);
 }
 
-static int print_level = P_VAR;
-
 std::string print_color_text(std::string data, int level){
 	std::string prefix;
 	if(settings::get_setting("print_color") != "true"){
@@ -137,52 +135,40 @@ static bool print_is_sane(std::string data){
 	return true;
 }
 
-void print_(std::string data, int level, const char *func){
-	if(unlikely(print_level == P_VAR)){
-		try{
-			print_level =
-			std::stoi(
-				settings::get_setting(
-					"print_level"));
-		}catch(...){}
-	}
+static uint64_t print_level = P_VAR;
+static uint64_t print_delay_milli_s = 0;
+static bool print_backtrace = false;
+static bool print_soe = false;
+
+void update_print_level(){
+	print_level =
+		settings::get_setting_unsigned_def(
+			"print_level", P_VAR);
+	print_delay_milli_s =
+		settings::get_setting_unsigned_def(
+			"print_delay", 0);
+	print_backtrace =
+		!!(settings::get_setting_unsigned_def(
+			   "print_backtrace", false));
+	print_soe =
+		!!(settings::get_setting_unsigned_def(
+			   "print_soe", false));
+}
+
+void print_(std::string data, uint64_t level){
 	if(unlikely(level >= print_level)){
-		if(!print_is_sane(data)){
-			std::cout << "[OHCOMEON] something happened" << std::endl;
-			std::raise(SIGINT);
-		}
-		// Personally, I use the print delay to keep tmux from
-		// slowing to a halt and destroying my bandwidth
-		uint64_t print_delay_milli_s =
-			settings::get_setting_unsigned_def(
-				"print_delay", 0);
-		// need to force the sleep to get around running variable
-		// that's no biggie
-		/*
-		  TODO: instead of sleeping, stack requests back on each other
-		  until a limit is reached (to keep printed output and the
-		  program state in-line, in case of errors or exceptions)
-		*/
-		sleep_ms(print_delay_milli_s, true);
-		std::string func_;
-		if(func != nullptr){
-			func_ = func;
+		if(unlikely(print_delay_milli_s != 0)){
+			sleep_ms(print_delay_milli_s, true);
 		}
 		std::cout << print_color_text(print_level_text(level), level) << " "
-			  << " " << print_color_text(data, level) << std::endl;;
-		if(settings::get_setting_unsigned_def(
-			   "throw_level", P_CRIT) <= (uint64_t)level){
+			  << " " << print_color_text(data, level) << std::endl;
+		if(unlikely(level >= P_CRIT)){
 			std::cerr << "CRITICAL ERROR" << std::endl;
 			std::raise(SIGKILL);
 		}
-		// if(level >= P_WARN){
-		// 	sleep_ms(1000, true);
-		// }else{
-		// 	sleep_ms(250, true);
-		// }
 	}
-	if(level >= P_WARN){
-		if(settings::get_setting("print_backtrace") == "true"){
+	if(unlikely(level >= P_WARN)){
+		if(print_backtrace){
 			void *trace[16];
 			uint32_t trace_size =
 				backtrace(
@@ -198,10 +184,10 @@ void print_(std::string data, int level, const char *func){
 			std::cout << "Finished backtrace" << std::endl;
 		}
 	}
-	if(level >= P_ERR && settings::get_setting("print_soe") == "true"){ // SIGINT-on-error, GDB
+	if(unlikely(level >= P_ERR && settings::get_setting("print_soe") == "true")){ // SIGINT-on-error, GDB
 		std::raise(SIGINT);
 	}
-	if(level >= P_ERR || level == P_UNABLE){
+	if(unlikely(level >= P_ERR || level == P_UNABLE)){
 		throw std::runtime_error(data);
 	}
 }

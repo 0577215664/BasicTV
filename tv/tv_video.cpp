@@ -222,9 +222,6 @@ static tv_frame_video_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_
 static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
 					  SDL_Surface *surface){
 	SDL_Rect window_rect;
-	if(window->get_pos() != TV_WINDOW_CT){
-		print("unsupported window position", P_CRIT);
-	}
 	window_rect.w = surface->w;
 	window_rect.x = 0;
 	window_rect.h = surface->h;
@@ -379,7 +376,8 @@ static void tv_init_test_test_card(uint64_t x_res,
 	// done initializing
 	window->set_item_id(channel->id.get_id());
 	item->add_frame_id({frame_video->id.get_id()});
-	window->add_active_stream_id(frame_video->id.get_id());
+	// window->set_active_streams(
+	// 	frame_video->id.get_id());
 }
 
 /*
@@ -423,7 +421,7 @@ static void tv_init_test_webcam(){
 	item->add_frame_id(vector_array);
 	item->set_tv_channel_id(channel->id.get_id());
 	window->set_item_id(item->id.get_id());
-	window->add_active_stream_id(vector_array[0]);
+	// window->add_active_stream_id(vector_array[0]);
 }
 
 void tv_video_init(){

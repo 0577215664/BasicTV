@@ -66,7 +66,7 @@ static void encrypt_pull_key_info(id_t_ id,
 		P_V_I(id, P_SPAM)
 		print("id is nullptr", P_UNABLE);
 	}
-	if(ptr->get_type() == "encrypt_pub_key_t"){
+	if(ptr->get_type_byte() == TYPE_ENCRYPT_PUB_KEY_T){
 		encrypt_pub_key_t *pub_key =
 			(encrypt_pub_key_t*)ptr->get_ptr();
 		if(pub_key == nullptr){
@@ -79,7 +79,7 @@ static void encrypt_pull_key_info(id_t_ id,
 		}
 		*key = key_data.second;
 		*key_type = ENCRYPT_KEY_TYPE_PUB;
- 	}else if(ptr->get_type() == "encrypt_priv_key_t"){
+ 	}else if(ptr->get_type_byte() == TYPE_ENCRYPT_PRIV_KEY_T){
 		encrypt_priv_key_t *priv_key =
 			(encrypt_priv_key_t*)ptr->get_ptr();
 		if(priv_key == nullptr){

@@ -77,12 +77,14 @@ int main(int argc_, char **argv_){
 	print("formally starting BasicTV, entering loop", P_NOTE);
 	uint64_t start_time = get_time_microseconds();
 	uint64_t working_iter_time = start_time;
+	id_tier_init(); // TODO: add me to init() when i'm known to work
 	while(running){
 		try{
 			tv_loop();
 			input_loop();
 			net_proto_loop();
 			console_loop();
+			id_tier_loop();
 		}catch(...){}
 
 		// main loop specific stuff

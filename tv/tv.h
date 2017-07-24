@@ -4,12 +4,16 @@
 #include <utility>
 #include <chrono>
 
-#define TV_CHANNEL_SIZE 65536
-#define TV_WINDOW_SIZE 16
+#define TV_FRAME_TYPE_AUDIO 1
+#define TV_FRAME_TYPE_VIDEO 2
+#define TV_FRAME_TYPE_TEXT 3
+#define TV_FRAME_TYPE_NUMERICAL 4
 
 extern void tv_init();
 extern void tv_loop();
 extern void tv_close();
 
-#endif
 #include "tv_api.h"
+#include "sink/tv_sink.h"
+#include "sink/audio/tv_sink_audio_hardware.h"
+#endif

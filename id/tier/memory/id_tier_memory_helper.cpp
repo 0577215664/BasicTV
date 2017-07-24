@@ -16,13 +16,13 @@ data_id_t *mem_helper::lookup::id(id_t_ id_){
 			const bool matching_nonhash =
 				get_id_uuid(list_id) == get_id_uuid(id_) &&
 				get_id_type(list_id) == get_id_type(id_);
-			const bool matching_hash =
-				get_id_hash(list_id) == get_id_hash(id_);
-			const bool list_hash_blank =
-				get_id_hash(list_id) == blank_hash;
-			const bool param_hash_blank =
-				get_id_hash(id_) == blank_hash;
-			if(matching_nonhash){
+			if(unlikely(matching_nonhash)){
+				const bool matching_hash =
+					get_id_hash(list_id) == get_id_hash(id_);
+				const bool list_hash_blank =
+					get_id_hash(list_id) == blank_hash;
+				const bool param_hash_blank =
+					get_id_hash(id_) == blank_hash;
 				if(matching_hash ||
 				   (list_hash_blank || param_hash_blank)){
 					return id_vector[i];

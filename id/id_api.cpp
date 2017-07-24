@@ -459,14 +459,15 @@ bool encrypt_blacklist_type(type_t_ type_){
 #define ID_SHIFT(x) vector_pos += sizeof(x)
 #define ID_IMPORT(x) memcpy(&x, data.data()+vector_pos, sizeof(x));vector_pos += sizeof(x)
 
-#pragma warning("strip_to_lowest_rules removed a lot of sanity checks for clarity, should REALLY re-add");
+#pragma warning("strip_to_only_rules removed a lot of sanity checks for clarity, should REALLY re-add");
 
-std::vector<uint8_t> id_api::raw::strip_to_lowest_rules(
+
+std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 	std::vector<uint8_t> data,
-	uint8_t network_rules,
-	uint8_t export_rules,
-	uint8_t peer_rules){
-
+	std::vector<uint8_t> network_rules,
+	std::vector<uint8_t> export_rules,
+	std::vector<uint8_t> peer_rules){
+	
 	uint32_t vector_pos = 0;
 	id_t_ trans_id = ID_BLANK_ID;
 	uint8_t extra =
@@ -490,25 +491,51 @@ std::vector<uint8_t> id_api::raw::strip_to_lowest_rules(
 	uint8_t network_rules_tmp = 0;
 	uint8_t export_rules_tmp = 0;
 	uint8_t peer_rules_tmp = 0;
-	while(data.size() > sizeof(transport_i_t) + sizeof(transport_size_t)){
+	const uint64_t metadata_size =
+		sizeof(trans_i)+(sizeof(uint8_t)*3)+sizeof(transport_size_t);
+	uint32_t remaining_count = 0;
+	while(data.size()-vector_pos > metadata_size){
 		ID_SHIFT(trans_i);
 		ID_IMPORT(network_rules_tmp);
 		ID_IMPORT(export_rules_tmp);
 		ID_IMPORT(peer_rules_tmp);
 		ID_IMPORT(trans_size);
-		const bool network_allows = (network_rules_tmp >= network_rules || network_rules == ID_DATA_RULE_UNDEF);
-		const bool export_allows = (export_rules_tmp >= export_rules || export_rules == ID_DATA_RULE_UNDEF);
-		const bool peer_allows = (peer_rules_tmp >= peer_rules || peer_rules == ID_DATA_RULE_UNDEF);
+		trans_size =
+			NBO_32(trans_size);
+		ASSERT((network_rules_tmp & 0b11111000) == 0, P_ERR);
+		ASSERT((export_rules_tmp & 0b11111000) == 0, P_ERR);
+		ASSERT((peer_rules_tmp & 0b11111000) == 0, P_ERR);
+		ASSERT(trans_size+vector_pos <= data.size(), P_ERR);
+		const bool network_allows =
+			std::find(network_rules.begin(),
+				  network_rules.end(),
+				  network_rules_tmp) != network_rules.end();
+		const bool export_allows =
+			std::find(export_rules.begin(),
+				  export_rules.end(),
+				  export_rules_tmp) != export_rules.end();
+		const bool peer_allows =
+			std::find(peer_rules.begin(),
+				  peer_rules.end(),
+				  peer_rules_tmp) != peer_rules.end();
 		if(!(network_allows &&
 		     export_allows &&
 		     peer_allows)){
+			vector_pos -= metadata_size;
 			data.erase(
 				data.begin()+vector_pos,
-				data.begin()+vector_pos+trans_size);
-			vector_pos -= trans_size;
+				data.begin()+vector_pos+trans_size+metadata_size);
+		}else{
+			remaining_count++;
 		}
 	}
-	return data;
+	if(remaining_count == 0){
+		// no sense in exporting just the packet metadata
+		return std::vector<uint8_t>({});
+	}else{
+		return data;
+	}
+
 }
 
 std::vector<uint8_t> id_api::raw::force_to_extra(

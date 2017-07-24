@@ -12,7 +12,7 @@ ID_TIER_INIT_STATE(cache){
 	id_tier_cache_state_t *cache_state_ptr =
 		new id_tier_cache_state_t;
 	tier_state_ptr->set_medium(
-		ID_TIER_MEDIUM_MEM);
+		ID_TIER_MEDIUM_CACHE); // ?
 	tier_state_ptr->set_payload(
 		cache_state_ptr);
 	return tier_state_ptr->id.get_id();
@@ -30,6 +30,8 @@ ID_TIER_ADD_DATA(cache){
 	GET_ALL_STATE_PTR(cache);
 	ASSERT(tier_state_ptr->is_allowed_extra(
 		       id_api::raw::fetch_extra(
+			       data),
+		       id_api::raw::fetch_id(
 			       data)), P_ERR);
 	const id_t_ id_new =
 		id_api::raw::fetch_id(
@@ -100,17 +102,6 @@ ID_TIER_GET_ID(cache){
 	return std::vector<uint8_t>({});
 }
 
-ID_TIER_GET_ID_MOD_INC(cache){
-	GET_ALL_STATE_PTR(cache);
-	for(uint64_t i = 0;i < cache_state_ptr->cache_data.size();i++){
-		const id_t_ id_tmp =
-			id_api::raw::fetch_id(
-				cache_state_ptr->cache_data[i]);
-		if(unlikely(id_tmp == id)){
-			return id_api::raw::fetch_mod_inc(
-				cache_state_ptr->cache_data[i]);
-		}
-	}
-	print("no ID, so no mod_inc", P_ERR);
-	return 0;
+ID_TIER_UPDATE_CACHE(cache){
+	return;
 }

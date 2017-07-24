@@ -1,6 +1,6 @@
 #ifndef TV_FRAME_AUDIO_H
 #define TV_FRAME_AUDIO_H
-#include "tv_audio.h"
+#include "audio/tv_audio.h"
 #include "tv_frame_standard.h"
 #include <opus/opus.h>
 

@@ -2,7 +2,6 @@
 #include "../tv/tv.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_item.h"
-#include "../tv/tv_audio.h"
 #include "../tv/tv_frame_audio.h"
 #include "../tv/tv_window.h"
 #include "../tv/transcode/tv_transcode.h"
@@ -45,9 +44,9 @@ DEC_CMD(tv_window_list_active_streams){
 	if(window == nullptr){
 		print("window is a nullptr", P_ERR);
 	}
-	output_table = 
-		console_generate_generic_id_table(
-			window->get_active_streams());
+	// output_table = 
+	// 	console_generate_generic_id_table(
+	// 		window->get_active_streams());
 	ADD_COLUMN_TO_TABLE(
 		output_table, 0, get_item_id, convert::array::id::to_hex, tv_window_t);
 }
@@ -78,7 +77,7 @@ DEC_CMD(tv_window_set_to_time){
 		print("window is a nullptr", P_ERR);
 	}
 	uint64_t time = std::stoull(registers[1]);
-	window->set_timestamp_offset(time-get_time_microseconds());
+	window->set_timestamp_offset_micro_s(time-get_time_microseconds());
 }
 
 DEC_CMD(tv_window_set_timestamp_offset){
@@ -90,7 +89,7 @@ DEC_CMD(tv_window_set_timestamp_offset){
 		print("window is a nullptr", P_ERR);
 	}
 	uint64_t time = std::stoull(registers[1]);
-	window->set_timestamp_offset(time);
+	window->set_timestamp_offset_micro_s(time);
 }
 
 /*
@@ -198,8 +197,8 @@ DEC_CMD(tv_test_audio){
 		all_frame_audios);
 	window->set_item_id(
 		item->id.get_id());
-	window->add_active_stream_id(
-		all_frame_audios.at(0));
+	// window->add_active_stream_id(
+	// 	all_frame_audios.at(0));
 	output_table =
 		console_generate_generic_id_table(
 			all_frame_audios);

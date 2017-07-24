@@ -2,12 +2,23 @@
 #include "memory/id_tier_memory.h"
 #include "memory/id_tier_memory_helper.h"
 #include "id_tier_cache.h"
+#include "disk/id_tier_disk.h"
+
+// default directory relies on HOME path
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
+std::vector<type_t_> memory_locked = {
+	TYPE_ID_TIER_STATE_T
+};
 
 std::vector<std::pair<uint8_t, uint8_t> > all_tiers = {
 	{ID_TIER_MAJOR_MEM, 0},
 	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED},
 	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED},
-	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED}
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED},
+	{ID_TIER_MAJOR_DISK, 0}
 };
 
 std::vector<id_tier_medium_t> id_tier_medium = {
@@ -17,19 +28,28 @@ std::vector<id_tier_medium_t> id_tier_medium = {
 		id_tier_mem_add_data,
 		id_tier_mem_del_id,
 		id_tier_mem_get_id,
-		id_tier_mem_get_id_mod_inc),
+		id_tier_mem_update_cache),
 	id_tier_medium_t(
 		id_tier_cache_init_state,
 		id_tier_cache_del_state,
 		id_tier_cache_add_data,
 		id_tier_cache_del_id,
 		id_tier_cache_get_id,
-		id_tier_cache_get_id_mod_inc),
+		id_tier_cache_update_cache),
+	id_tier_medium_t(
+		id_tier_disk_init_state,
+		id_tier_disk_del_state,
+		id_tier_disk_add_data,
+		id_tier_disk_del_id,
+		id_tier_disk_get_id,
+		id_tier_disk_update_cache)
 };
 
 id_tier_medium_t id_tier::get_medium(uint8_t medium_type){
-	ASSERT(medium_type == 1 ||
-	       medium_type == 2, P_ERR);
+	ASSERT(medium_type == ID_TIER_MEDIUM_MEM ||
+	       medium_type == ID_TIER_MEDIUM_CACHE ||
+	       medium_type == ID_TIER_MEDIUM_DISK, P_ERR);
+	       
 	return id_tier_medium.at(medium_type-1); // 0 is undefined
 }
 
@@ -139,7 +159,7 @@ std::vector<std::tuple<id_t_, uint8_t, uint8_t> > id_tier::operation::valid_stat
 void id_tier::operation::shift_data_to_state(
 	id_t_ start_state_id,
 	id_t_ end_state_id,
-	std::vector<id_t_> id_vector){
+	std::vector<id_t_> *id_vector){
 	shift_data_to_state(
 		PTR_DATA(start_state_id, id_tier_state_t),
 		PTR_DATA(end_state_id, id_tier_state_t),
@@ -149,7 +169,7 @@ void id_tier::operation::shift_data_to_state(
 void id_tier::operation::shift_data_to_state(
 	id_tier_state_t *start_state_ptr,
 	id_tier_state_t *end_state_ptr,
-	std::vector<id_t_> id_vector){
+	std::vector<id_t_> *id_vector){
 
 	ASSERT(start_state_ptr != nullptr, P_ERR);
 	ASSERT(end_state_ptr != nullptr, P_ERR);
@@ -161,17 +181,31 @@ void id_tier::operation::shift_data_to_state(
 		id_tier::lookup::ids::from_state(
 			end_state_ptr);
 
-	for(uint64_t i = 0;i < id_vector.size();i++){
-		id_tier_medium_t first_medium =
-			id_tier::get_medium(
-				start_state_ptr->get_medium());
-		id_tier_medium_t second_medium =
-			id_tier::get_medium(
-				end_state_ptr->get_medium());
+	id_tier_medium_t first_medium =
+		id_tier::get_medium(
+			start_state_ptr->get_medium());
+	id_tier_medium_t second_medium =
+		id_tier::get_medium(
+			end_state_ptr->get_medium());
+	for(uint64_t i = 0;i < id_vector->size();i++){
+		if(std::find(
+			   memory_locked.begin(),
+			   memory_locked.end(),
+			   get_id_type((*id_vector)[i])) != memory_locked.end()){
+			// can't leave memory because it is needed for core
+			// functionality (id_tier_state_t only at the moment)
+			continue;
+		}
+		if(start_state_ptr->get_tier_major() == 0 &&
+		   get_id_hash((*id_vector)[i]) !=
+		   get_id_hash(production_priv_key_id)){
+			// can't take any data from tier 0 we don't own
+			continue;
+		}
 		if(std::find(
 			   first_buffer.begin(),
 			   first_buffer.end(),
-			   id_vector[i]) != first_buffer.end()){
+			   (*id_vector)[i]) != first_buffer.end()){
 			print("found ID in first medium state", P_DEBUG);
 			std::vector<uint8_t> shift_payload;
 			try{
@@ -179,20 +213,41 @@ void id_tier::operation::shift_data_to_state(
 					end_state_ptr->get_allowed_extra();
 				ASSERT(allowed_extra.size() > 0, P_ERR);
 				shift_payload =
+					first_medium.get_id(
+						start_state_ptr->id.get_id(),
+						(*id_vector)[i]);
+				ASSERT(shift_payload.size() > 0, P_ERR);
+				if(get_id_hash((*id_vector)[i]) ==
+				   get_id_hash(production_priv_key_id)){
+					// can't re-encrypt data we don't have
+					shift_payload =
+						id_api::raw::strip_to_only_rules(
+							shift_payload,
+							std::vector<uint8_t>({}),
+							std::vector<uint8_t>({
+								ID_DATA_EXPORT_RULE_ALWAYS}),
+							std::vector<uint8_t>({}));
+				} // don't care, can't reconstruct
+				// TODO: can probably decrypt and check, blacklist against DDoS?
+				if(shift_payload.size() == 0){
+					// probably set to completely non-exportable
+					continue;
+				}
+				shift_payload =
 					id_api::raw::force_to_extra(
-						first_medium.get_id(
-							start_state_ptr->id.get_id(),
-							id_vector[i]),
+						shift_payload,
 						allowed_extra[0]); // TODO: compute this stuff better (?)
+				try{
+					second_medium.add_data(
+						end_state_ptr->id.get_id(),
+						shift_payload);
+					id_vector->erase(
+						id_vector->begin()+i);
+				}catch(...){
+					print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (set)", P_WARN);
+				}
 			}catch(...){
-				print("couldn't shift id " + id_breakdown(id_vector[i]) + " over to new device (get)", P_ERR);
-			}
-			try{
-				second_medium.add_data(
-					end_state_ptr->id.get_id(),
-					shift_payload);
-			}catch(...){
-				print("couldn't shift id " + id_breakdown(id_vector[i]) + " over to new device (set)", P_ERR);
+				print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (get)", P_WARN);
 			}
 		}
 	}
@@ -289,11 +344,17 @@ id_tier_state_t::id_tier_state_t() : id(this, TYPE_ID_TIER_STATE_T){
 id_tier_state_t::~id_tier_state_t(){
 }
 
-bool id_tier_state_t::is_allowed_extra(extra_t_ extra_){
+bool id_tier_state_t::is_allowed_extra(extra_t_ extra_, id_t_ id_){
 	return std::find(
 		allowed_extra.begin(),
 		allowed_extra.end(),
-		extra_) != allowed_extra.end();
+		extra_) != allowed_extra.end() ||
+		std::find(
+			encrypt_blacklist.begin(),
+			encrypt_blacklist.end(),
+			get_id_type(id_)) != encrypt_blacklist.end();
+	// anything that shouldn't be encrypted overrides the is_allowed_extra,
+	// but should probably enforce compression
 }
 
 void id_tier_state_t::del_id_buffer(id_t_ id_){
@@ -307,11 +368,226 @@ void id_tier_state_t::del_id_buffer(id_t_ id_){
 }
 
 
+// creation of tier states happens in the main init()
+
+static void id_tier_init_disk(){
+	id_tier_medium_t disk_medium_ptr =
+		id_tier::get_medium(
+			ID_TIER_MEDIUM_DISK);
+	id_tier_state_t *tier_state_ptr =
+		PTR_DATA(disk_medium_ptr.init_state(), id_tier_state_t);
+	tier_state_ptr->add_allowed_extra(
+		ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS);
+	tier_state_ptr->set_medium(
+		ID_TIER_MEDIUM_DISK);
+	tier_state_ptr->set_tier_major(
+		ID_TIER_MAJOR_DISK);
+	tier_state_ptr->set_tier_minor(
+		0);
+
+	id_tier_disk_state_t *disk_state_ptr =
+		reinterpret_cast<id_tier_disk_state_t*>(
+			tier_state_ptr->get_payload());
+	ASSERT(disk_state_ptr != nullptr, P_ERR);
+
+#ifdef __linux
+	struct passwd *pw = getpwuid(getuid());
+	const std::string home_path =
+		pw->pw_dir;
+#else
+	const std::string home_path =
+		"";
+#endif
+	const std::string full_path =
+		home_path + "/.BasicTV/";
+	P_V_S(full_path, P_VAR);
+	disk_state_ptr->path =
+		convert::string::to_bytes(
+			full_path);
+	disk_medium_ptr.update_cache(
+		tier_state_ptr->id.get_id());
+}
+
+static void id_tier_init_cache(){
+	id_tier_medium_t cache_medium_ptr =
+		id_tier::get_medium(
+			ID_TIER_MEDIUM_CACHE);
+	// can have a vector of std::pair<uint8_t> (allowed extra), but
+	// the cache is set up so there's only one extra configuration per
+	// minor tier
+	std::vector<std::tuple<id_tier_state_t*, uint8_t, uint8_t, std::pair<uint8_t, uint8_t> > > cache_data =
+		std::vector<std::tuple<id_tier_state_t*, uint8_t, uint8_t, std::pair<uint8_t, uint8_t> > >({
+				std::make_tuple(
+					PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
+					0,
+					ID_TIER_MEDIUM_CACHE,
+					std::make_pair(
+						ID_TIER_MAJOR_CACHE,
+						ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED)),
+					std::make_tuple(
+						PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
+						ID_EXTRA_COMPRESS,
+						ID_TIER_MEDIUM_CACHE,
+						std::make_pair(
+							ID_TIER_MAJOR_CACHE,
+							ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED)),
+					std::make_tuple(
+						PTR_DATA(cache_medium_ptr.init_state(), id_tier_state_t),
+						ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS,
+						ID_TIER_MEDIUM_CACHE,
+						std::make_pair(
+							ID_TIER_MAJOR_CACHE,
+							ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED)),
+					});
+	for(uint64_t i = 0;i < cache_data.size();i++){
+		id_tier_state_t *tier_state_ptr =
+			std::get<0>(cache_data[i]);
+		tier_state_ptr->add_allowed_extra(
+			std::get<1>(cache_data[i]));
+		tier_state_ptr->set_medium(
+			std::get<2>(cache_data[i]));
+		tier_state_ptr->set_tier_major(
+			std::get<3>(cache_data[i]).first);
+		tier_state_ptr->set_tier_minor(
+			std::get<3>(cache_data[i]).second);
+	}
+}
+
 void id_tier_init(){
+	// memory is handled in-line in init() for private key loading
+	id_tier_init_cache();
+	id_tier_init_disk();
+}
+
+#define COPY_UP 1
+#define COPY_DOWN 2
+
+// GC should be in another function
+// #define MOVE_DOWN 3
+
+// ID (first) is copied/moved (fourth) from state A (lower tier, second) to
+// state B (higher tier, third). If the movement type (1-3) doesn't match the
+// A/B, there's an internal error
+
+static std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
+	id_t_ first_id,
+	id_t_ second_id){
+	std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > retval;
+	
+	id_tier_state_t *first_state_ptr =
+		PTR_DATA(first_id,
+			 id_tier_state_t);
+	ASSERT(first_state_ptr != nullptr, P_ERR);
+	id_tier_state_t *second_state_ptr =
+		PTR_DATA(second_id,
+			 id_tier_state_t);
+	ASSERT(second_state_ptr != nullptr, P_ERR);
+
+	// We don't bother with cache right now, since that's more hinting
+	// and pre-loading (which isn't an optimization until MT gets going)
+	if(first_state_ptr->get_tier_major() == second_state_ptr->get_tier_major()){
+		return retval;
+	}
+
+	if(first_state_ptr->get_tier_major() > second_state_ptr->get_tier_major()){
+		std::swap(first_state_ptr, second_state_ptr);
+		std::swap(first_id, second_id);
+	}
+
+	const std::vector<std::pair<id_t_, mod_inc_t_> > first_id_buffer =
+		id_tier::lookup::id_mod_inc::from_state(
+			first_state_ptr);
+	const std::vector<std::pair<id_t_, mod_inc_t_> > second_id_buffer =
+		id_tier::lookup::id_mod_inc::from_state(
+			second_state_ptr);
+	for(uint64_t a = 0;a < first_id_buffer.size();a++){
+		bool found = false;
+		const id_t_ a_id = std::get<0>(first_id_buffer[a]);
+		for(uint64_t b = 0;b < second_id_buffer.size();b++){
+			if(std::get<0>(second_id_buffer[b]) == a_id){
+				const mod_inc_t_ a_mod_inc =
+					std::get<1>(first_id_buffer[a]);
+				const mod_inc_t_ b_mod_inc =
+					std::get<1>(second_id_buffer[b]);
+				found = true;
+				if(a_mod_inc > b_mod_inc){
+					retval.push_back(
+						std::make_tuple(
+							a_id,
+							first_id,
+							second_id,
+							COPY_UP));
+				}else if(a_mod_inc < b_mod_inc){
+					retval.push_back(
+						std::make_tuple(
+							a_id,
+							first_id,
+							second_id,
+							COPY_DOWN));
+				}
+			}
+		}
+		if(found == false){ // push it down if it isn't already there
+			retval.push_back(
+				std::make_tuple(
+					std::get<0>(first_id_buffer[a]),
+					first_id,
+					second_id,
+					COPY_UP));
+		}
+	}
+	return retval;
 }
 
 void id_tier_loop(){
+	std::vector<id_t_> tier_state_vector =
+		ID_TIER_CACHE_GET(
+			TYPE_ID_TIER_STATE_T);
+	for(uint64_t i = 0;i < tier_state_vector.size();i++){
+		for(uint64_t c = 0;c < tier_state_vector.size();c++){
+			if(i == c){
+				continue;
+			}
+			const std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > move_logic =
+				tier_move_logic(
+					tier_state_vector[i],
+					tier_state_vector[c]);
+			for(uint64_t a = 0;a < move_logic.size();a++){
+				id_t_ from_id = ID_BLANK_ID;
+				id_t_ to_id = ID_BLANK_ID;
+				switch(std::get<3>(move_logic[a])){
+				case COPY_UP:
+					from_id = std::get<1>(move_logic[a]);
+					to_id = std::get<2>(move_logic[a]);
+					break;
+				case COPY_DOWN: // reversed
+					from_id = std::get<2>(move_logic[a]);
+					to_id = std::get<1>(move_logic[a]);
+					break;
+				default:
+					print("invalid copy setting", P_ERR);
+				}
+				std::vector<id_t_> shift_operation(
+					{std::get<0>(move_logic[a])});
+				id_tier::operation::shift_data_to_state(
+					from_id,
+					to_id,
+					&shift_operation);
+				if(shift_operation.size() == 1){
+					// completely normal behavior, since we
+					// let shift_data_to_state handle a lot
+					// of the rules
+					// print("couldn't shift data over", P_SPAM);
+				}
+			}
+		}
+	}
 }
 
+#undef COPY_UP
+#undef COPY_DOWN
+#undef MOVE_DOWN
+
 void id_tier_close(){
+	id_tier_loop();
 }

@@ -62,7 +62,7 @@ extern void sleep_ms(int ms, bool force = false);
 extern int search_for_argv(std::string);
 extern std::string get_argv(int a);
 #define print(x, y) print_((std::string)(__PRETTY_FUNCTION__) + ": " + x, y)
-extern void print_(std::string data, int level, const char *func = nullptr);
+extern void print_(std::string data, uint64_t level);
 extern long double get_mul_to_btc(std::string currency);
 extern long double get_btc_rate(std::string currency);
 extern std::vector<std::string> newline_to_vector(std::string data);
@@ -99,14 +99,14 @@ uint64_t flip_bit_section(uint8_t begin, uint8_t end);
 
 std::vector<uint8_t> true_rand_byte_vector(uint32_t size_bytes);
 
-#define CONTINUE_IF_NULL(x, p_level) if(x == nullptr){print((std::string)#x + " is a nullptr", p_level);continue;}
+#define CONTINUE_IF_NULL(x, p_level) if(unlikely(x == nullptr)){print((std::string)#x + " is a nullptr", p_level);continue;}
 #define CONTINUE_ON_NULL(x, p_level) CONTINUE_IF_NULL(x, p_level)
 // TODO: convert codebase to use this instead of three or more lines
-#define PRINT_IF_NULL(x, p_l) if(x == nullptr){print((std::string)#x + " is a nullptr", p_l);}
-#define PRINT_IF_EMPTY(x, p_l) if((x).size() == 0){print((std::string)#x + " is empty", p_l);}
+#define PRINT_IF_NULL(x, p_l) if(unlikely(x == nullptr)){print((std::string)#x + " is a nullptr", p_l);}
+#define PRINT_IF_EMPTY(x, p_l) if(unlikely((x).size() == 0)){print((std::string)#x + " is empty", p_l);}
 #define CONTINUE_IF_TRUE(x) if(x){continue;}
 
-#define ASSERT(x, p_l) if(!(x)){print("assertion " + (std::string)#x + " failed", p_l);}
+#define ASSERT(x, p_l) if(unlikely(!(x))){print("assertion " + (std::string)#x + " failed", p_l);}
 
 std::string fix_to_length(std::string string, uint64_t size);
 
@@ -161,6 +161,8 @@ void prefetch_range(void* addr, uint32_t range);
 std::string to_hex(uint8_t s);
 
 std::string get_readable_time(uint64_t time_micro_s);
+
+extern void update_print_level();
 
 #endif
 #include "convert.h"
