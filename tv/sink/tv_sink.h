@@ -3,6 +3,9 @@
 /*
   Standard interface for reading to and writing from any source of
   any type.
+
+  TODO: should probably be renamed to TV_SINK_STREAM, since TV_SINK_METADATA
+  also exists, and has a seperate interface
 */
 
 #include "../../id/id.h"
@@ -77,5 +80,13 @@ public:
 };
 
 tv_sink_medium_t tv_sink_get_medium(uint8_t medium);
+
+namespace tv_sink{
+	namespace stream{
+		namespace ogg_bitstream{
+			
+		};
+	};
+};
 
 #endif

@@ -1,0 +1,5 @@
+#ifndef TV_SINK_AUDIO_STREAM_OPUS_H
+#define TV_SINK_AUDIO_STREAM_OPUS_H
+/*
+ */
+#endif
