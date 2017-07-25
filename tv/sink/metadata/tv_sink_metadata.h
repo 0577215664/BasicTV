@@ -33,8 +33,8 @@ public:
 };
 
 #define TV_SINK_METADATA_INIT(medium) tv_sink_metadata_state_t *tv_sink_metadata_##medium##_init()
-#define TV_SINK_METADATA_CLOSE(medium) void tv_sink_metadata_##medium##_close(tv_sink_metadata_state_t *state_ptr)
-#define TV_SINK_METADATA_UPDATE(medium) void tv_sink_metadata_##medium##_update(tv_sink_metadata_state_t *state_ptr)
+#define TV_SINK_METADATA_CLOSE(medium) void tv_sink_metadata_##medium##_close(tv_sink_metadata_state_t *metadata_state_ptr)
+#define TV_SINK_METADATA_UPDATE(medium) void tv_sink_metadata_##medium##_update(tv_sink_metadata_state_t *metadata_state_ptr)
 
 struct tv_sink_metadata_medium_t{
 public:
