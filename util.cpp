@@ -148,11 +148,11 @@ void update_print_level(){
 		settings::get_setting_unsigned_def(
 			"print_delay", 0);
 	print_backtrace =
-		!!(settings::get_setting_unsigned_def(
-			   "print_backtrace", false));
+		settings::get_setting(
+			   "print_backtrace") == "true";
 	print_soe =
-		!!(settings::get_setting_unsigned_def(
-			   "print_soe", false));
+		settings::get_setting(
+			   "print_soe") == "true";
 }
 
 void print_(std::string data, uint64_t level){
