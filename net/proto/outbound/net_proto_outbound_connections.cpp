@@ -24,9 +24,9 @@ static void net_proto_initiate_direct_tcp(
 	net_socket_t *socket_ptr = nullptr;
 	net_proto_socket_t *proto_socket_ptr = nullptr;
 	try{
+		ip_address_ptr->set_last_attempted_connect_time(
+			get_time_microseconds());
 		try{
-			ip_address_ptr->set_last_attempted_connect_time(
-				get_time_microseconds());
 			socket_ptr =
 				new net_socket_t;
 			socket_ptr->set_net_ip(
@@ -35,29 +35,17 @@ static void net_proto_initiate_direct_tcp(
 				ip_address_ptr->get_port());
 			socket_ptr->connect();
 		}catch(...){
-			print("exception caught in connect()", P_ERR);
+			print("exception caught in connect()", P_UNABLE);
 		}
 		if(socket_ptr->is_alive() == false){
-			print("couldn't connect to peer", P_NOTE);
-		}else{
-			print("opened connection with peer " +
-			      net_proto::peer::get_breakdown(proto_peer_ptr->id.get_id()),
-			      P_NOTE);
-			delete con_req;
-			con_req = nullptr;
+			print("couldn't connect to peer", P_UNABLE);
 		}
-			
-		try{
-			proto_socket_ptr =
-				new net_proto_socket_t;
-			proto_socket_ptr->set_peer_id(
-				proto_peer_ptr->id.get_id());
-			proto_socket_ptr->set_socket_id(
-				socket_ptr->id.get_id());
-		}catch(...){
-			print("exception caught in proto_socket initialization", P_ERR);
-		}
-		
+		proto_socket_ptr =
+			new net_proto_socket_t;
+		proto_socket_ptr->set_peer_id(
+			proto_peer_ptr->id.get_id());
+		proto_socket_ptr->set_socket_id(
+			socket_ptr->id.get_id());
 		try{
 			const id_t_ my_peer_id =
 				net_proto::peer::get_self_as_peer();
@@ -70,21 +58,22 @@ static void net_proto_initiate_direct_tcp(
 			SEND_IF_VALID(my_peer_id);
 			SEND_IF_VALID(my_proto_peer_ptr->get_address_id());
 		}catch(...){
-			print("exception caught in initial data transmission", P_SPAM);
+			print("exception caught in initial data transmission", P_UNABLE);
 		}
 	}catch(...){
-		print("caught an exception in direct TCP connection attempt", P_NOTE);
-		if(proto_socket_ptr != nullptr){
-			delete proto_socket_ptr;
-			proto_socket_ptr = nullptr;
-		}
-		// proto_socket deletes the socket by default
-		// if(socket_ptr != nullptr){
-		// 	delete socket_ptr;
-		// 	socket_ptr = nullptr;
-		// }
+		const id_t_ proto_socket_id =
+			proto_socket_ptr->id.get_id();
+		const id_t_ socket_id =
+			socket_ptr->id.get_id();
+		// proto_socket destructor destroys socket_id and sample sets
+		ID_TIER_DESTROY(proto_socket_id);
+		ID_TIER_DESTROY(socket_id);
+		print("caught an exception in direct TCP connection attempt", P_UNABLE);
 	}
-}
+	print("opened connection with peer " +
+	      net_proto::peer::get_breakdown(proto_peer_ptr->id.get_id()),
+	      P_NOTE);
+	}
 
 #pragma message("net_proto_first_id_logic only does direct TCP without any checks")
 
@@ -141,13 +130,24 @@ void net_proto_initiate_all_connections(){
 		if(cur_time_micro_s >
 		   ip_address_ptr->get_last_attempted_connect_time()+1000000){
 			try{
+				/*
+				  first_id_logic creates and (if needed)
+				  destroys the net_socket_t and
+				  net_proto_socket_t
+				 */
 				net_proto_first_id_logic(
 					con_req,
 					second_peer_ptr,
 					ip_address_ptr); // only  write to IP address is last connect attempt time
 			}catch(...){
 				print("couldn't connect to peer", P_NOTE);
+				ID_TIER_DESTROY(second_peer_ptr->id.get_id());
+				second_peer_ptr = nullptr;
+				ID_TIER_DESTROY(ip_address_ptr->id.get_id());
+				ip_address_ptr = nullptr;
 			}
+			ID_TIER_DESTROY(con_req->id.get_id());
+			con_req = nullptr;
 		}
 	}
 	// second is always inbound, don't bother with that here

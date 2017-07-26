@@ -122,15 +122,15 @@ std::string net_get_ip(){
 
 void net_init(){
 	net_proto_init();
-	net_http_init();
+	// net_http_init();
 }
 
 void net_loop(){
 	net_proto_loop();
-	net_http_loop();
+	// net_http_loop();
 }
 
 void net_close(){
 	net_proto_close();
-	net_http_close();
+	// net_http_close();
 }

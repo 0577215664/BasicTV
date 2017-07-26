@@ -25,11 +25,11 @@ static uint64_t last_request_slow_time_micro_s = 0;
 static std::vector<uint8_t> routine_request_fast_vector = {
 	TYPE_ENCRYPT_PUB_KEY_T,
 	TYPE_NET_PROTO_PEER_T,
+	TYPE_TV_ITEM_T,
+	TYPE_TV_CHANNEL_T,
 	TYPE_NET_PROTO_CON_REQ_T
 };
 static std::vector<uint8_t> routine_request_slow_vector = {
-	TYPE_TV_ITEM_T,
-	TYPE_TV_CHANNEL_T,
 	TYPE_WALLET_SET_T
 };
 

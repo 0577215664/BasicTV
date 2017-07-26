@@ -104,8 +104,6 @@ net_proto_socket_t::net_proto_socket_t() : id(this, TYPE_NET_PROTO_SOCKET_T){
 }
 
 net_proto_socket_t::~net_proto_socket_t(){
-	ID_TIER_DESTROY(socket_id);
-	socket_id = ID_BLANK_ID;
 	ID_TIER_DESTROY(inbound_id_set_id);
 	inbound_id_set_id = ID_BLANK_ID;
 	ID_TIER_DESTROY(outbound_id_set_id);

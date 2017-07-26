@@ -25,11 +25,12 @@ static id_t_ net_proto_preferable_id_from_hash(
 		}
 	}
 	if(matching_hash_peer_id == ID_BLANK_ID){
+		print("can't find matching hash, adding a random connected peer", P_WARN);
 		matching_hash_peer_id =
-			net_proto::peer::random_peer_id();
+			net_proto::peer::random_connected_peer_id();
 	}
 	if(matching_hash_peer_id == ID_BLANK_ID){
-		print("no connected peers to facilitate request", P_SPAM);
+		print("no connected peers to facilitate request", P_WARN);
 	}
 	return matching_hash_peer_id;
 }
