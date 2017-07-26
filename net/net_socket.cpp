@@ -50,7 +50,6 @@ static void recv_to_buffer(
 				break;
 			}
 		}
-		sleep_ms(1);
 		iterator++;
 	}
 }
@@ -92,7 +91,6 @@ static void send_from_buffer(
 			print("exception caught in send thread", P_WARN);
 		}
 		ptr->thread_mutex.unlock();
-		sleep_ms(1);
 		iterator++;
 	}
 }
