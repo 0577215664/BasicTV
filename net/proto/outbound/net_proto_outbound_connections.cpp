@@ -61,13 +61,17 @@ static void net_proto_initiate_direct_tcp(
 			print("exception caught in initial data transmission", P_UNABLE);
 		}
 	}catch(...){
-		const id_t_ proto_socket_id =
-			proto_socket_ptr->id.get_id();
-		const id_t_ socket_id =
-			socket_ptr->id.get_id();
-		// proto_socket destructor destroys socket_id and sample sets
-		ID_TIER_DESTROY(proto_socket_id);
-		ID_TIER_DESTROY(socket_id);
+		if(proto_socket_ptr != nullptr){
+			const id_t_ proto_socket_id =
+				proto_socket_ptr->id.get_id();
+			ID_TIER_DESTROY(proto_socket_id);
+		}
+		if(socket_ptr != nullptr){
+			const id_t_ socket_id =
+				socket_ptr->id.get_id();
+			// proto_socket destructor destroys socket_id and sample sets
+			ID_TIER_DESTROY(socket_id);
+		}
 		print("caught an exception in direct TCP connection attempt", P_UNABLE);
 	}
 	print("opened connection with peer " +
@@ -105,28 +109,16 @@ void net_proto_initiate_all_connections(){
 			&first_id,
 			&second_id,
 			nullptr);
-		if(first_id != self_peer_id){
-			continue;
-		}
-		if(second_id == self_peer_id){
-			continue;
-		}
+		CONTINUE_IF_TRUE(first_id != self_peer_id);
+		CONTINUE_IF_TRUE(second_id == self_peer_id);
 		net_proto_peer_t *second_peer_ptr =
 			PTR_DATA(second_id,
 				 net_proto_peer_t);
 		CONTINUE_IF_NULL(second_peer_ptr, P_WARN);
-		// ASSERT(net_interface::medium::from_address(second_peer_ptr->get_address_id()) == NET_INTERFACE_MEDIUM_IP, P_ERR);
 		net_interface_ip_address_t *ip_address_ptr =
 			PTR_DATA(second_peer_ptr->get_address_id(),
 				 net_interface_ip_address_t);
-		if(ip_address_ptr == nullptr){
-			print("ip_address_ptr is a nullptr " + id_breakdown(second_peer_ptr->get_address_id()) +
-			      " in association with " + id_breakdown(second_peer_ptr->id.get_id()), P_WARN);
-			ID_TIER_DESTROY(second_peer_ptr->id.get_id());
-			second_peer_ptr = nullptr;
-			continue;
-		}
-		// CONTINUE_IF_NULL(ip_address_ptr, P_WARN);
+		CONTINUE_IF_NULL(ip_address_ptr, P_SPAM);
 		if(cur_time_micro_s >
 		   ip_address_ptr->get_last_attempted_connect_time()+1000000){
 			try{
