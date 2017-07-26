@@ -11,7 +11,7 @@ data_id_t *mem_helper::lookup::id(id_t_ id_){
 	const type_t_ id_type =
 		get_id_type(id_);
 	for(uint64_t i = 0;i < id_vector[id_type].size();i++){
-		if(get_id_hash(id_vector[id_type][i]->get_id(true)) == blank_hash){
+		if(unlikely(get_id_hash(id_vector[id_type][i]->get_id(true)) == blank_hash)){
 			P_V_S(id_breakdown(id_vector[id_type][i]->get_id(true)), P_NOTE);
 			ASSERT(get_id_hash(id_vector[id_type][i]->get_id(true)) != blank_hash, P_WARN);
 		}

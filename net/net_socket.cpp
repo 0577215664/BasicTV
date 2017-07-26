@@ -46,6 +46,8 @@ static void recv_to_buffer(
 				}
 			}catch(...){
 				print("exception caught in recv_to_buffer", P_WARN);
+				*recv_running = false;
+				break;
 			}
 		}
 		sleep_ms(1);

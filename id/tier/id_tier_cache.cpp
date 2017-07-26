@@ -91,10 +91,8 @@ ID_TIER_GET_ID(cache){
 		const id_t_ id_tmp =
 			id_api::raw::fetch_id(
 				cache_state_ptr->cache_data[i]);
-		P_V_S(convert::array::id::to_hex(id_tmp), P_NOTE);
-		P_V_S(convert::array::id::to_hex(id), P_NOTE);
 		if(unlikely(id_tmp == id)){
-			print("found ID " + id_breakdown(id_tmp) + " in cache", P_DEBUG);
+			// print("found ID " + id_breakdown(id_tmp) + " in cache", P_DEBUG);
 			return cache_state_ptr->cache_data[i];
 		}
 	}

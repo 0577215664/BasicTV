@@ -306,7 +306,6 @@ data_id_t *id_tier::mem::get_id_ptr(
 						tier_minor)) !=
 				tier_vector.end();
 			if(good_tier_pair){
-				print("attempting loading " + id_breakdown(id) + " from tier " + std::to_string(tier_major) + "." + std::to_string(tier_minor), P_SPAM);
 				// TODO: could probably re-order this
 				std::vector<id_t_> shift_payload(
 					{id});
