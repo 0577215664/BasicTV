@@ -332,6 +332,9 @@ void id_tier::operation::add_data_to_state(
 					for(uint8_t ext = 0;ext < 4;ext++){
 						// lower extras are simpler
 						try{
+							if(extra_vector[ext].size() == 0){
+								continue;
+							}
 							extra_vector[extra_byte] =
 								id_api::raw::force_to_extra(
 									extra_vector[ext],
