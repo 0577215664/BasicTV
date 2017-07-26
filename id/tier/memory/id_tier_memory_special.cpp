@@ -14,11 +14,6 @@ void id_tier_mem_regen_state_cache(){
 			std::make_pair(id_vector[i]->get_id(),
 				       id_vector[i]->get_mod_inc()));
 	}
-	if(old_size != id_buffer.size()){
-		print("id buffer changed on refresh from " + std::to_string(old_size) + " to " + std::to_string(id_buffer.size()), P_SPAM);
-	}else{
-		print("id buffer didn't change on refresh, stayed at " + std::to_string(old_size), P_SPAM);
-	}
 }
 
 void id_tier_mem_update_state_cache(

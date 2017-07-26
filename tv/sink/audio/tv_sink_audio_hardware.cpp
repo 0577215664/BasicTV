@@ -191,10 +191,7 @@ TV_SINK_MEDIUM_PUSH(audio_hardware){
 	// we have to have the frames for them to be cataloged as played
 	for(uint64_t i = 0;i < frames.size();i++){
 		if(PTR_ID(frames[i], ) == nullptr){
-			print("can't attempt frame decoding on the first"
-			      "and following frames we don't have, chopping"
-			      "off " + std::to_string(frames.size()-i) + " frames",
-			      P_WARN);
+			// can't decode a null frame
 			frames.erase(
 				frames.begin()+i,
 				frames.end());
@@ -211,7 +208,6 @@ TV_SINK_MEDIUM_PUSH(audio_hardware){
 		}
 	}
 	if(frames.size() > 0){
-		print("decoding new samples for audio callback queue", P_DEBUG);
 		std::vector<uint8_t> raw =
 			transcode::audio::frames::to_raw(
 				frames,
