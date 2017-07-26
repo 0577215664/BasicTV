@@ -26,18 +26,21 @@ static std::string atom_wrap_title(std::string data){
 }
 
 TV_SINK_METADATA_INIT(atom){	
-	tv_sink_metadata_state_t *metadata_state_ptr =
-		new tv_sink_metadata_state_t;
-	tv_sink_metadata_atom_state_t *atom_state_ptr =
-		new tv_sink_metadata_atom_state_t;
-	metadata_state_ptr->set_state_ptr(
-		reinterpret_cast<void*>(atom_state_ptr));
+	STD_STATE_INIT(tv_sink_metadata_state_t,
+		       metadata_state_ptr,
+		       tv_sink_metadata_atom_state_t,
+		       atom_state_ptr);
+	
 	return metadata_state_ptr;
 }
 
 TV_SINK_METADATA_CLOSE(atom){
-	
+	STD_STATE_CLOSE(metadata_state_ptr,
+			tv_sink_metadata_atom_state_t);
 }
 
 TV_SINK_METADATA_UPDATE(atom){
+	STD_STATE_GET_PTR(metadata_state_ptr,
+			  tv_sink_metadata_atom_state_t,
+			  atom_state_ptr);
 }

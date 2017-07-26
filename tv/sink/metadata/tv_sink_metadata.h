@@ -3,6 +3,8 @@
 #include "../../../id/id.h"
 #include "../../../id/id_api.h"
 
+#include "../../../state.h"
+
 /*
   Interface for generating and sending metadata out to the clearnet. 
 
@@ -18,17 +20,22 @@
 
 #define TV_SINK_METADATA_ATOM 1
 
-struct tv_sink_metadata_state_t{
+struct tv_sink_metadata_state_t : public state_t{
 private:
-	uint8_t medium = 0;
+	/*
+	  TODO: create one HTTP server that can have tv_sink_metadata_state_t
+	  and other state stuff bind to it (on an "only one needed per
+	  program instance" basis)
+
+	  Dedicated sockets isn't too bad at the moment
+	 */
+	id_t_ connection_socket_id = ID_BLANK_ID;
+	std::vector<id_t_> socket_vector;
 	std::vector<id_t_> channel_set;
-	void *state_ptr = nullptr;
 public:
 	data_id_t id;
 	tv_sink_metadata_state_t();
 	~tv_sink_metadata_state_t();
-	GET_SET(medium, uint8_t);
-	GET_SET(state_ptr, void*);
 	GET_SET(channel_set, std::vector<id_t_>);
 };
 
@@ -42,9 +49,9 @@ public:
 	
 	tv_sink_metadata_state_t* (*init) =
 		nullptr;
-	void (*close) =
+	void (*close)(tv_sink_metadata_state_t* metadata_state_ptr) =
 		nullptr;
-	void (*update) =
+	void (*update)(tv_sink_metadata_state_t* metadata_state_ptr) =
 		nullptr;
 };
 

@@ -20,7 +20,6 @@ private:
 	std::vector<uint8_t> mapping; // Vorbis I channel mappings, etc.
 	std::vector<id_t_> push_history;
 	std::vector<id_t_> pull_history;
-
 	
 	// tv_audio_prop_t, tv_video_prop_t, etc
 	void *prop_ptr = nullptr;
@@ -45,10 +44,6 @@ public:
 #define TV_SINK_MEDIUM_AUDIO_HARDWARE 1
 #define TV_SINK_MEDIUM_AUDIO_RTSP 2
 #define TV_SINK_MEDIUM_AUDIO_FILE 3
-
-#define TV_SINK_MEDIUM_VIDEO_HARDWARE 4
-#define TV_SINK_MEDIUM_VIDEO_RTSP 5
-#define TV_SINK_MEDIUM_VIDEO_FILE 6
 
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_IN 1
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_OUT 2
