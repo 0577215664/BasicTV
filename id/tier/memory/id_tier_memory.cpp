@@ -34,7 +34,7 @@
 #include "../../../encrypt/encrypt.h"
 
 // not static for id_tier_memory_helper.cpp only, not declared extern in header
-std::vector<data_id_t*> id_vector;
+std::array<std::vector<data_id_t*>, TYPE_COUNT+1> id_vector; // +1 for NOTYPE
 std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
 
 /*
@@ -208,11 +208,11 @@ ID_TIER_DEL_ID(mem){
 	   ptr->get_type_byte() != TYPE_ID_TIER_STATE_T){
 		auto pos =
 			std::find(
-				id_vector.begin(),
-				id_vector.end(),
+				id_vector[get_id_type(id)].begin(),
+				id_vector[get_id_type(id)].end(),
 				ptr);
-		if(pos != id_vector.end()){
-			id_vector.erase(
+		if(pos != id_vector[get_id_type(id)].end()){
+			id_vector[get_id_type(id)].erase(
 				pos);
 		}
 		print("No proper type was found for clean deleting" + ptr->get_type(), P_WARN);
@@ -233,9 +233,9 @@ ID_TIER_GET_ID(mem){
 		P_V_S(id_breakdown(production_priv_key_id), P_VAR);
 		print("cannot/shouldn't supply data I do not own directly from memory, refer to tier 1 or higher", P_UNABLE);
 	}
-	for(uint64_t i = 0;i < id_vector.size();i++){
-		if(id_vector[i]->get_id() == id){
-			return id_vector[i]->export_data(
+	for(uint64_t i = 0;i < id_vector[get_id_type(id)].size();i++){
+		if(id_vector[get_id_type(id)][i]->get_id() == id){
+			return id_vector[get_id_type(id)][i]->export_data(
 				0, 0, 0, 0, 0);
 		}
 	}
