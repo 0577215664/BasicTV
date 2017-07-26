@@ -70,7 +70,6 @@ public:
 	~net_socket_t();
 
 	std::mutex thread_mutex;
-
 	
 	// general socket stuff
 	bool is_alive();

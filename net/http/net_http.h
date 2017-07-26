@@ -79,6 +79,21 @@ public:
 	ADD_DEL_VECTOR(conn_vector, net_http_file_conn_instance_t);
 };
 
+// HTTP interface, bound to a socket
+// Some files can't be bound to some sockets
+struct net_http_t{
+private:
+	id_t_ conn_socket_id = ID_BLANK_ID;
+	std::vector<id_t_> file_vector;
+public:
+	data_id_t id;
+	net_http_t();
+	~net_http_t();
+	GET_SET_ID(conn_socket_id);
+	ADD_DEL_VECTOR(file_vector, id_t_);
+	
+};
+
 extern void net_http_init();
 extern void net_http_loop();
 extern void net_http_close();
