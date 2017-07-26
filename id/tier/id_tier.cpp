@@ -315,28 +315,33 @@ std::vector<std::vector<uint8_t> > id_tier::operation::get_data_from_state(
 void id_tier::operation::add_data_to_state(
 	std::vector<id_t_> state_id,
 	std::vector<std::vector<uint8_t> > data_vector){
-	for(uint64_t i = 0;i < state_id.size();i++){
-		try{
-			id_tier_state_t *tier_state_ptr =
-				PTR_DATA(state_id[i],
-					 id_tier_state_t);
-			CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
-			for(uint64_t c = 0;c < data_vector.size();c++){
-				try{
-					id_tier_medium_t medium =
-						id_tier::get_medium(
-							tier_state_ptr->get_medium());
-					medium.add_data(
-						tier_state_ptr->id.get_id(),
+	for(uint64_t i = 0;i < data_vector.size();i++){
+		std::array<std::vector<uint8_t>, 4> extra_vector;
+		for(uint64_t c = 0;c < state_id.size();c++){
+			try{
+				id_tier_state_t *tier_state_ptr =
+					PTR_DATA(state_id[c],
+						 id_tier_state_t);
+				PRINT_IF_NULL(tier_state_ptr, P_UNABLE);
+				id_tier_medium_t medium =
+					id_tier::get_medium(
+						tier_state_ptr->get_medium());
+				const extra_t_ extra_byte =
+					tier_state_ptr->get_allowed_extra().at(0);
+				if(extra_vector[extra_byte].size() == 0){
+					extra_vector[extra_byte] =
 						id_api::raw::force_to_extra(
-							data_vector[c],
-							tier_state_ptr->get_allowed_extra().at(0)));
-					print("added data " + id_breakdown(id_api::raw::fetch_id(data_vector[c])) + " to tier " +
-					      std::to_string(tier_state_ptr->get_tier_major()) + "." +
-					      std::to_string(tier_state_ptr->get_tier_minor()), P_DEBUG);
-				}catch(...){}
+							data_vector[i],
+							extra_byte);
+				}
+				medium.add_data(
+					tier_state_ptr->id.get_id(),
+					extra_vector[extra_byte]);
+			}catch(...){
+				print("couldn't insert " + id_breakdown(id_api::raw::fetch_id(data_vector[i])) + " into " +
+				      id_breakdown(state_id[c]), P_WARN);
 			}
-		}catch(...){}
+		}
 	}
 }
 

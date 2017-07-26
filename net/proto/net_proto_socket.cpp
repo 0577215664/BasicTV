@@ -219,14 +219,6 @@ void net_proto_socket_t::send_id_vector(std::vector<id_t_> id_vector){
  */
 
 void net_proto_socket_t::load_blocks(){
-	/*
-	  For now, i'm fine with loading this directly into memory and letting
-	  the ID_TIER_DESTROY take care of exporting it somehow, but I would
-	  like to create an index where information can be stored really
-	  anywhere, and have a more robust intratransport system for this
-	  data (expandable to say giant tape libraries, CD/DVD/BD archvies,
-	  in memory, on disk, etc). However, that is for another day.
-	 */
 	for(uint64_t i = 0;i < block_buffer.size();i++){
 		if(block_buffer[i].first.size() != 0 &&
 		   block_buffer[i].second.size() != 0){

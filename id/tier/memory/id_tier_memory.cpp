@@ -289,42 +289,17 @@ data_id_t *id_tier::mem::get_id_ptr(
 				std::vector<std::pair<uint8_t, uint8_t> >(
 					{std::make_pair(0, 0)})).at(0);
 		ASSERT(mem_state_ptr != nullptr, P_ERR);
-		for(uint64_t i = 0;i < tier_state_vector.size();i++){
+		std::vector<id_t_> shift_payload({id});
+		for(uint64_t i = 0;i < tier_state_vector.size() && shift_payload.size() != 0;i++){
 			if(tier_state_vector[i]->get_tier_major() == 0){
 				continue;
 			}
-			const uint8_t tier_major =
-				tier_state_vector[i]->get_tier_major();
-			const uint8_t tier_minor =
-				tier_state_vector[i]->get_tier_minor();
-			const bool good_tier_pair =
-				std::find(
-					tier_vector.begin(),
-					tier_vector.end(),
-					std::make_pair(
-						tier_major,
-						tier_minor)) !=
-				tier_vector.end();
-			if(good_tier_pair){
-				// TODO: could probably re-order this
-				std::vector<id_t_> shift_payload(
-					{id});
-				id_tier::operation::shift_data_to_state(
-					tier_state_vector[i],
-					mem_state_ptr,
-					&shift_payload);
-				if(shift_payload.size() != 0){
-					continue;
-				}
-				if((retval = mem_helper::lookup::id(id)) != nullptr){
-					break;
-				}
-			}else{
-				P_V(tier_major, P_NOTE);
-				P_V(tier_minor, P_NOTE);
-				print("ID lookup opted to exclude a tier", P_WARN);
-			}
+			id_tier::operation::shift_data_to_state(
+				tier_state_vector[i],
+				mem_state_ptr,
+				&shift_payload);
 		}
+		retval = mem_helper::lookup::id(id);
 		if(retval == nullptr &&
 		   tier_vector == all_tiers &&
 		   production_priv_key_id != ID_BLANK_ID){

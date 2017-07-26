@@ -60,10 +60,12 @@ std::pair<std::vector<uint8_t>, std::vector<uint8_t> > unescape_vector(
 			vector.begin(),
 			vector.begin()+escaped_length);
 	}
-	for(uint64_t i = 0;i < payload.size();i++){
-		if(payload[i] == escape_char){
+	uint64_t payload_size = payload.size();
+	for(uint64_t i = 0;i < payload_size;i++){
+		if(unlikely(payload[i] == escape_char)){
 			payload.erase(
 				payload.begin()+i);
+			payload_size--;
 			while(i < payload.size() &&
 			      payload[i] == escape_char){
 				i++;
