@@ -251,8 +251,6 @@ void id_tier::operation::shift_data_to_state(
 			}catch(...){
 				print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (get)", P_WARN);
 			}
-		}else{
-			print("we don't have the ID " + id_breakdown((*id_vector)[i]) + " in the buffer at all, can't shift", P_WARN);
 		}
 	}
 }

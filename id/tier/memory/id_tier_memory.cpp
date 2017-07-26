@@ -315,7 +315,6 @@ data_id_t *id_tier::mem::get_id_ptr(
 					mem_state_ptr,
 					&shift_payload);
 				if(shift_payload.size() != 0){
-					print("couldn't shift from non-memory tier to memory tier", P_WARN);
 					continue;
 				}
 				if((retval = mem_helper::lookup::id(id)) != nullptr){
