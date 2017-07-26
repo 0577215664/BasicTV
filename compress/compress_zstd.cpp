@@ -71,18 +71,20 @@ std::vector<uint8_t> compressor::zstd::to(std::vector<uint8_t> data,
 		ctx = nullptr;
 	}
 	if(ZSTD_isError(out_true_size)){
+		delete[] out_data;
+		out_data = nullptr;
 		print("zstd cannot compress file:" + (std::string)ZSTD_getErrorName(out_true_size), P_ERR);
 	}else{
 		// ZSTD_compress should assert true_size < size
 		retval = std::vector<uint8_t>(
 			out_data,
-			out_data+out_true_size);
+			out_data+out_true_size);	
 		delete[] out_data;
 		out_data = nullptr;
+		retval.insert(
+			retval.begin(),
+			dictionary);
 	}
-	retval.insert(
-		retval.begin(),
-		dictionary);
 	return retval;
 }
 
