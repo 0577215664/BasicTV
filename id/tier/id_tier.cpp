@@ -329,10 +329,22 @@ void id_tier::operation::add_data_to_state(
 				const extra_t_ extra_byte =
 					tier_state_ptr->get_allowed_extra().at(0);
 				if(extra_vector[extra_byte].size() == 0){
-					extra_vector[extra_byte] =
-						id_api::raw::force_to_extra(
-							data_vector[i],
-							extra_byte);
+					for(uint8_t ext = 0;ext < 4;ext++){
+						// lower extras are simpler
+						try{
+							extra_vector[extra_byte] =
+								id_api::raw::force_to_extra(
+									extra_vector[ext],
+									extra_byte);
+							break;
+						}catch(...){}
+					}
+					if(extra_vector[extra_byte].size() == 0){
+						extra_vector[extra_byte] =
+							id_api::raw::force_to_extra(
+								data_vector[i],
+								extra_byte);
+					}
 				}
 				medium.add_data(
 					tier_state_ptr->id.get_id(),
