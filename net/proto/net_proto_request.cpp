@@ -266,9 +266,7 @@ void net_proto::request::add_id(id_t_ id){
 		if(std::find(id_request_id_vector.begin(),
 			     id_request_id_vector.end(),
 			     id) != id_request_vector.end()){
-			print("ID already exists as a net_proto_id_request_t, "
-			      "safely assume that all redundancy is put in "
-			      "place by the creator", P_SPAM);
+			// pending request exists for that ID
 			return;
 		}
 	}

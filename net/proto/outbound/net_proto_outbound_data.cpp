@@ -14,7 +14,8 @@
 static void net_proto_send_logic(std::vector<id_t_> id_vector,
 				 id_t_ net_proto_peer_id){
 	if(net_proto_peer_id == net_proto::peer::get_self_as_peer()){
-		print("refusing to fill a request to send data to myself", P_ERR);
+		print("refusing to fill a request to send data to myself", P_SPAM);
+		return;
 	}
 	net_proto_peer_t *proto_peer_ptr =
 		PTR_DATA(net_proto_peer_id,
@@ -267,9 +268,7 @@ void net_proto_handle_request_send(T request_ptr){
 			net_proto::socket::connect(
 				destination_peer_id,
 				1);
-		}catch(...){
-			print("couldn't create connection request", P_ERR);
-		}
+		}catch(...){}
 	}
 }
 

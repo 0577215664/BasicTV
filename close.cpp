@@ -16,7 +16,7 @@ void close(){
 	input_close();
 	net_close();
 	console_close();
-	id_tier_close();
+	// id_tier_close();
 	id_tier::operation::del_id_from_state(
 		{id_tier::state_tier::only_state_of_tier(
 				0, 0)},
