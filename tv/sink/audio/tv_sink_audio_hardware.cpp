@@ -139,7 +139,7 @@ TV_SINK_MEDIUM_INIT(audio_hardware){
 				tv_sink_audio_hardware_callback,
 				nullptr);
 		ASSERT(stream_retval == paNoError, P_ERR);
-		Pa_StartStream(stream);
+		ASSERT(Pa_StartStream(stream) == paNoError, P_ERR);
 		pa_init = true;
 	}
 	state_ptr->set_state_ptr(

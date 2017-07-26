@@ -43,7 +43,10 @@ std::vector<uint8_t> compressor::zstd::to(std::vector<uint8_t> data,
 	const size_t out_size = ZSTD_compressBound(data.size());
 	uint8_t *out_data = new uint8_t[out_size];
 	size_t out_true_size = 0;
-	compression_level = (uint8_t)((compression_level*22.0/9.0)+0.5);
+	compression_level =
+		static_cast<uint8_t>(
+			static_cast<long double>(compression_level)*
+			22.0/9.0);
 	if(dictionary == 0){
 		out_true_size =
 			ZSTD_compress(
