@@ -10,6 +10,9 @@
 #include "../main.h"
 #include "../util.h"
 
+#include "proto/net_proto.h"
+#include "http/net_http.h"
+
 static std::vector<net_cache_t> net_cache; // lock this
 
 static size_t curl_write(void *ptr, size_t size, size_t nmemb, void *userdata){
@@ -116,3 +119,18 @@ std::string net_get_ip(){
 /*
   newer stuff, code above is pretty old and decrepit
  */
+
+void net_init(){
+	net_proto_init();
+	net_http_init();
+}
+
+void net_loop(){
+	net_proto_loop();
+	net_http_loop();
+}
+
+void net_close(){
+	net_proto_close();
+	net_http_close();
+}

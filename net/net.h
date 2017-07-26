@@ -44,5 +44,9 @@ namespace net{
 
 std::string net_get_ip();
 
+extern void net_init();
+extern void net_loop();
+extern void net_close();
+
 #include "net_socket.h"
 #include "proto/net_proto.h"

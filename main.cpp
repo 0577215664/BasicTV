@@ -82,7 +82,7 @@ int main(int argc_, char **argv_){
 		try{
 			tv_loop();
 			input_loop();
-			net_proto_loop();
+			net_loop();
 			console_loop();
 			//	id_tier_loop();
 		}catch(...){}

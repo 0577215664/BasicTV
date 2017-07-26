@@ -5,6 +5,7 @@
 #include "tv/tv.h"
 #include "input/input.h"
 #include "net/proto/net_proto.h"
+#include "net/net.h"
 #include "console/console.h"
 #include "id/id_api.h"
 #include "settings.h"
@@ -13,7 +14,7 @@ void close(){
 	closing = true;
 	tv_close();
 	input_close();
-	net_proto_close();
+	net_close();
 	console_close();
 	id_tier_close();
 	id_tier::operation::del_id_from_state(

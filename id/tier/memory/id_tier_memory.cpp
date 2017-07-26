@@ -34,6 +34,8 @@
 #include "../../../encrypt/encrypt.h"
 
 // not static for id_tier_memory_helper.cpp only, not declared extern in header
+
+// TODO: make multiple vectors for each datatype, use with a jump table
 std::vector<data_id_t*> id_vector;
 std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
 

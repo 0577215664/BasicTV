@@ -47,25 +47,40 @@ typedef std::pair<std::vector<uint8_t>, std::vector<uint8_t> > net_http_file_con
 
 struct net_http_file_conn_instance_t{
 private:
+	// HTTP connection metadata
 	id_t_ socket_id = ID_BLANK_ID;
-	std::vector<uint8_t> full_path; // derived from HTTP POST
-	// variable, value of variable, data to send out
-	std::vector<uint8_t> payload;
+	std::vector<uint8_t> http_buffer;
+	std::vector<std::vector<uint8_t> > header; // seperated by newlines (no CRLF)
+	std::vector<uint8_t> full_path; // derived from HTTP header
+
+	// Data jargon
+	std::vector<uint8_t> payload; // payla
 	uint8_t payload_flags = 0;
 	std::vector<net_http_file_conn_request_line_t> request_vector;
 public:
+	bool operator!=(const net_http_file_conn_instance_t &rhs){
+		return !(*this == rhs);
+	}
+
 	bool operator==(const net_http_file_conn_instance_t &rhs){
 		return socket_id == rhs.socket_id &&
 		full_path == rhs.full_path;
-	};
+	}
 	
 	net_http_file_conn_instance_t();
 	~net_http_file_conn_instance_t();
 	GET_SET_ID_S(socket_id);
+	GET_SET_S(http_buffer, std::vector<uint8_t>);
 	GET_SET_S(full_path, std::vector<uint8_t>);
+	GET_SET_S(header, std::vector<std::vector<uint8_t> >);
 	ADD_DEL_VECTOR_S(request_vector, net_http_file_conn_request_line_t);
 	GET_SET_S(request_vector, std::vector<net_http_file_conn_request_line_t>);
 };
+
+/*
+  For now, we just scan every file and check in on any conn_vectors that they
+  reference directly
+ */
 
 struct net_http_file_t{
 private:
@@ -77,6 +92,7 @@ public:
 	~net_http_file_t();
 	GET_SET(min_path_needed, std::vector<uint8_t>);
 	ADD_DEL_VECTOR(conn_vector, net_http_file_conn_instance_t);
+	GET_SET(conn_vector, std::vector<net_http_file_conn_instance_t>);
 };
 
 // HTTP interface, bound to a socket

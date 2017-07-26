@@ -5,6 +5,7 @@
 #include "tv/tv.h"
 #include "input/input.h"
 #include "net/proto/net_proto.h"
+#include "net/net.h"
 #include "console/console.h"
 #include "id/id_api.h"
 #include "settings.h"
@@ -172,8 +173,10 @@ void init(){
 	settings::set_setting("print_delay", "0");
 
 	settings::set_setting("test_catch_all", "false");
-
+	
 	settings::set_setting("audio_playback", "ao");
+
+	settings::set_setting("net_http_port", "65000");
 	
 	settings_init();
 
@@ -200,7 +203,7 @@ void init(){
 
 	tv_init();
 	input_init();
-	net_proto_init();
+	net_init();
 	console_init();
 }
 
