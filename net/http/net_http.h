@@ -92,7 +92,8 @@ public:
 	~net_http_file_t();
 	GET_SET(min_path_needed, std::vector<uint8_t>);
 	ADD_DEL_VECTOR(conn_vector, net_http_file_conn_instance_t);
-	GET_SET(conn_vector, std::vector<net_http_file_conn_instance_t>);
+	GET(conn_vector, std::vector<net_http_file_conn_instance_t>);
+	/* GET_SET(conn_vector, std::vector<net_http_file_conn_instance_t>); */
 };
 
 // HTTP interface, bound to a socket

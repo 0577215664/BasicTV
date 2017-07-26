@@ -18,7 +18,7 @@
 	type get_##data_to_get(){return data_to_get;}	
 
 #define SET(data_to_set, type)						\
-	void set_##data_to_set(type datum){if(data_to_set != datum){id.mod_inc();}data_to_set = datum;}	
+	void set_##data_to_set(const type datum){if(data_to_set != datum){id.mod_inc();}data_to_set = (type)datum;}	
 
 #define GET_ID(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
 
@@ -47,7 +47,7 @@
 	type get_##data_to_get(){return data_to_get;}	
 
 #define SET_V(data_to_set, type)						\
-	void set_##data_to_set(type datum){if(data_to_set != datum){id->mod_inc();}data_to_set = datum;}	
+	void set_##data_to_set(const type datum){if(data_to_set != datum){id->mod_inc();}data_to_set = (type)datum;}	
 
 #define GET_ID_V(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
 
