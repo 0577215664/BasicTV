@@ -46,12 +46,10 @@ public:
 };
 
 #define TV_SINK_MEDIUM_AUDIO_HARDWARE 1
-#define TV_SINK_MEDIUM_AUDIO_RTSP 2
-#define TV_SINK_MEDIUM_AUDIO_FILE 3
+#define TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT 2
 
-// just opens a listening socket, accepts all connections on a port
-// direction set in tv_sink_state_t makes it work either way
-#define TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT 20
+/* #define TV_SINK_MEDIUM_AUDIO_RTSP 2 */
+/* #define TV_SINK_MEDIUM_AUDIO_FILE 3 */
 
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_IN 1
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_OUT 2
