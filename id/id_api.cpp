@@ -86,16 +86,30 @@ void id_api::linked_list::link_vector(
 		}
 		std::vector<id_t_> forward;
 		std::vector<id_t_> backward;
+		bool add_forward =
+			id->get_linked_list().second.size() == 0;
+		bool add_backward =
+			id->get_linked_list().first.size() == 0;
 		for(uint64_t c = 1;c <= depth;c++){
 			try{
-				forward.push_back(
-					vector.at(i+c));
+				if(add_forward){
+					forward.push_back(
+						vector.at(i+c));
+				}
 			}catch(...){}
 			try{
-				backward.insert(
-					backward.begin(),
-					vector.at(i-c));
+				if(add_backward){
+					backward.insert(
+						backward.begin(),
+						vector.at(i-c));
+				}
 			}catch(...){}
+		}
+		if(!add_forward){
+			forward = id->get_linked_list().second;
+		}
+		if(!add_backward){
+			backward = id->get_linked_list().first;
 		}
 		if(i > 0){
 			ASSERT(backward.size() > 0, P_ERR);

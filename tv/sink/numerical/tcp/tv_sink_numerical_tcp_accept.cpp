@@ -73,7 +73,7 @@ TV_SINK_MEDIUM_CLOSE(tcp_accept){
   TCP pull to frame logistics
 
   Each line of text coming in is formatted as such
-  [UNIQUE NUMBER] [VALUE] [UNIT] [TIMESTAMP MICRO S]
+  [UNIQUE NUMBER PER NUMERICAL DEVICE] [VALUE] [UNIT] [TIMESTAMP MICRO S]
 
   unique number is just any relatively short (32-bit or lower is good) number
   that identifies that stream of data, this is bound either internally to a 

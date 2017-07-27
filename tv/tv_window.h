@@ -3,12 +3,7 @@
 #ifndef TV_WINDOW_H
 #define TV_WINDOW_H
 #include <SDL2/SDL.h>
-// get a better way to do this
-#define TV_WINDOW_CT 0
-#define TV_WINDOW_UL 1
-#define TV_WINDOW_UR 2
-#define TV_WINDOW_LL 2
-#define TV_WINDOW_LR 3
+
 /*
   A channel has to exist inside of a window at all times. When moving from
   a lower resolution to a higher resolution display, the top-left channel

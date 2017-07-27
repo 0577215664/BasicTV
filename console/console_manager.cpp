@@ -3,6 +3,7 @@
 #include "../tv/tv_channel.h"
 #include "../tv/tv_item.h"
 #include "../tv/tv_frame_audio.h"
+#include "../tv/tv_frame_numerical.h"
 #include "../tv/tv_window.h"
 #include "../util.h"
 
@@ -15,7 +16,7 @@
 #include "../id/tier/id_tier.h"
 
 /*
-  Somewhat hacky, but far better, interface for actual BasicTV functionality.
+  Somewhat hacky, but far better interface for actual BasicTV functionality.
  */
 
 std::vector<uint8_t> console_tv_load_opus_file(
@@ -208,6 +209,38 @@ std::string console_t::tv_manager_read_string(
 	return retval;
 }
 
+static id_t_ frame_id_to_state_id(
+	id_t_ frame_id,
+	uint8_t flow_direction){
+	uint8_t medium = 0;
+	switch(get_id_type(frame_id)){
+	case TYPE_TV_FRAME_AUDIO_T:
+		medium = TV_SINK_MEDIUM_AUDIO_HARDWARE;
+		break;
+	case TYPE_TV_FRAME_NUMERICAL_T:
+		medium = TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT;
+		break;
+	default:
+		print("invalid frame type", P_ERR);
+	}
+	std::vector<id_t_> sink_state_vector =
+		ID_TIER_CACHE_GET(
+			TYPE_TV_SINK_STATE_T);
+	for(uint64_t i = 0;i < sink_state_vector.size();i++){
+		tv_sink_state_t *sink_state_ptr =
+			PTR_DATA(sink_state_vector[i],
+				 tv_sink_state_t);
+		CONTINUE_IF_NULL(sink_state_ptr, P_WARN);
+		if(sink_state_ptr->get_medium() == medium &&
+		   sink_state_ptr->get_flow_direction() == flow_direction){
+			print("found valid TV sink", P_DEBUG);
+			return sink_state_vector[i];
+		}
+	}
+	print("can't find a valid sink", P_ERR);
+	return ID_BLANK_ID;
+}
+
 void console_t::tv_manager_load_item_to_channel(
 	net_socket_t *console_inbound_socket){
 	print_socket("Channel ID:");
@@ -218,20 +251,6 @@ void console_t::tv_manager_load_item_to_channel(
 	const std::string start_time_micro_s_offset =
 		tv_manager_read_string(
 			console_inbound_socket);
-	print_socket("File Path (WAV only):");
-	const std::string file_path =
-		tv_manager_read_string(
-			console_inbound_socket);
-	print_socket("interpreted ID as " +
-		     convert::array::id::to_hex(
-			     convert::array::id::from_hex(
-				     channel_id)) + "\n");
-	tv_channel_t *channel_ptr =
-		PTR_DATA(convert::array::id::from_hex(channel_id),
-			 tv_channel_t);
-	if(channel_ptr == nullptr){
-		print_socket("channel_ptr is a nullptr");
-	}
 	tv_item_t *new_item =
 		new tv_item_t;
 	print_socket("Item Name:");
@@ -250,41 +269,94 @@ void console_t::tv_manager_load_item_to_channel(
 		std::vector<uint8_t>(
 			desc.c_str(),
 			desc.c_str()+desc.size()));
-	print_socket("Frame Format (OPUS or WAVE):");
-	std::string frame_format =
+	print_socket("Item Type (1: Audio, 2: Numerical)");
+	const std::string item_type =
 		tv_manager_read_string(
 			console_inbound_socket);
-	uint8_t frame_format_byte =
-		0;
-	if(frame_format == "OPUS"){
-		frame_format_byte = TV_AUDIO_FORMAT_OPUS;
-	}else if(frame_format == "WAVE"){
-		frame_format_byte = TV_AUDIO_FORMAT_WAVE;
+	print_socket("interpreted channel ID as " +
+		     convert::array::id::to_hex(
+			     convert::array::id::from_hex(
+				     channel_id)) + "\n");
+	tv_channel_t *channel_ptr =
+		PTR_DATA(convert::array::id::from_hex(channel_id),
+			 tv_channel_t);
+	if(item_type == "1"){
+		print_socket("File Path (WAV only):");
+		const std::string file_path =
+			tv_manager_read_string(
+				console_inbound_socket);
+		if(channel_ptr == nullptr){
+			print_socket("channel_ptr is a nullptr");
+		}
+		print_socket("Frame Format (OPUS or WAVE):");
+		std::string frame_format =
+			tv_manager_read_string(
+				console_inbound_socket);
+		uint8_t frame_format_byte =
+			0;
+		if(frame_format == "OPUS"){
+			frame_format_byte = TV_AUDIO_FORMAT_OPUS;
+		}else if(frame_format == "WAVE"){
+			frame_format_byte = TV_AUDIO_FORMAT_WAVE;
+		}
+		std::vector<id_t_> frame_id_vector =
+			console_tv_load_samples_to_frames(
+				console_tv_load_samples_from_file(
+					file_path),
+				frame_format_byte);
+		tv_frame_audio_t *frame_audio_end_ptr =
+			PTR_DATA(frame_id_vector[frame_id_vector.size()-1],
+				 tv_frame_audio_t);
+		ASSERT(frame_audio_end_ptr, P_ERR);
+		new_item->add_frame_id(
+			frame_id_vector);
+		new_item->set_tv_channel_id(
+			convert::array::id::from_hex(channel_id));
+		new_item->set_start_time_micro_s(
+			get_time_microseconds()+std::stoi(
+				start_time_micro_s_offset));
+		new_item->set_end_time_micro_s(
+			frame_audio_end_ptr->get_end_time_micro_s());
+		print_socket("added data properly\n");
+	}else{
+		print_socket("numerical streams are stream only\n"
+			     "open a TCP connection to the BasicTV node (port 59051) "
+			     "and send data in the following format\n"
+			     "[UNIQUE NUMBER PER NUMERICAL DEVICE] [VALUE] [UNIT] [TIMESTAMP MICRO S]\n"
+			     "Viewers, once they bind the type to a window, should connect to their BasicTV nodes (port 59050)\n");
+		tv_window_t *window_ptr =
+			new tv_window_t;
+		tv_frame_numerical_t *frame_numerical_ptr =
+			new tv_frame_numerical_t;
+		// this is only here so there is a common pointer that both
+		// the tv_item_t has access to (on the playback side) and the
+		// tv_window_t has (on the recording side)
+		// technically having the same start and end times should work
+		// since we have a frame_entry incrementor for each frame
+		frame_numerical_ptr->set_start_time_micro_s(
+			get_time_microseconds());
+		frame_numerical_ptr->set_ttl_micro_s(
+			1);
+		new_item->add_frame_id(
+			{frame_numerical_ptr->id.get_id()});
+		print_socket("added data properly\n");
+		window_ptr->set_item_id(
+			new_item->id.get_id());
+		window_ptr->set_active_streams(
+			std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >(
+				{std::make_tuple(
+						frame_numerical_ptr->id.get_id(),
+						frame_id_to_state_id(
+							frame_numerical_ptr->id.get_id(),
+							TV_SINK_MEDIUM_FLOW_DIRECTION_IN),
+						std::vector<uint8_t>({}))}));
+		print_socket("bound item and live stream to tv_window_t\n");
 	}
-	std::vector<id_t_> frame_id_vector =
-		console_tv_load_samples_to_frames(
-			console_tv_load_samples_from_file(
-				file_path),
-			frame_format_byte);
-	tv_frame_audio_t *frame_audio_end_ptr =
-		PTR_DATA(frame_id_vector[frame_id_vector.size()-1],
-			 tv_frame_audio_t);
-	ASSERT(frame_audio_end_ptr, P_ERR);
-	new_item->add_frame_id(
-		frame_id_vector);
-	new_item->set_tv_channel_id(
-		convert::array::id::from_hex(channel_id));
-	new_item->set_start_time_micro_s(
-		get_time_microseconds()+std::stoi(
-			start_time_micro_s_offset));
-	new_item->set_end_time_micro_s(
-		frame_audio_end_ptr->get_end_time_micro_s());
-	print_socket("added data properly");
 	output_table =
 		console_generate_generic_id_table(
 			std::vector<id_t_>(
-			{new_item->id.get_id(),
-			 channel_ptr->id.get_id()}));
+				{new_item->id.get_id(),
+						channel_ptr->id.get_id()}));
 }
 
 void console_t::tv_manager_play_loaded_item(
@@ -345,7 +417,8 @@ void console_t::tv_manager_play_loaded_item(
 		std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({
 				std::make_tuple(
 					item_ptr->get_frame_id_vector()[0][0],
-					ID_TIER_CACHE_GET(TYPE_TV_SINK_STATE_T).at(0),
+					frame_id_to_state_id(item_ptr->get_frame_id_vector()[0][0],
+							     TV_SINK_MEDIUM_FLOW_DIRECTION_OUT), // IN from the outside
 					std::vector<uint8_t>({}))}));
 	print_socket("everything should be loaded nicely now, right?\n");
 }
@@ -505,13 +578,15 @@ void console_t::tv_manager_play_loaded_item_live(
 		timestamp_offset);
 	window_ptr->set_item_id(
 		item_ptr->id.get_id());
-	 window_ptr->set_active_streams(
-		 std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({
-				 std::make_tuple(
-					 item_ptr->get_frame_id_vector().at(0).at(0),
-					 ID_TIER_CACHE_GET(TYPE_TV_SINK_STATE_T).at(0),
-					 std::vector<uint8_t>({}))
-					 }));
+	window_ptr->set_active_streams(
+		std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({
+				std::make_tuple(
+					item_ptr->get_frame_id_vector().at(0).at(0),
+					frame_id_to_state_id(
+						item_ptr->get_frame_id_vector().at(0).at(0),
+						TV_SINK_MEDIUM_FLOW_DIRECTION_OUT),
+					std::vector<uint8_t>({}))
+					}));
 	print_socket("everything should be loaded nicely now, right?\n");
 
 }

@@ -149,6 +149,8 @@ TV_SINK_MEDIUM_INIT(audio_hardware){
 		TV_SINK_MEDIUM_AUDIO_HARDWARE);
 	state_ptr->set_frame_type(
 		TV_FRAME_TYPE_AUDIO);
+	state_ptr->set_flow_direction(
+		TV_SINK_MEDIUM_FLOW_DIRECTION_OUT);
 	return state_ptr;
 }
 
