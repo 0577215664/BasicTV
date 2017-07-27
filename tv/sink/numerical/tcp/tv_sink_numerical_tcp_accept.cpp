@@ -36,9 +36,11 @@ TV_SINK_MEDIUM_INIT(tcp_accept){
 	if(flow_direction == TV_SINK_MEDIUM_FLOW_DIRECTION_OUT){
 		socket_ptr->set_net_ip(
 			"", 59050);
-	}else{
+	}else if(flow_direction == TV_SINK_MEDIUM_FLOW_DIRECTION_IN){
 		socket_ptr->set_net_ip(
 			"", 59051);
+	}else{
+		print("invalid flow direction", P_ERR);
 	}
 	socket_ptr->connect();
 	tcp_accept_state_ptr->set_conn_socket_id(
@@ -52,16 +54,34 @@ static void tv_sink_numerical_tcp_accept_socket_check(
 	net_socket_t *socket_ptr){
 	if(socket_ptr->is_alive() == false){
 		print("connection accepting socket has died, restarting", P_WARN);
-		socket_ptr->connect();
+		socket_ptr->reconnect();
 	}
 	if(direction == TV_SINK_MEDIUM_FLOW_DIRECTION_IN){
-		std::vector<uint8_t> tmp =
-			socket_ptr->recv_all_buffer();
-		tcp_accept_state_ptr->buffer.insert(
-			tmp.begin(),
-			tcp_accept_state_ptr->buffer.begin(),
-			tcp_accept_state_ptr->buffer.end());
+		std::vector<id_t_> socket_vector =
+			tcp_accept_state_ptr->get_socket_vector();
+		for(uint64_t i = 0;i < socket_vector.size();i++){
+			net_socket_t *data_socket_ptr =
+				PTR_DATA(socket_vector[i],
+					 net_socket_t);
+			CONTINUE_IF_NULL(data_socket_ptr, P_WARN);
+			if(data_socket_ptr->is_alive() == false){
+				print("removing a stale socket", P_DEBUG);
+				ID_TIER_DESTROY(data_socket_ptr->id.get_id());
+				data_socket_ptr = nullptr;
+				continue;
+			}
+			std::vector<uint8_t> tmp =
+				data_socket_ptr->recv_all_buffer();
+			if(tmp.size() > 0){
+				print("received data on TCP inbound sink", P_DEBUG);
+				tcp_accept_state_ptr->buffer.insert(
+					tcp_accept_state_ptr->buffer.end(),
+					tmp.begin(),
+					tmp.end());
+			}
+		}
 	}
+	ASSERT(socket_ptr->is_alive(), P_UNABLE);
 }
 
 TV_SINK_MEDIUM_CLOSE(tcp_accept){
@@ -94,40 +114,34 @@ TV_SINK_MEDIUM_CLOSE(tcp_accept){
 
 static std::vector<uint8_t> pull_until_end_of_item(
 	std::vector<uint8_t> *buffer){
-	std::vector<uint8_t> retval;
-	auto space_iter =
-		std::find(
+	uint64_t iter =
+		std::distance(
 			buffer->begin(),
-			buffer->end(),
-			(uint8_t)' ');
-	if(space_iter != buffer->end()){
-		std::vector<uint8_t> retval(
-			buffer->begin(),
-			space_iter-1);
-		buffer->erase(
-			buffer->begin(),
-			space_iter);
-		return retval;
-	}else{
-		auto newline_iter =
 			std::find(
 				buffer->begin(),
 				buffer->end(),
-				(uint8_t)'\n');
-		if(newline_iter != buffer->end()){
-			std::vector<uint8_t> retval(
+				' '));
+	if(iter == buffer->size()){
+		iter =
+			std::distance(
 				buffer->begin(),
-				newline_iter-1);
-			buffer->erase(
-				buffer->begin(),
-				newline_iter);
-			return retval;
-		}
+				std::find(
+					buffer->begin(),
+					buffer->end(),
+					'\n'));
+
 	}
-	if(retval.size() != 0){
-		P_V_S(convert::string::from_bytes(retval), P_DEBUG);
+	if(iter != buffer->size()){
+		std::vector<uint8_t> tmp(
+			buffer->begin(),
+			buffer->begin()+iter);
+		buffer->erase(
+			buffer->begin(),
+			buffer->begin()+iter+1);
+		return tmp;
+	}else{
+		return std::vector<uint8_t>({});
 	}
-	return retval;
 }
 
 static std::vector<uint8_t> smart_number_creation(
@@ -135,14 +149,14 @@ static std::vector<uint8_t> smart_number_creation(
 	if(std::find(data.begin(),
 		     data.end(),
 		     '.') != data.end()){
-		print("detected decimal, interpreting as floating point", P_DEBUG);
+		// print("detected decimal, interpreting as floating point", P_DEBUG);
 		return math::number::create(
 			std::stold(
 				convert::string::from_bytes(
 					data)),
 			0); // don't bother with units for now
 	}else{
-		print("no decimal, interpreting as signed 64-bit", P_DEBUG);
+		// print("no decimal, interpreting as signed 64-bit", P_DEBUG);
 		return math::number::create(
 			(int64_t)std::stoll(
 				convert::string::from_bytes(
@@ -154,40 +168,46 @@ static std::vector<uint8_t> smart_number_creation(
 static std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> formatted_to_computable(
 	std::vector<uint8_t> *inbound_buffer){
 	std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> tmp;
-	auto newline_iter =
-		std::find(inbound_buffer->begin(),
-			  inbound_buffer->end(),
-			  static_cast<uint8_t>('\n'));
-	if(newline_iter == inbound_buffer->end()){
-		return tmp; // not enough data to make a new frame
-	}
-	std::vector<uint8_t> tmp_vector =
-		std::vector<uint8_t>(
-			inbound_buffer->begin(),
-			newline_iter);
-	// unique number, value (VBL), and timestamp in microseconds
-	// no units, but they'd be tied in with the number
 	std::vector<uint8_t> old_buffer =
 		*inbound_buffer;
 	try{
-		std::get<0>(tmp) =
-			std::stoi(
-				convert::string::from_bytes(
-					pull_until_end_of_item(
-						&tmp_vector)));
-		std::get<1>(tmp) =
-			smart_number_creation(
-				std::vector<uint8_t>(
-					pull_until_end_of_item(
-						&tmp_vector)));
-		pull_until_end_of_item(&tmp_vector); // unit isn't used for now
-		std::get<2>(tmp) =
-			std::stoull(
-				convert::string::from_bytes(
-					pull_until_end_of_item(
-						&tmp_vector)));
+		std::array<std::vector<uint8_t>, 4> recv_data = {
+			pull_until_end_of_item(inbound_buffer),
+			pull_until_end_of_item(inbound_buffer),
+			pull_until_end_of_item(inbound_buffer), // unit isn't used
+			pull_until_end_of_item(inbound_buffer)
+		};
+		if(likely(recv_data[0].size() != 0 &&
+			  recv_data[1].size() != 0 &&
+			  recv_data[2].size() != 0 &&
+			  recv_data[3].size() != 0)){
+			std::get<0>(tmp) =
+				std::stoll(
+					convert::string::from_bytes(
+						recv_data[0]));
+			std::get<1>(tmp) =
+				smart_number_creation(
+					recv_data[1]);
+			std::get<2>(tmp) =
+				std::stoull(
+					convert::string::from_bytes(
+						recv_data[3]));
+			// P_V(std::get<0>(tmp), P_VAR);
+			// P_V(math::number::get::number(std::get<1>(tmp)), P_VAR);
+			// P_V(s;td::get<2>(tmp), P_VAR);
+			if(abs(static_cast<int64_t>(std::get<2>(tmp))-
+			       static_cast<int64_t>(get_time_microseconds())) > 60*1000*1000){
+				print("timestamps are more than a minute off, if this is live, check for microsecond accuracy", P_DEBUG);
+			}
+			old_buffer.erase(
+				old_buffer.begin(),
+				std::find(old_buffer.begin(),
+					  old_buffer.end(),
+					  '\n'));
+		}
 	}catch(...){
 		print("couldn't interpret the inbound TCP data", P_DEBUG);
+		P_V(inbound_buffer->size(), P_VAR);
 		*inbound_buffer =
 			old_buffer;
 	}
@@ -269,16 +289,20 @@ TV_SINK_MEDIUM_PULL(tcp_accept){
 	net_socket_t *socket_ptr =
 		PTR_DATA(tcp_accept_state_ptr->get_conn_socket_id(),
 			 net_socket_t);
+	PRINT_IF_NULL(socket_ptr, P_ERR);
+	get_new_connections(
+		socket_ptr,
+		tcp_accept_state_ptr);
 	tv_sink_numerical_tcp_accept_socket_check(
 		state_ptr->get_flow_direction(),
 		tcp_accept_state_ptr,
 		socket_ptr);
 	try{
 		std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> number;
-		while((number = formatted_to_computable(
-			       &tcp_accept_state_ptr->buffer)) !=
+		while(likely((number = formatted_to_computable(
+				      &tcp_accept_state_ptr->buffer)) !=
 		      std::make_tuple(
-			      0, std::vector<uint8_t>({}), 0)){
+			      0, std::vector<uint8_t>({}), 0))){
 			tcp_accept_state_ptr->data_buffer.push_back(
 				number);
 		}
@@ -287,13 +311,14 @@ TV_SINK_MEDIUM_PULL(tcp_accept){
 	if(tcp_accept_state_ptr->data_buffer.size() == 0){
 		return retval;
 	}
-	std::raise(SIGINT);
 	uint64_t start_time_micro_s =
 		std::get<2>(tcp_accept_state_ptr->data_buffer[0]);
 	for(uint64_t i = 0;i < tcp_accept_state_ptr->data_buffer.size();i++){
 		const std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> elem =
 			tcp_accept_state_ptr->data_buffer[i];
 		if(std::get<2>(elem)-start_time_micro_s > 1*1000*1000){
+			P_V(std::get<2>(elem)-start_time_micro_s, P_VAR);
+			print("creating a numerical frame with " + std::to_string(i) + " samples", P_DEBUG);
 			tv_frame_numerical_t *frame_numerical_ptr =
 				new tv_frame_numerical_t;
 			frame_numerical_ptr->set_start_time_micro_s(

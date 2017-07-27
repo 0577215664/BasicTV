@@ -346,17 +346,6 @@ void console_t::tv_manager_load_item_to_channel(
 		new_item->add_frame_id(
 			{frame_numerical_ptr->id.get_id()});
 		print_socket("added data properly\n");
-		window_ptr->set_item_id(
-			new_item->id.get_id());
-		window_ptr->set_active_streams(
-			std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >(
-				{std::make_tuple(
-						frame_numerical_ptr->id.get_id(),
-						frame_id_to_state_id(
-							frame_numerical_ptr->id.get_id(),
-							TV_SINK_MEDIUM_FLOW_DIRECTION_IN),
-						std::vector<uint8_t>({}))}));
-		print_socket("bound item and live stream to tv_window_t\n");
 	}
 	output_table =
 		console_generate_generic_id_table(
@@ -431,12 +420,15 @@ void console_t::tv_manager_bind_item_to_window(
 		timestamp_offset);
 	window_ptr->set_item_id(
 		item_ptr->id.get_id());
+	std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > > streams =
+		window_ptr->get_active_streams();;
+	streams.push_back(
+		std::make_tuple(
+			item_ptr->get_frame_id_vector()[0][0],
+			sink_state_ptr->id.get_id(),
+			std::vector<uint8_t>({})));
 	window_ptr->set_active_streams(
-		std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({
-				std::make_tuple(
-					item_ptr->get_frame_id_vector()[0][0],
-					sink_state_ptr->id.get_id(),
-					std::vector<uint8_t>({}))}));
+		streams);
 	print_socket("everything should be loaded nicely now, right?\n");
 }
 
@@ -758,9 +750,10 @@ void console_t::tv_manager_print_options(){
 		"(3) Play Loaded TV Item in 10 Seconds\n"
 		"(4) Change Item in Window\n"
 		"(5) List TV Channels, Items, Sinks\n"
-		"(6) Create a Sink\n"
-		"(7) Create TV Channel\n"
-		"(8) Exit TV Manager\n"
+		"(6) List TV Sinks\n"
+		"(7) Create a Sink\n"
+		"(8) Create TV Channel\n"
+		"(9) Exit TV Manager\n"
 		"] ";
 	print_socket(tmp);
 }
@@ -801,12 +794,15 @@ DEC_CMD(tv_manager){
 			tv_manager_list_channels_and_items();
 			break;
 		case 6:
-			tv_manager_create_sink(console_inbound_socket);
+			tv_manager_list_sinks();
 			break;
 		case 7:
-			tv_manager_create_tv_channel(console_inbound_socket);
+			tv_manager_create_sink(console_inbound_socket);
 			break;
 		case 8:
+			tv_manager_create_tv_channel(console_inbound_socket);
+			break;
+		case 9:
 			print_socket("closing TV manager\n");
 			tv_manager_loop = false;
 			break;

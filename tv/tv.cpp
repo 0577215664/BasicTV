@@ -43,7 +43,7 @@ static void tv_loop_sink_outward_flow(
 
 	const int64_t window_offset =
 		window_ptr->get_timestamp_offset_micro_s();
-	// only because of shoddy programming, should and will work well soon
+	// should work fine, but haven't had a use case yet, so haven't tested
 	ASSERT(window_ptr->get_active_streams().size() <= 1, P_ERR);
 	id_t_ latest_id = ID_BLANK_ID;
 	switch(get_id_type(std::get<0>(stream))){
@@ -136,7 +136,7 @@ static void tv_loop_sink_inward_flow(
 		id_api::linked_list::link_vector(
 			new_frames,
 			10);
-		std::get<1>(stream) =
+		std::get<0>(stream) =
 			new_frames[new_frames.size()-1];
 		window_ptr->set_active_streams(
 			{stream});
