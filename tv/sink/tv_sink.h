@@ -18,7 +18,7 @@ private:
 	uint8_t medium = 0;
 	uint8_t frame_type = 0;
 	// right now, mapping isn't used for simplicity reasons, add it later
-	std::vector<uint8_t> mapping; // Vorbis I channel mappings, multiple numerical feeds, etc.
+	std::vector<uint8_t> mapping; // Vorbis I channel mappings, multiple snumerical feeds, etc.
 	std::vector<id_t_> push_history;
 	std::vector<id_t_> pull_history;
 	

@@ -7,6 +7,10 @@
 #include "../tv/tv_window.h"
 #include "../util.h"
 
+#include "../tv/sink/tv_sink.h"
+#include "../tv/sink/audio/tv_sink_audio_hardware.h"
+#include "../tv/sink/numerical/tcp/tv_sink_numerical_tcp_accept.h"
+
 #include "../tv/transcode/tv_transcode.h"
 #include "../tv/transcode/tv_transcode_audio.h"
 #include "../tv/transcode/tv_transcode_opus.h"
@@ -280,6 +284,8 @@ void console_t::tv_manager_load_item_to_channel(
 	tv_channel_t *channel_ptr =
 		PTR_DATA(convert::array::id::from_hex(channel_id),
 			 tv_channel_t);
+	new_item->set_tv_channel_id(
+		convert::array::id::from_hex(channel_id));
 	if(item_type == "1"){
 		print_socket("File Path (WAV only):");
 		const std::string file_path =
@@ -359,10 +365,14 @@ void console_t::tv_manager_load_item_to_channel(
 						channel_ptr->id.get_id()}));
 }
 
-void console_t::tv_manager_play_loaded_item(
+void console_t::tv_manager_bind_item_to_window(
 	net_socket_t *console_inbound_socket){
 	print_socket("Item ID:");
 	const std::string item_id =
+		tv_manager_read_string(
+			console_inbound_socket);
+	print_socket("Sink ID:");
+	const std::string sink_id =
 		tv_manager_read_string(
 			console_inbound_socket);
 	print_socket("Offset from Live TV (0 for Live, - for Rewind, + for Forwards):");
@@ -375,15 +385,6 @@ void console_t::tv_manager_play_loaded_item(
 	if(item_ptr == nullptr){
 		print_socket("item_ptr is a nullptr");	
 		print("item_ptr is a nullptr", P_ERR);
-	}
-	tv_channel_t *channel_ptr =
-		PTR_DATA(item_ptr->get_tv_channel_id(),
-			 tv_channel_t);
-	// technically we don't need channel_ptr, but printing out metadata
-	// is something i'd like to do real soon
-	if(channel_ptr == nullptr){
-		print_socket("channel_ptr is a nullptr\n");
-		print("channel_ptr is a nullptr", P_ERR);
 	}
 	std::vector<id_t_> window_vector =
 		ID_TIER_CACHE_GET(
@@ -404,6 +405,25 @@ void console_t::tv_manager_play_loaded_item(
 				new tv_window_t;
 		}
 	}
+	tv_sink_state_t *sink_state_ptr =
+		PTR_DATA(convert::array::id::from_hex(sink_id),
+			 tv_sink_state_t);
+	if(sink_state_ptr == nullptr){
+		print_socket("sink_state_ptr is a nullptr\n");
+		print("sink_state_ptr is a nullptr", P_ERR);
+	}
+	switch(sink_state_ptr->get_flow_direction()){
+	case TV_SINK_MEDIUM_FLOW_DIRECTION_IN:
+		print_socket("an input sink is specified, will be recording, encoding, and transmitting live\n");
+		break;
+	case TV_SINK_MEDIUM_FLOW_DIRECTION_OUT: // only mediums can have BOTH
+		print_socket("an output sink is specified, will follow the linked list of the frame\n");
+		break;
+	default:
+		print_socket("invalid sink state direction\n");
+		print("invalid sink state direction", P_ERR);
+		break;
+	}
 	const uint64_t timestamp_offset =
 		std::stoi(time_offset_micro_s_str);
 	print_socket("interpreted timestamp offset as " + std::to_string(timestamp_offset) + "\n");
@@ -411,14 +431,11 @@ void console_t::tv_manager_play_loaded_item(
 		timestamp_offset);
 	window_ptr->set_item_id(
 		item_ptr->id.get_id());
-	// TODO: actually make a prompt for making TV sink states (especially
-	// when RTSP gets going)
 	window_ptr->set_active_streams(
 		std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > >({
 				std::make_tuple(
 					item_ptr->get_frame_id_vector()[0][0],
-					frame_id_to_state_id(item_ptr->get_frame_id_vector()[0][0],
-							     TV_SINK_MEDIUM_FLOW_DIRECTION_OUT), // IN from the outside
+					sink_state_ptr->id.get_id(),
 					std::vector<uint8_t>({}))}));
 	print_socket("everything should be loaded nicely now, right?\n");
 }
@@ -496,6 +513,72 @@ void console_t::tv_manager_list_channels_and_items(){
 					});
 		output_table.push_back(
 			datum);
+	}
+}
+
+void console_t::tv_manager_list_sinks(){
+	std::vector<id_t_> sink_vector =
+		ID_TIER_CACHE_GET(
+			TYPE_TV_SINK_STATE_T);
+	output_table.clear();
+	output_table.push_back(
+		{"Sink ID",
+				"Medium Type",
+				"Frame Type",
+				"Flow Direction"});
+	for(uint64_t i = 0;i < sink_vector.size();i++){
+		tv_sink_state_t *sink_state_ptr =
+			PTR_DATA(sink_vector[i],
+				 tv_sink_state_t);
+		if(sink_state_ptr == nullptr){
+			print_socket("sink_state_ptr is a nullptr\n");
+			print("sink_state_ptr is a nullptr", P_WARN);
+		}
+		std::string sink_id =
+			convert::array::id::to_hex(
+				sink_vector[i]);
+		std::string medium_type;
+		switch(sink_state_ptr->get_medium()){
+		case TV_SINK_MEDIUM_AUDIO_HARDWARE:
+			medium_type = "Speakers (AUDIO_HARDWARE)";
+			break;
+		case TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT:
+			medium_type = "TCP Sink (NUMERICAL_TCP_ACCEPT)";
+			break;
+		default:
+			print_socket("invalid medium\n");
+			print("invalid medium", P_ERR);
+		}
+		std::string frame_type;
+		switch(sink_state_ptr->get_frame_type()){
+		case TV_FRAME_TYPE_AUDIO:
+			frame_type = "Audio";
+			break;
+		case TV_FRAME_TYPE_NUMERICAL:
+			frame_type = "Numerical";
+			break;
+		default:
+			print_socket("invalid frame_type\n");
+			print("invalid frame_type", P_ERR);
+		}
+		std::string flow_direction;
+		switch(sink_state_ptr->get_flow_direction()){
+		case TV_SINK_MEDIUM_FLOW_DIRECTION_IN:
+			flow_direction = "In";
+			break;
+		case TV_SINK_MEDIUM_FLOW_DIRECTION_OUT:
+			flow_direction= "Out";
+			break;
+		default:
+			print_socket("invalid flow direction\n");
+			print("invalid flow direction", P_ERR);
+		}
+		output_table.push_back(
+			std::vector<std::string>(
+				{sink_id,
+						medium_type,
+						frame_type,
+						flow_direction}));
 	}
 }
 
@@ -591,15 +674,93 @@ void console_t::tv_manager_play_loaded_item_live(
 
 }
 
+void console_t::tv_manager_create_sink(net_socket_t *console_inbound_socket){
+	print_socket("Medium (AUDIO_HARDWARE or NUMERICAL_TCP_ACCEPT): ");
+	const std::string medium_type_str =
+		tv_manager_read_string(
+			console_inbound_socket);
+	print_socket("Flow Direction (IN or OUT): ");
+	const std::string flow_direction_str =
+		tv_manager_read_string(
+			console_inbound_socket);
+	uint8_t medium = 0;
+	uint8_t flow_direction = 0;
+	if(medium_type_str == "AUDIO_HARDWARE"){
+		medium = TV_SINK_MEDIUM_AUDIO_HARDWARE;
+	}else if(medium_type_str == "NUMERICAL_TCP_ACCEPT"){
+		medium = TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT;
+	}else{
+		print_socket("invalid medium\n");
+		print("invalid medium", P_ERR);
+	}
+
+	if(flow_direction_str == "IN"){
+		flow_direction = TV_SINK_MEDIUM_FLOW_DIRECTION_IN;
+	}else if(flow_direction_str == "OUT"){
+		flow_direction = TV_SINK_MEDIUM_FLOW_DIRECTION_OUT;
+	}else{
+		print_socket("invalid flow direction\n");
+		print("invalid flow direction", P_ERR);
+	}
+	tv_sink_state_t *sink_state_ptr =
+		tv::sink::state::init(
+			medium,
+			flow_direction);
+	if(sink_state_ptr == nullptr){
+		print_socket("sink_state_ptr is a nullptr\n");
+		print("sink_state_ptr is a nullptr", P_ERR);
+	}
+	print_socket("Queueing up medium-specific settings\n");
+	switch(medium){
+	case TV_SINK_MEDIUM_AUDIO_HARDWARE:
+		print_socket("no settings for AUDIO_HARDWARE\n");
+		break;
+	case TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT:
+		if(true){
+			// TODO: maybe allow whitelisting IP address ranges?
+			print_socket("Incoming Port: ");
+			const std::string incoming_port_str =
+				tv_manager_read_string(
+					console_inbound_socket);
+			uint64_t incoming_port =
+				std::stoi(incoming_port_str);
+			if(incoming_port > 65535){
+				print_socket("port falls outside of 16-bit range\n");
+				print("port falls outside of 16-bit range", P_ERR);
+			}
+			tv_sink_numerical_tcp_accept_state_t *tcp_accept_state_ptr =
+				reinterpret_cast<tv_sink_numerical_tcp_accept_state_t*>(
+					sink_state_ptr->get_state_ptr());
+			if(tcp_accept_state_ptr == nullptr){
+				print_socket("tcp_accept_state_ptr is a nullptr\n");
+				print("tcp_accept_state_ptr is a nullptr", P_ERR);
+			}
+			net_socket_t *socket_ptr =
+				PTR_DATA(tcp_accept_state_ptr->get_conn_socket_id(),
+					 net_socket_t);
+			if(socket_ptr == nullptr){
+				print_socket("socket_ptr is a nullptr\n");
+				print("socket_ptr is a nullptr", P_ERR);
+			}
+			socket_ptr->set_net_ip(
+				"", static_cast<uint16_t>(incoming_port));
+		}
+		break;
+	default:
+		print_socket("invalid medium (after proper sink creation?)\n");
+	}
+}
+
 void console_t::tv_manager_print_options(){
 	const std::string tmp =
 		"(1) Load TV Item to Channel\n"
-		"(2) Play Loaded TV Item\n"
+		"(2) Bind TV Item to Window\n"
 		"(3) Play Loaded TV Item in 10 Seconds\n"
 		"(4) Change Item in Window\n"
-		"(5) List TV Channels and Items\n"
-		"(6) Create TV Channel\n"
-		"(7) Exit TV Manager\n"
+		"(5) List TV Channels, Items, Sinks\n"
+		"(6) Create a Sink\n"
+		"(7) Create TV Channel\n"
+		"(8) Exit TV Manager\n"
 		"] ";
 	print_socket(tmp);
 }
@@ -628,7 +789,7 @@ DEC_CMD(tv_manager){
 			tv_manager_load_item_to_channel(console_inbound_socket);
 			break;
 		case 2:
-			tv_manager_play_loaded_item(console_inbound_socket);
+			tv_manager_bind_item_to_window(console_inbound_socket);
 			break;
 		case 3:
 			tv_manager_play_loaded_item_live(console_inbound_socket);
@@ -640,9 +801,12 @@ DEC_CMD(tv_manager){
 			tv_manager_list_channels_and_items();
 			break;
 		case 6:
-			tv_manager_create_tv_channel(console_inbound_socket);
+			tv_manager_create_sink(console_inbound_socket);
 			break;
 		case 7:
+			tv_manager_create_tv_channel(console_inbound_socket);
+			break;
+		case 8:
 			print_socket("closing TV manager\n");
 			tv_manager_loop = false;
 			break;

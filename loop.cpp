@@ -6,9 +6,40 @@
 #include "id/id.h"
 #include "id/id_api.h"
 
+#include "tv/tv_window.h"
+
 #define NEW_TAB_LINE(the_payload) (std::string(P_V_LEV_LEN+8, ' ') + (std::string)the_payload + (std::string)"\n")
 
 static uint64_t last_print_micro_s = 0;
+
+static std::string window_breakdown(){
+	std::string retval;
+	std::vector<id_t_> window_vector =
+		ID_TIER_CACHE_GET(
+			TYPE_TV_WINDOW_T);
+	for(uint64_t i = 0;i < window_vector.size();i++){
+		tv_window_t *window_ptr =
+			PTR_DATA(window_vector[i],
+				 tv_window_t);
+		CONTINUE_IF_NULL(window_ptr, P_WARN);
+		retval += id_breakdown(window_vector[i]) + "has the following frame bindings";
+		std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > > tmp =
+			window_ptr->get_active_streams();
+		for(uint64_t c = 0;c < tmp.size();c++){
+			const bool is_frame_null =
+				PTR_ID(std::get<0>(tmp[c]), ) == nullptr;;
+			tv_sink_state_t *sink_state_ptr =
+				PTR_DATA(std::get<1>(tmp[c]),
+					 tv_sink_state_t);
+			const bool is_sink_null =
+				sink_state_ptr == nullptr;
+			retval += "        " + id_breakdown(std::get<0>(tmp[c])) + "Null?: " + ((is_frame_null) ? "Yes\n": "No\n");
+			retval += "        " + id_breakdown(std::get<1>(tmp[c])) + "Null?: " + ((is_sink_null) ? "Yes ": "No ") + "Flow Direction: " + ((sink_state_ptr->get_flow_direction() == TV_SINK_MEDIUM_FLOW_DIRECTION_IN) ? "In\n" : "Out\n");
+			// possibly add mappings here later on...
+		}
+	}
+	return retval;
+}
 
 static std::string storage_breakdown(){
 	std::string retval;
@@ -56,18 +87,21 @@ static void print_stats(uint64_t avg_iter_time){
 	uint64_t cur_time_micro_s =
 		get_time_microseconds();
 	if(cur_time_micro_s-last_print_micro_s > print_stat_freq){
-		std::string network_socket_count =
-			"Proto Socket Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_NET_PROTO_SOCKET_T).size());
-		std::string network_peer_count =
-			"Peer Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_NET_PROTO_PEER_T).size());
-		std::string channel_count =
-			"Channel Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_TV_CHANNEL_T).size());
-		std::string item_count =
-			"Item Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_TV_ITEM_T).size());
+		// std::string network_socket_count =
+		// 	"Proto Socket Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_NET_PROTO_SOCKET_T).size());
+		// std::string network_peer_count =
+		// 	"Peer Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_NET_PROTO_PEER_T).size());
+		// std::string channel_count =
+		// 	"Channel Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_TV_CHANNEL_T).size());
+		// std::string item_count =
+		// 	"Item Count: " + std::to_string(ID_TIER_CACHE_GET(TYPE_TV_ITEM_T).size());
 		std::string avg_iter_time_ =
 			"Average Iteration Frequency: " + std::to_string(1/((long double)((long double)avg_iter_time/(long double)1000000)));
+		std::string window_bindings =
+			"Window Bindings: " + window_breakdown() + "\n";
 		print("Routine Stats\n" +
-		      storage_breakdown() + 
+		      storage_breakdown() +
+		      window_bindings +
 		      avg_iter_time_, P_NOTE);
 		last_print_micro_s =
 			cur_time_micro_s;

@@ -40,6 +40,7 @@ TV_SINK_MEDIUM_INIT(tcp_accept){
 		socket_ptr->set_net_ip(
 			"", 59051);
 	}
+	socket_ptr->connect();
 	tcp_accept_state_ptr->set_conn_socket_id(
 		socket_ptr->id.get_id());
 	return state_ptr;
@@ -93,6 +94,7 @@ TV_SINK_MEDIUM_CLOSE(tcp_accept){
 
 static std::vector<uint8_t> pull_until_end_of_item(
 	std::vector<uint8_t> *buffer){
+	std::vector<uint8_t> retval;
 	auto space_iter =
 		std::find(
 			buffer->begin(),
@@ -106,23 +108,26 @@ static std::vector<uint8_t> pull_until_end_of_item(
 			buffer->begin(),
 			space_iter);
 		return retval;
+	}else{
+		auto newline_iter =
+			std::find(
+				buffer->begin(),
+				buffer->end(),
+				(uint8_t)'\n');
+		if(newline_iter != buffer->end()){
+			std::vector<uint8_t> retval(
+				buffer->begin(),
+				newline_iter-1);
+			buffer->erase(
+				buffer->begin(),
+				newline_iter);
+			return retval;
+		}
 	}
-
-	auto newline_iter =
-		std::find(
-			buffer->begin(),
-			buffer->end(),
-			(uint8_t)'\n');
-	if(newline_iter != buffer->end()){
-		std::vector<uint8_t> retval(
-			buffer->begin(),
-			newline_iter-1);
-		buffer->erase(
-			buffer->begin(),
-			newline_iter);
-		return retval;
+	if(retval.size() != 0){
+		P_V_S(convert::string::from_bytes(retval), P_DEBUG);
 	}
-	return std::vector<uint8_t>({});
+	return retval;
 }
 
 static std::vector<uint8_t> smart_number_creation(
@@ -182,7 +187,7 @@ static std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> formatted_to_computa
 					pull_until_end_of_item(
 						&tmp_vector)));
 	}catch(...){
-		print("couldn't interpret the inbound TCP data", P_ERR);
+		print("couldn't interpret the inbound TCP data", P_DEBUG);
 		*inbound_buffer =
 			old_buffer;
 	}
@@ -269,18 +274,22 @@ TV_SINK_MEDIUM_PULL(tcp_accept){
 		tcp_accept_state_ptr,
 		socket_ptr);
 	try{
-		while(true){
-			std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> number =
-				formatted_to_computable(
-					&tcp_accept_state_ptr->buffer);
+		std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> number;
+		while((number = formatted_to_computable(
+			       &tcp_accept_state_ptr->buffer)) !=
+		      std::make_tuple(
+			      0, std::vector<uint8_t>({}), 0)){
 			tcp_accept_state_ptr->data_buffer.push_back(
 				number);
-				
 		}
 	}catch(...){}
+	std::vector<id_t_> retval;
+	if(tcp_accept_state_ptr->data_buffer.size() == 0){
+		return retval;
+	}
+	std::raise(SIGINT);
 	uint64_t start_time_micro_s =
 		std::get<2>(tcp_accept_state_ptr->data_buffer[0]);
-	std::vector<id_t_> retval;
 	for(uint64_t i = 0;i < tcp_accept_state_ptr->data_buffer.size();i++){
 		const std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> elem =
 			tcp_accept_state_ptr->data_buffer[i];

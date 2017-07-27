@@ -6,6 +6,7 @@
 #include "tv_frame_audio.h"
 #include "tv_frame_video.h"
 #include "tv_frame_standard.h"
+#include "tv_frame_numerical.h"
 
 #include "../util.h"
 #include "../id/id_api.h"
@@ -33,6 +34,8 @@ void tv_init(){
 		for(uint64_t i  = 0;i < window_vector.size();i++	\
 	}						\
 
+#define FRAME_TYPE_SEEK(frame_type) if(true){frame_type *ptr = PTR_DATA(std::get<0>(stream), frame_type);PRINT_IF_NULL(ptr, P_UNABLE);latest_id = tv_frame_scroll_to_time(ptr, get_time_microseconds()+window_offset);}break;
+
 // Playback towards outward sinks
 static void tv_loop_sink_outward_flow(
 	std::tuple<id_t_, id_t_, std::vector<uint8_t> > stream,
@@ -45,17 +48,9 @@ static void tv_loop_sink_outward_flow(
 	id_t_ latest_id = ID_BLANK_ID;
 	switch(get_id_type(std::get<0>(stream))){
 	case TYPE_TV_FRAME_AUDIO_T:
-		if(true){
-			tv_frame_audio_t *frame_audio_ptr =
-				PTR_DATA(std::get<0>(stream),
-					 tv_frame_audio_t);
-			PRINT_IF_NULL(frame_audio_ptr, P_UNABLE);
-			latest_id =
-				tv_frame_scroll_to_time(
-					frame_audio_ptr,
-					get_time_microseconds() + window_offset);
-		}
-		break;
+		FRAME_TYPE_SEEK(tv_frame_audio_t);
+	case TYPE_TV_FRAME_NUMERICAL_T:
+		FRAME_TYPE_SEEK(tv_frame_numerical_t);
 	case TYPE_TV_FRAME_VIDEO_T:
 		print("no formal video support exists yet", P_WARN);
 		return;
@@ -132,16 +127,20 @@ static void tv_loop_sink_inward_flow(
 		tv::sink::state::pull(
 			std::get<1>(stream),
 			0);
-	new_frames.insert(
-		new_frames.begin(),
-		std::get<0>(stream));
-	id_api::linked_list::link_vector(
-		new_frames,
-		10);
-	std::get<1>(stream) =
-		new_frames[new_frames.size()-1];
-	window_ptr->set_active_streams(
-		{stream});
+	if(new_frames.size() > 0){
+		print("created " + std::to_string(new_frames.size()) + " frames of type " +
+		      convert::type::from(get_id_type(new_frames.at(0))), P_DEBUG);
+		new_frames.insert(
+			new_frames.begin(),
+			std::get<0>(stream));
+		id_api::linked_list::link_vector(
+			new_frames,
+			10);
+		std::get<1>(stream) =
+			new_frames[new_frames.size()-1];
+		window_ptr->set_active_streams(
+			{stream});
+	}
 }
 
 void tv_loop(){
