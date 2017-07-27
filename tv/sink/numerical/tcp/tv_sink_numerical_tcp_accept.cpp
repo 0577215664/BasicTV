@@ -265,39 +265,42 @@ TV_SINK_MEDIUM_PULL(tcp_accept){
 				
 		}
 	}catch(...){}
+	uint64_t start_time_micro_s =
+		std::get<2>(tcp_accept_state_ptr->data_buffer[0]);
 	std::vector<id_t_> retval;
-	while(tcp_accept_state_ptr->data_buffer.size() > 0 &&
-	      std::get<2>(tcp_accept_state_ptr->data_buffer[tcp_accept_state_ptr->data_buffer.size()-1])-
-	      std::get<2>(tcp_accept_state_ptr->data_buffer[0]) > 1*1000*1000){
-		tv_frame_numerical_t *frame_numerical_ptr =
-			new tv_frame_numerical_t;
-		std::vector<uint8_t> escaped_data;
-		for(uint64_t i = 0;i < tcp_accept_state_ptr->data_buffer.size();i++){
-			std::vector<uint8_t> tmp =
-				escape_vector(
-					std::get<1>(tcp_accept_state_ptr->data_buffer[i]),
-					TV_FRAME_NUMERICAL_ESCAPE);
-			escaped_data.insert(
-				escaped_data.end(),
-				tmp.begin(),
-				tmp.end());
+	for(uint64_t i = 0;i < tcp_accept_state_ptr->data_buffer.size();i++){
+		const std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> elem =
+			tcp_accept_state_ptr->data_buffer[i];
+		if(std::get<2>(elem)-start_time_micro_s > 1*1000*1000){
+			tv_frame_numerical_t *frame_numerical_ptr =
+				new tv_frame_numerical_t;
+			frame_numerical_ptr->set_start_time_micro_s(
+				start_time_micro_s);
+			frame_numerical_ptr->set_ttl_micro_s(
+				std::get<2>(elem)-start_time_micro_s);
+			frame_numerical_ptr->set_frame_entry(
+				tcp_accept_state_ptr->current_frame_entry++);
+			std::vector<uint8_t> escaped_vector;
+			for(uint64_t c = 0;c <= i;c++){
+				std::vector<uint8_t> tmp =
+					escape_vector(
+						std::get<1>(tcp_accept_state_ptr->data_buffer[c]),
+						TV_FRAME_NUMERICAL_ESCAPE);
+				escaped_vector.insert(
+					escaped_vector.end(),
+					tmp.begin(),
+					tmp.end());
+			}
+			frame_numerical_ptr->set_escaped_one_dimension_data(
+				escaped_vector);
+			retval.push_back(
+				frame_numerical_ptr->id.get_id());
+			start_time_micro_s = std::get<2>(elem);
+			tcp_accept_state_ptr->data_buffer.erase(
+				tcp_accept_state_ptr->data_buffer.begin(),
+				tcp_accept_state_ptr->data_buffer.begin()+i);
+			i = 0;
 		}
-		frame_numerical_ptr->set_escaped_one_dimension_data(
-			escaped_data);
-		uint64_t start_time_micro_s =
-			std::get<2>(tcp_accept_state_ptr->data_buffer[0]);
-		uint64_t end_time_micro_s =
-			std::get<2>(tcp_accept_state_ptr->data_buffer[
-					    tcp_accept_state_ptr->data_buffer.size()-1]);
-		frame_numerical_ptr->set_start_time_micro_s(
-			start_time_micro_s);
-		frame_numerical_ptr->set_ttl_micro_s(
-			end_time_micro_s-start_time_micro_s);
-		frame_numerical_ptr->set_frame_entry(
-			tcp_accept_state_ptr->current_frame_entry++);
-		retval.push_back(
-			frame_numerical_ptr->id.get_id());
-		tcp_accept_state_ptr->data_buffer.clear();
 	}
 	return retval;
 }
