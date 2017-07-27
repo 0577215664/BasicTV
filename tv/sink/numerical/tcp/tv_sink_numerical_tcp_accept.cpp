@@ -30,6 +30,18 @@ TV_SINK_MEDIUM_INIT(tcp_accept){
 		TV_FRAME_TYPE_NUMERICAL);
 	state_ptr->set_flow_direction(
 		flow_direction);
+
+	net_socket_t *socket_ptr =
+		new net_socket_t;
+	if(flow_direction == TV_SINK_MEDIUM_FLOW_DIRECTION_OUT){
+		socket_ptr->set_net_ip(
+			"", 59050);
+	}else{
+		socket_ptr->set_net_ip(
+			"", 59051);
+	}
+	tcp_accept_state_ptr->set_conn_socket_id(
+		socket_ptr->id.get_id());
 	return state_ptr;
 }
 
