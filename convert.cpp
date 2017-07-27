@@ -308,6 +308,7 @@ uint8_t convert::type::to(std::string type){
 	CONV_CHECK_TYPE("tv_sink_metadata_state_t", TYPE_TV_SINK_METADATA_STATE_T);
 	CONV_CHECK_TYPE("net_http_t", TYPE_NET_HTTP_T);
 	CONV_CHECK_TYPE("net_http_file_t", TYPE_NET_HTTP_FILE_T);
+	CONV_CHECK_TYPE("tv_frame_numerical_t", TYPE_TV_FRAME_NUMERICAL_T);
 	P_V_S(type, P_WARN);
 	print("unknown type has been passed, returning zero", P_ERR);
 	return 0;
@@ -377,6 +378,8 @@ std::string convert::type::from(uint8_t type){
 		return "net_http_t";
 	case TYPE_NET_HTTP_FILE_T:
 		return "net_http_file_t";
+	case TYPE_TV_FRAME_NUMERICAL_T:
+		return "tv_frame_numerical_t";
 	case 0:
 		print("zero type, something went wrong earlier", P_WARN);
 		return "NOTYPE";

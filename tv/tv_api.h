@@ -27,7 +27,8 @@ namespace tv{
 	namespace sink{
 		namespace state{
 			tv_sink_state_t *init(
-				uint8_t medium);
+				uint8_t medium,
+				uint8_t flow_direction);
 			void close(id_t_ state_id);
 			void close(tv_sink_state_t *state_ptr);
 			std::vector<id_t_> pull(

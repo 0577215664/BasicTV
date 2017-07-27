@@ -28,10 +28,13 @@ tv_sink_state_t::tv_sink_state_t() : id(this, TYPE_TV_SINK_STATE_T){
 tv_sink_state_t::~tv_sink_state_t(){
 }
 
-tv_sink_state_t *tv::sink::state::init(uint8_t medium){
+tv_sink_state_t *tv::sink::state::init(
+	uint8_t medium,
+	uint8_t flow_direction){
 	tv_sink_medium_t sink_medium =
 		tv_sink_get_medium(medium);
-	return sink_medium.init();
+	return sink_medium.init(
+		flow_direction);
 }
 
 void tv::sink::state::close(tv_sink_state_t *state_ptr){

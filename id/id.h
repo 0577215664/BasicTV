@@ -346,8 +346,9 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 #define TYPE_TV_SINK_METADATA_STATE_T			33
 #define TYPE_NET_HTTP_T					34
 #define TYPE_NET_HTTP_FILE_T				35
+#define TYPE_TV_FRAME_NUMERICAL_T			36
 
-#define TYPE_COUNT 35
+#define TYPE_COUNT 36
 
 #define ID_MAKE_TMP(x)						\
 	if(true){						\

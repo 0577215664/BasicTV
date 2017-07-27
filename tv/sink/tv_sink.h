@@ -24,6 +24,8 @@ private:
 	// tv_audio_prop_t, tv_video_prop_t, etc
 	void *prop_ptr = nullptr;
 	void *state_ptr = nullptr;
+
+	uint8_t flow_direction = 0;
 public:
 	data_id_t id;
 	tv_sink_state_t();
@@ -39,17 +41,23 @@ public:
 
 	GET_SET(prop_ptr, void*);
 	GET_SET(state_ptr, void*);
+
+	GET_SET(flow_direction, uint8_t);
 };
 
 #define TV_SINK_MEDIUM_AUDIO_HARDWARE 1
 #define TV_SINK_MEDIUM_AUDIO_RTSP 2
 #define TV_SINK_MEDIUM_AUDIO_FILE 3
 
+// just opens a listening socket, accepts all connections on a port
+// direction set in tv_sink_state_t makes it work either way
+#define TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT 20
+
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_IN 1
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_OUT 2
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_BOTH 3
 
-#define TV_SINK_MEDIUM_INIT(medium) tv_sink_state_t *tv_sink_##medium##_init()
+#define TV_SINK_MEDIUM_INIT(medium) tv_sink_state_t *tv_sink_##medium##_init(uint8_t flow_direction)
 #define TV_SINK_MEDIUM_CLOSE(medium) void tv_sink_##medium##_close(tv_sink_state_t* state_ptr)
 #define TV_SINK_MEDIUM_PULL(medium) std::vector<id_t_> tv_sink_##medium##_pull(tv_sink_state_t* state_ptr, uint8_t mapping)
 #define TV_SINK_MEDIUM_PUSH(medium) void tv_sink_##medium##_push(tv_sink_state_t *state_ptr, int64_t window_offset_micro_s, std::vector<id_t_> frames)
@@ -61,7 +69,8 @@ public:
 	uint8_t flow_direction = 0;
 	uint8_t medium = 0;
 
-	tv_sink_state_t* (*init)() = nullptr;
+	tv_sink_state_t* (*init)(
+		uint8_t flow_direction) = nullptr;
 	void (*close)(
 		tv_sink_state_t *state_ptr) = nullptr;
 
