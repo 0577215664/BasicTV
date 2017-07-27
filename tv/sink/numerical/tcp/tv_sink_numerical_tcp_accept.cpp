@@ -163,6 +163,7 @@ static std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> formatted_to_computa
 				std::vector<uint8_t>(
 					pull_until_end_of_item(
 						&tmp_vector)));
+		pull_until_end_of_item(&tmp_vector); // unit isn't used for now
 		std::get<2>(tmp) =
 			std::stoull(
 				convert::string::from_bytes(
