@@ -71,14 +71,13 @@ public:
 
 struct net_proto_type_request_t : public net_proto_request_set_t{
 private:
-	type_t_ type = ID_BLANK_TYPE;
+	// type simplifies to 8-bits
+	std::vector<type_t_> type;
 public:
 	data_id_t id;
 	net_proto_type_request_t();
 	~net_proto_type_request_t();
-	void update_type(
-		type_t_ type_);
-	type_t_ get_type(){return type;}
+	GET_SET(type, std::vector<type_t_>);
 };
 
 /*

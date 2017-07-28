@@ -177,10 +177,10 @@ static std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> formatted_to_computa
 			pull_until_end_of_item(inbound_buffer), // unit isn't used
 			pull_until_end_of_item(inbound_buffer)
 		};
-		if(likely(recv_data[0].size() != 0 &&
-			  recv_data[1].size() != 0 &&
-			  recv_data[2].size() != 0 &&
-			  recv_data[3].size() != 0)){
+		if(recv_data[0].size() != 0 &&
+		   recv_data[1].size() != 0 &&
+		   recv_data[2].size() != 0 &&
+		   recv_data[3].size() != 0){
 			std::get<0>(tmp) =
 				std::stoll(
 					convert::string::from_bytes(

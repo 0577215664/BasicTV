@@ -143,18 +143,26 @@ static void net_proto_fill_type_requests(){
 	 			 net_proto_type_request_t);
 		CONTINUE_IF_NULL(proto_type_request, P_DEBUG);
 		if(net_proto_valid_request_to_fill(proto_type_request)){
-			print("filling a valid type request " + id_breakdown(net_proto_type_requests[i]) + "for type " + convert::type::from(proto_type_request->get_type()), P_DEBUG);
+			print("filling a valid type request " + id_breakdown(net_proto_type_requests[i]), P_DEBUG);
 			try{
 				const std::vector<id_t_> raw_id_vector =
 					proto_type_request->get_ids();
-				const std::vector<id_t_> type_vector =
-					ID_TIER_CACHE_GET(
-						proto_type_request->get_type());
+				std::vector<id_t_> type_vector;
+				std::vector<type_t_> all_types =
+					proto_type_request->get_type();
+				for(uint64_t i = 0;i < all_types.size();i++){
+					std::vector<id_t_> tmp_vector =
+						ID_TIER_CACHE_GET(
+							all_types[i]);
+					type_vector.insert(
+						type_vector.end(),
+						tmp_vector.begin(),
+						tmp_vector.end());
+				}
 				const std::vector<id_t_> real_payload =
 					remove_ids_from_vector(
 						type_vector,
 						raw_id_vector);
-				P_V_S(convert::type::from(proto_type_request->get_type()), P_VAR);
 				P_V(type_vector.size(), P_VAR);
 				P_V(raw_id_vector.size(), P_VAR);
 				P_V(real_payload.size(), P_VAR);

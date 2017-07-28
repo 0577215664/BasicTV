@@ -135,7 +135,7 @@ net_proto_id_request_t::~net_proto_id_request_t(){}
 net_proto_type_request_t::net_proto_type_request_t() : id(this, TYPE_NET_PROTO_TYPE_REQUEST_T){
 	list_set_virtual_data(&id);
 	list_bare_virtual_data(&id);
-	id.add_data_raw(&type, sizeof(type));
+	id.add_data_one_byte_vector(&type, ~0);
 	id.set_lowest_global_flag_level(
 		ID_DATA_NETWORK_RULE_PUBLIC,
 		ID_DATA_EXPORT_RULE_NEVER,
@@ -185,16 +185,7 @@ id_t_ net_proto_linked_list_request_t::get_curr_id(){
 	return curr_id;
 }
 
-void net_proto_type_request_t::update_type(type_t_ type_){
-	type = type_;
-	set_ids(
-		ID_TIER_CACHE_GET(
-			type_));
-}
-
 // TODO: combine this file and routine_requests
-
-
 
 void net_proto::request::add_fast_routine_type(std::string type){
 	routine_request_fast_vector.push_back(
@@ -346,30 +337,25 @@ static void net_proto_routine_request_create(
 	const uint64_t time_micro_s =
 		get_time_microseconds();
 	if(time_micro_s-(*last_request_time_micro_s) > request_interval_micro_s){
+		id_t_ recv_peer_id =
+			net_proto::peer::random_connected_peer_id();
+		if(recv_peer_id == ID_BLANK_ID){
+			return;
+		}
 		print("creating routine request with frequency " + std::to_string(request_interval_micro_s) + "micro_s", P_SPAM);
-		for(uint64_t i = 0;i < type_vector.size();i++){
-			P_V_S(convert::type::from(type_vector[i]), P_VAR);
-			// all request names are in the perspective of the
-			// sender, not the receiver. This makes the receiver
-			// the person we send it to, and the sender ourselves.
-			id_t_ recv_peer_id =
-				net_proto::peer::random_connected_peer_id();
-			if(recv_peer_id == ID_BLANK_ID){
-				print("we have no peer connections, not creating any network requests", P_DEBUG);
-			}else{
-				net_proto_type_request_t *type_request =
-					new net_proto_type_request_t;
-				type_request->update_type(
-					type_vector[i]);
-				type_request->set_ttl_micro_s(
-					request_interval_micro_s);
-				type_request->set_destination_peer_id(
-					recv_peer_id);
-				type_request->set_origin_peer_id(
-					net_proto::peer::get_self_as_peer());
-				type_request->update_request_time();
-			}
- 		}
+
+		net_proto_type_request_t *type_request =
+			new net_proto_type_request_t;
+		type_request->set_type(
+			type_vector);
+		type_request->set_ttl_micro_s(
+			request_interval_micro_s);
+		type_request->set_destination_peer_id(
+			recv_peer_id);
+		type_request->set_origin_peer_id(
+			net_proto::peer::get_self_as_peer());
+		type_request->update_request_time();
+		
 		*last_request_time_micro_s = time_micro_s;
  	}
 }

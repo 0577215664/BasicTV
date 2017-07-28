@@ -150,7 +150,7 @@ id_t_ net_proto::peer::random_connected_peer_id(){
 		CONTINUE_IF_TRUE(socket_ptr->is_alive() == false);
 		return proto_socket_ptr->get_peer_id();
 	}
-	print("no connected peers exist, returning a blank ID", P_WARN);
+	// print("no connected peers exist, returning a blank ID", P_WARN);
 	return ID_BLANK_ID;
 }
 

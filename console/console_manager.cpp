@@ -749,7 +749,7 @@ void console_t::tv_manager_print_options(){
 		"(2) Bind TV Item to Window\n"
 		"(3) Play Loaded TV Item in 10 Seconds\n"
 		"(4) Change Item in Window\n"
-		"(5) List TV Channels, Items, Sinks\n"
+		"(5) List TV Items\n"
 		"(6) List TV Sinks\n"
 		"(7) Create a Sink\n"
 		"(8) Create TV Channel\n"
