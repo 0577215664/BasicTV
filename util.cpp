@@ -160,7 +160,7 @@ void print_(std::string data, uint64_t level){
 		if(unlikely(print_delay_milli_s != 0)){
 			sleep_ms(print_delay_milli_s, true);
 		}
-		std::cout << print_color_text(print_level_text(level), level) << " "
+		std::cout << print_color_text(print_level_text(level), level)
 			  << " " << print_color_text(data, level) << std::endl;
 		if(unlikely(level >= P_CRIT)){
 			std::cerr << "CRITICAL ERROR" << std::endl;

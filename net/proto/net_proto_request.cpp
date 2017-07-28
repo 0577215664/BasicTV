@@ -363,11 +363,13 @@ static void net_proto_routine_request_create(
 static void net_proto_routine_request_loop(){
  	net_proto_routine_request_create(
  		routine_request_fast_vector,
-		15*1000*1000,
+		settings::get_setting_unsigned_def(
+			"net_proto_routine_request_fast_interval_micro_s", 15*1000*1000),
  		&last_request_fast_time_micro_s);
  	net_proto_routine_request_create(
  		routine_request_slow_vector,
-		60*1000*1000,
+		settings::get_setting_unsigned_def(
+			"net_proto_routine_request_slow_interval_micro_s", 60*1000*1000),
  		&last_request_slow_time_micro_s);
 }
 

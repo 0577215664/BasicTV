@@ -23,6 +23,48 @@
   Somewhat hacky, but far better interface for actual BasicTV functionality.
  */
 
+std::string sink_id_to_readable(
+	id_t_ sink_id){
+	tv_sink_state_t *sink_state_ptr =
+		PTR_DATA(sink_id,
+			 tv_sink_state_t);
+	ASSERT(sink_state_ptr != nullptr, P_ERR);
+	std::string retval;
+	switch(sink_state_ptr->get_medium()){
+	case TV_SINK_MEDIUM_AUDIO_HARDWARE:
+		retval += "Speakers (AUDIO_HARDWARE)";
+		break;
+	case TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT:
+		retval += "TCP Sink (NUMERICAL_TCP_ACCEPT)";
+		break;
+	default:
+		print("invalid medium", P_ERR);
+	}
+	retval += "/";
+	switch(sink_state_ptr->get_frame_type()){
+	case TV_FRAME_TYPE_AUDIO:
+		retval += "Audio";
+		break;
+	case TV_FRAME_TYPE_NUMERICAL:
+		retval += "Numerical";
+		break;
+	default:
+		print("invalid frame_type", P_ERR);
+	}
+	retval += "/";
+	switch(sink_state_ptr->get_flow_direction()){
+	case TV_SINK_MEDIUM_FLOW_DIRECTION_IN:
+		retval += "In";
+		break;
+	case TV_SINK_MEDIUM_FLOW_DIRECTION_OUT:
+		retval += "Out";
+		break;
+	default:
+		print("invalid flow direction", P_ERR);
+	}
+	return retval;
+}
+
 std::vector<uint8_t> console_tv_load_opus_file(
 	std::string file){
 	std::vector<uint8_t> raw_samples;
@@ -378,22 +420,10 @@ void console_t::tv_manager_bind_item_to_window(
 	std::vector<id_t_> window_vector =
 		ID_TIER_CACHE_GET(
 			TYPE_TV_WINDOW_T);
-	tv_window_t *window_ptr = nullptr;
-	if(window_vector.size() == 0){
-		window_ptr =
-			new tv_window_t;
-	}else{
-		if(window_vector.size() > 1){
-			print_socket("more than one window created, this is good, but we don't have full support yet\n");
-		}
-		window_ptr =
-			PTR_DATA(window_vector[0],
-				 tv_window_t);
-		if(window_ptr == nullptr){
-			window_ptr =
-				new tv_window_t;
-		}
-	}
+	tv_window_t *window_ptr =
+		new tv_window_t;
+	// NEED to use a new window_ptr for pretty much everything at this
+	// point, since timestamp_offset_micro_s applies to everything
 	tv_sink_state_t *sink_state_ptr =
 		PTR_DATA(convert::array::id::from_hex(sink_id),
 			 tv_sink_state_t);
@@ -432,40 +462,39 @@ void console_t::tv_manager_bind_item_to_window(
 	print_socket("everything should be loaded nicely now, right?\n");
 }
 
-void console_t::tv_manager_change_item_in_window(
+void console_t::tv_manager_list_window_streams(
 	net_socket_t *console_inbound_socket){
-	print_socket("Item ID:");
-	const id_t_ item_id =
-		convert::array::id::from_hex(
-			tv_manager_read_string(
-				console_inbound_socket));
 	std::vector<id_t_> window_vector =
 		ID_TIER_CACHE_GET(
 			TYPE_TV_WINDOW_T);
-	id_t_ window_id = ID_BLANK_ID;
-	if(window_vector.size() == 1){
-		print_socket("automatically using only created window\n");
-		window_id = window_vector[0];
-	}else{
-		print_socket("Window ID:");
-		window_id =
-			convert::array::id::from_hex(
-				tv_manager_read_string(
-					console_inbound_socket));
+	// we can have more, but it simplifies the UI
+	output_table.clear();
+	output_table.push_back(
+		std::vector<std::string>(
+			{"Current Frame ID",
+					"Sink"}));
+	for(uint64_t i = 0;i < window_vector.size();i++){
+		tv_window_t *window_ptr =
+			PTR_DATA(window_vector[i],
+				 tv_window_t);
+		if(window_ptr == nullptr){
+			print_socket("window_ptr is a nullptr\n");
+			print("window_ptr is a nullptr", P_ERR);
+		}
+		std::vector<std::tuple<id_t_, id_t_, std::vector<uint8_t> > > active_streams =
+			    window_ptr->get_active_streams();	    
+		for(uint64_t c = 0;c < active_streams.size();c++){
+			std::string id_str =
+				convert::array::id::to_hex(
+					std::get<0>(active_streams[c]));
+			std::string sink_str =
+				sink_id_to_readable(
+					std::get<1>(active_streams[c]));
+			output_table.push_back(
+				{id_str, sink_str});
+		}
+		
 	}
-	tv_window_t *window_ptr =
-		PTR_DATA(window_id,
-			 tv_window_t);
-	if(window_ptr == nullptr){
-		print_socket("window_ptr is a nullptr\n");
-		print("window_ptr is a nullptr", P_ERR);
-	}
-	if(PTR_DATA(item_id, tv_item_t) == nullptr){
-		print_socket("item_ptr is a nullptr\n");
-		print("item_ptr is a nullptr", P_WARN);
-	}
-	window_ptr->set_item_id(
-		item_id);
 }
 
 void console_t::tv_manager_list_channels_and_items(){
@@ -748,7 +777,7 @@ void console_t::tv_manager_print_options(){
 		"(1) Load TV Item to Channel\n"
 		"(2) Bind TV Item to Window\n"
 		"(3) Play Loaded TV Item in 10 Seconds\n"
-		"(4) Change Item in Window\n"
+		"(4) List TV Window Streams\n"
 		"(5) List TV Items\n"
 		"(6) List TV Sinks\n"
 		"(7) Create a Sink\n"
@@ -788,7 +817,7 @@ DEC_CMD(tv_manager){
 			tv_manager_play_loaded_item_live(console_inbound_socket);
 			break;
 		case 4:
-			tv_manager_change_item_in_window(console_inbound_socket);
+			tv_manager_list_window_streams(console_inbound_socket);
 			break;
 		case 5:
 			tv_manager_list_channels_and_items();

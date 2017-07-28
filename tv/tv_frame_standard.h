@@ -88,7 +88,7 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 					new_id = ID_BLANK_ID;
 				}
 			}
-		} /*  */
+		}
 		data_id_t *new_id_ptr =
 			PTR_ID(new_id, );
 		if(new_id_ptr != nullptr){

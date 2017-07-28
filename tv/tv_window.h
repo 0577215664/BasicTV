@@ -42,16 +42,23 @@ private:
 	  SECOND: ID of the tv_sink_audio_t
 	  THIRD: List of mappings from codec-channels to absolute channels
 	*/
+
+	uint64_t last_push_timestamp_offset_micro_s = 0;
+	
 	std::vector<std::tuple<id_t_,
 		id_t_,
 		std::vector<uint8_t> > > active_streams;
 	int64_t timestamp_offset_micro_s = 0;
+
+	std::vector<id_t_> last_pushed_frame_mapping;
 public:
 	data_id_t id;
 	tv_window_t();
 	~tv_window_t();
 	GET_SET_ID(item_id);
 	GET_SET(timestamp_offset_micro_s, int64_t);
+	GET_SET(last_push_timestamp_offset_micro_s, uint64_t);
+	GET_SET(last_pushed_frame_mapping, std::vector<id_t_>);
 	std::vector<std::tuple<id_t_,
 		id_t_,
 		std::vector<uint8_t> > > get_active_streams();

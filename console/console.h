@@ -137,7 +137,7 @@ private:
 	void tv_manager_load_item_to_channel(net_socket_t*);
 	void tv_manager_bind_item_to_window(net_socket_t*);
 	void tv_manager_play_loaded_item_live(net_socket_t*);
-	void tv_manager_change_item_in_window(net_socket_t*);
+	void tv_manager_list_window_streams(net_socket_t*);
 	void tv_manager_list_channels_and_items();
 	void tv_manager_list_sinks();
 	void tv_manager_create_sink(net_socket_t*);

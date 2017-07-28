@@ -26,25 +26,17 @@ void tv_init(){
 		TV_SINK_MEDIUM_FLOW_DIRECTION_OUT); // reading
 }
 
-#define TV_LOOP_FRAME_SEARCH_SEEK_SINK(format)\
-	void tv_##format##_search_seek_sink(){	\
-		std::vector<id_t_> window_vector =	\
-		ID_API_CACHE_GET(			\
-			TYPE_TV_WINDOW_T);		\
-		for(uint64_t i  = 0;i < window_vector.size();i++	\
-	}						\
-
 #define FRAME_TYPE_SEEK(frame_type) if(true){frame_type *ptr = PTR_DATA(std::get<0>(stream), frame_type);PRINT_IF_NULL(ptr, P_UNABLE);latest_id = tv_frame_scroll_to_time(ptr, get_time_microseconds()+window_offset);}break;
 
 // Playback towards outward sinks
 static void tv_loop_sink_outward_flow(
 	std::tuple<id_t_, id_t_, std::vector<uint8_t> > stream,
+	id_t_ *last_pushed_id, 
 	tv_window_t *window_ptr){
 
 	const int64_t window_offset =
 		window_ptr->get_timestamp_offset_micro_s();
 	// should work fine, but haven't had a use case yet, so haven't tested
-	ASSERT(window_ptr->get_active_streams().size() <= 1, P_ERR);
 	id_t_ latest_id = ID_BLANK_ID;
 	switch(get_id_type(std::get<0>(stream))){
 	case TYPE_TV_FRAME_AUDIO_T:
@@ -59,62 +51,83 @@ static void tv_loop_sink_outward_flow(
 		return;
 	}
 	if(latest_id != ID_BLANK_ID){
+		/*
+		  TODO: standardize how the data is actually leaving the 
+		  program: instantly or pushing for a callback.
+
+		  Right now audio is the only system that uses a callback,
+		  so it decompresses the data in the main thread ahead of
+		  time, offloads to a vector, and the callback takes care
+		  of the rest.
+		*/
+
+		if(*last_pushed_id != ID_BLANK_ID &&
+		   *last_pushed_id == latest_id){
+			return;
+		}
+
 		std::get<0>(stream) = latest_id;
 		window_ptr->set_active_streams(
 			{stream});
 		tv_sink_state_t *sink_state_ptr =
 			PTR_DATA(std::get<1>(stream),
 				 tv_sink_state_t);
-		ASSERT(sink_state_ptr->get_frame_type() ==
-		       TV_FRAME_TYPE_AUDIO, P_ERR);
 		PRINT_IF_NULL(sink_state_ptr, P_ERR);
-		data_id_t *data_id_ptr =
-			PTR_ID(latest_id, );
-		std::vector<id_t_> ids_to_push =
-			data_id_ptr->get_linked_list().second;
-		ids_to_push.insert(
-			ids_to_push.begin(),
-			latest_id);
-		uint64_t old_size = ~0;
-		// finds last ID in the list we have an ID for, and
-		// gets the end of that ID until we have no more growth
-		// sanity checks on whether we have the individual IDs
-		// are handled inside of tv::sink::state::push (more
-		// specifically, ATM, the audio_hardware push)
-		const uint64_t tv_forward_buffer =
-			settings::get_setting_unsigned_def(
-				"tv_forward_buffer", 10);
-
-		while(ids_to_push.size() < tv_forward_buffer &&
-		      ids_to_push.size() != old_size){
-			old_size = ids_to_push.size();
-			data_id_t *frame_id_ptr =
-				nullptr;
-			for(int64_t c = ids_to_push.size()-1;c >= 0;c--){
-				frame_id_ptr =
-					PTR_ID(ids_to_push[c], );
-				if(frame_id_ptr != nullptr){
-					break;
-				}
-			}
-			std::vector<id_t_> linked_list_forward =
-				frame_id_ptr->get_linked_list().second;
+		std::vector<id_t_> ids_to_push;
+		if(get_id_type(std::get<0>(stream)) == TV_FRAME_TYPE_AUDIO){
+			data_id_t *data_id_ptr =
+				PTR_ID(latest_id, );
+			ids_to_push =
+				data_id_ptr->get_linked_list().second;
 			ids_to_push.insert(
-				ids_to_push.end(),
-				linked_list_forward.begin(),
-				linked_list_forward.end());
+				ids_to_push.begin(),
+				latest_id);
+			uint64_t old_size = ~0;
+			// finds last ID in the list we have an ID for, and
+			// gets the end of that ID until we have no more growth
+			// sanity checks on whether we have the individual IDs
+			// are handled inside of tv::sink::state::push (more
+			// specifically, ATM, the audio_hardware push)
+			const uint64_t tv_forward_buffer =
+				settings::get_setting_unsigned_def(
+					"tv_forward_buffer", 10);
+
+			while(ids_to_push.size() < tv_forward_buffer &&
+			      ids_to_push.size() != old_size){
+				old_size = ids_to_push.size();
+				data_id_t *frame_id_ptr =
+					nullptr;
+				for(int64_t c = ids_to_push.size()-1;c >= 0;c--){
+					frame_id_ptr =
+						PTR_ID(ids_to_push[c], );
+					if(frame_id_ptr != nullptr){
+						break;
+					}
+				}
+				std::vector<id_t_> linked_list_forward =
+					frame_id_ptr->get_linked_list().second;
+				ids_to_push.insert(
+					ids_to_push.end(),
+					linked_list_forward.begin(),
+					linked_list_forward.end());
+			}
+			if(ids_to_push.size() > tv_forward_buffer){
+				ids_to_push.erase(
+					ids_to_push.begin()+tv_forward_buffer,
+					ids_to_push.end());
+			}
+			net_proto::request::add_id(
+				ids_to_push);
+		}else{
+			ids_to_push =
+				std::vector<id_t_>({latest_id});
 		}
-		if(ids_to_push.size() > tv_forward_buffer){
-			ids_to_push.erase(
-				ids_to_push.begin()+tv_forward_buffer,
-				ids_to_push.end());
-		}
-		net_proto::request::add_id(
-			ids_to_push);
 		tv::sink::state::push(
 			sink_state_ptr,
 			window_offset,
 			ids_to_push);
+		*last_pushed_id =
+			ids_to_push[ids_to_push.size()-1];
 	}
 	
 }
@@ -130,12 +143,16 @@ static void tv_loop_sink_inward_flow(
 	if(new_frames.size() > 0){
 		print("created " + std::to_string(new_frames.size()) + " frames of type " +
 		      convert::type::from(get_id_type(new_frames.at(0))), P_DEBUG);
-		new_frames.insert(
-			new_frames.begin(),
-			std::get<0>(stream));
 		id_api::linked_list::link_vector(
 			new_frames,
 			10);
+		data_id_t *old_frame_id =
+			PTR_ID(std::get<0>(stream), );
+		ASSERT(old_frame_id != nullptr, P_ERR);
+		old_frame_id->set_linked_list(
+			std::make_pair(
+				old_frame_id->get_linked_list().first,
+				new_frames));
 		std::get<0>(stream) =
 			new_frames[new_frames.size()-1];
 		window_ptr->set_active_streams(
@@ -166,6 +183,13 @@ void tv_loop(){
 			tv_sink_state_t *sink_state_ptr =
 				PTR_DATA(std::get<1>(active_streams[c]),
 					 tv_sink_state_t);
+			if(window_ptr->get_last_pushed_frame_mapping().size() !=
+			   active_streams.size()){
+				window_ptr->set_last_pushed_frame_mapping(
+					std::vector<id_t_>(
+						active_streams.size(),
+						ID_BLANK_ID));
+			}
 			switch(sink_state_ptr->get_flow_direction()){
 			case TV_SINK_MEDIUM_FLOW_DIRECTION_IN:
 				tv_loop_sink_inward_flow(
@@ -175,6 +199,7 @@ void tv_loop(){
 			case TV_SINK_MEDIUM_FLOW_DIRECTION_OUT:
 				tv_loop_sink_outward_flow(
 					active_streams[c],
+					&(window_ptr->get_last_pushed_frame_mapping()[c]),
 					window_ptr);
 				break;
 			default:

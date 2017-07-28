@@ -10,10 +10,12 @@ static void recv_to_buffer(
 	bool *recv_running,
 	net_socket_t *ptr){
 
+	ptr->thread_mutex.lock();
 	print("recv buffer has started", P_NOTE);
-	ASSERT(*recv_running == true, P_ERR);
-
-	uint64_t iterator = 0;
+	const bool recv_running_ =
+		*recv_running;
+	ptr->thread_mutex.unlock();
+	ASSERT(recv_running_ == true, P_ERR);
 	
 	char recv_buffer[65536];
 	while(ptr != nullptr &&
@@ -50,7 +52,7 @@ static void recv_to_buffer(
 				break;
 			}
 		}
-		iterator++;
+		sleep_ms(1);
 	}
 }
 
@@ -59,10 +61,12 @@ static void send_from_buffer(
 	bool *send_running,
 	net_socket_t *ptr){
 
+	ptr->thread_mutex.lock();
 	print("send buffer has started", P_NOTE);
-	ASSERT(*send_running == true, P_ERR);
-
-	uint64_t iterator = 0;
+	const bool send_running_ =
+		*send_running;
+	ptr->thread_mutex.unlock();
+	ASSERT(send_running_ == true, P_ERR);
 	
 	std::vector<uint8_t> send_buffer;
 	while(ptr != nullptr &&
@@ -91,7 +95,7 @@ static void send_from_buffer(
 			print("exception caught in send thread", P_WARN);
 		}
 		ptr->thread_mutex.unlock();
-		iterator++;
+		sleep_ms(1);
 	}
 }
 

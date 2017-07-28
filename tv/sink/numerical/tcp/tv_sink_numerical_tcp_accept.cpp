@@ -73,7 +73,6 @@ static void tv_sink_numerical_tcp_accept_socket_check(
 			std::vector<uint8_t> tmp =
 				data_socket_ptr->recv_all_buffer();
 			if(tmp.size() > 0){
-				print("received data on TCP inbound sink", P_DEBUG);
 				tcp_accept_state_ptr->buffer.insert(
 					tcp_accept_state_ptr->buffer.end(),
 					tmp.begin(),
@@ -113,24 +112,15 @@ TV_SINK_MEDIUM_CLOSE(tcp_accept){
 #define ASSERT_VALID_DIRECTION(direction) ASSERT(state_ptr->get_flow_direction() == direction, P_ERR);
 
 static std::vector<uint8_t> pull_until_end_of_item(
-	std::vector<uint8_t> *buffer){
+	std::vector<uint8_t> *buffer,
+	uint8_t char_){
 	uint64_t iter =
 		std::distance(
 			buffer->begin(),
 			std::find(
 				buffer->begin(),
 				buffer->end(),
-				' '));
-	if(iter == buffer->size()){
-		iter =
-			std::distance(
-				buffer->begin(),
-				std::find(
-					buffer->begin(),
-					buffer->end(),
-					'\n'));
-
-	}
+				char_));
 	if(iter != buffer->size()){
 		std::vector<uint8_t> tmp(
 			buffer->begin(),
@@ -165,40 +155,39 @@ static std::vector<uint8_t> smart_number_creation(
 	}
 }
 
-static std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> formatted_to_computable(
+static std::vector<std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> > formatted_to_computable(
 	std::vector<uint8_t> *inbound_buffer){
-	std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> tmp;
+	std::vector<std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> > retval;
 	std::vector<uint8_t> old_buffer =
 		*inbound_buffer;
 	try{
 		std::array<std::vector<uint8_t>, 4> recv_data = {
-			pull_until_end_of_item(inbound_buffer),
-			pull_until_end_of_item(inbound_buffer),
-			pull_until_end_of_item(inbound_buffer), // unit isn't used
-			pull_until_end_of_item(inbound_buffer)
+			pull_until_end_of_item(inbound_buffer, ' '),
+			pull_until_end_of_item(inbound_buffer, ' '),
+			pull_until_end_of_item(inbound_buffer, ' '), // unit isn't used
+			pull_until_end_of_item(inbound_buffer, '\n')
 		};
-		if(recv_data[0].size() != 0 &&
-		   recv_data[1].size() != 0 &&
-		   recv_data[2].size() != 0 &&
-		   recv_data[3].size() != 0){
-			std::get<0>(tmp) =
-				std::stoll(
-					convert::string::from_bytes(
-						recv_data[0]));
-			std::get<1>(tmp) =
-				smart_number_creation(
-					recv_data[1]);
-			std::get<2>(tmp) =
-				std::stoull(
-					convert::string::from_bytes(
-						recv_data[3]));
-			// P_V(std::get<0>(tmp), P_VAR);
-			// P_V(math::number::get::number(std::get<1>(tmp)), P_VAR);
-			// P_V(s;td::get<2>(tmp), P_VAR);
-			if(abs(static_cast<int64_t>(std::get<2>(tmp))-
-			       static_cast<int64_t>(get_time_microseconds())) > 60*1000*1000){
-				print("timestamps are more than a minute off, if this is live, check for microsecond accuracy", P_DEBUG);
-			}
+		if(likely(recv_data[0].size() != 0 &&
+			  recv_data[1].size() != 0 &&
+			  recv_data[2].size() != 0 &&
+			  recv_data[3].size() != 0)){
+			retval.push_back(
+				std::make_tuple(
+					std::stoll(
+						convert::string::from_bytes(
+							recv_data[0])),
+					smart_number_creation(
+						recv_data[1]),
+					std::stoull(
+						convert::string::from_bytes(
+							recv_data[3]))));
+			// if(abs(static_cast<int64_t>(std::get<2>(tmp))-
+			//        static_cast<int64_t>(get_time_microseconds())) > 60*1000*1000){
+			// 	P_V_S(convert::string::from_bytes(recv_data[3]), P_VAR);
+			// 	P_V(std::get<2>(tmp), P_VAR);
+			// 	P_V(get_time_microseconds(), P_VAR);
+			// 	print("timestamps are more than a minute off, if this is live, check for microsecond accuracy", P_DEBUG);
+			// }
 			old_buffer.erase(
 				old_buffer.begin(),
 				std::find(old_buffer.begin(),
@@ -211,7 +200,7 @@ static std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> formatted_to_computa
 		*inbound_buffer =
 			old_buffer;
 	}
-	return tmp;
+	return retval;
 }
 
 static std::vector<uint8_t> frames_to_formatted(
@@ -222,15 +211,16 @@ static std::vector<uint8_t> frames_to_formatted(
 			PTR_DATA(frames[i],
 				 tv_frame_numerical_t);
 		CONTINUE_IF_NULL(frame_numerical_ptr, P_WARN);
-		std::vector<std::vector<uint8_t> > data =
+		std::pair<std::vector<std::vector<uint8_t> >, std::vector<uint8_t> > data =
 			unescape_all_vectors(
 				frame_numerical_ptr->get_escaped_one_dimension_data(),
-				TV_FRAME_NUMERICAL_ESCAPE).first;
+				TV_FRAME_NUMERICAL_ESCAPE);
+		ASSERT(data.second.size() == 0, P_WARN);
 		const uint64_t start_time_micro_s =
 			frame_numerical_ptr->get_start_time_micro_s();
 		const uint64_t ttl_micro_s =
 			frame_numerical_ptr->get_ttl_micro_s();
-		for(uint64_t c = 0;c < data.size();c++){
+		for(uint64_t c = 0;c < data.first.size();c++){
 			std::vector<uint8_t> uuid =
 				convert::string::to_bytes(
 					std::to_string(c));
@@ -238,7 +228,14 @@ static std::vector<uint8_t> frames_to_formatted(
 			std::vector<uint8_t> timestamp_micro_s =
 				convert::string::to_bytes(
 					std::to_string(
-						start_time_micro_s+((c/(data.size()-1))*ttl_micro_s)));
+						start_time_micro_s+((c/(data.first.size()-1))*ttl_micro_s)));
+			long double value_fp =
+				math::number::get::number(
+					data.first[c]);
+			std::vector<uint8_t> value_vector =
+				convert::string::to_bytes(
+					std::to_string(
+						value_fp));
 			retval.insert(
 				retval.end(),
 				uuid.begin(),
@@ -246,8 +243,8 @@ static std::vector<uint8_t> frames_to_formatted(
 			retval.push_back('\t');
 			retval.insert(
 				retval.end(),
-				data[c].begin(),
-				data[c].end());
+				value_vector.begin(),
+				value_vector.end());
 			retval.push_back('\t');
 			retval.insert(
 				retval.end(),
@@ -297,16 +294,14 @@ TV_SINK_MEDIUM_PULL(tcp_accept){
 		state_ptr->get_flow_direction(),
 		tcp_accept_state_ptr,
 		socket_ptr);
-	try{
-		std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> number;
-		while(likely((number = formatted_to_computable(
-				      &tcp_accept_state_ptr->buffer)) !=
-		      std::make_tuple(
-			      0, std::vector<uint8_t>({}), 0))){
-			tcp_accept_state_ptr->data_buffer.push_back(
-				number);
-		}
-	}catch(...){}
+	std::vector<std::tuple<uint64_t, std::vector<uint8_t>, uint64_t> > buf =
+		formatted_to_computable(
+			&tcp_accept_state_ptr->buffer);
+	tcp_accept_state_ptr->data_buffer.insert(
+		tcp_accept_state_ptr->data_buffer.end(),
+		buf.begin(),
+		buf.end());
+
 	std::vector<id_t_> retval;
 	if(tcp_accept_state_ptr->data_buffer.size() == 0){
 		return retval;
@@ -369,7 +364,6 @@ TV_SINK_MEDIUM_PUSH(tcp_accept){
 	get_new_connections(
 		socket_ptr,
 		tcp_accept_state_ptr);
-
 	std::vector<id_t_> socket_vector =
 		tcp_accept_state_ptr->get_socket_vector();
 	const std::vector<uint8_t> formatted_numerical_data =
