@@ -50,6 +50,7 @@ static int tv_sink_audio_hardware_callback(
 		if(start_playback_iter >= 0){
 			// TODO: write this to output directly when finished
 			std::vector<uint8_t> data_to_push;
+			data_to_push.reserve(bytes_to_write);
 			while(data_to_push.size() < bytes_to_write){
 				const uint64_t data_push_size =
 					data_to_push.size();
@@ -64,8 +65,8 @@ static int tv_sink_audio_hardware_callback(
 				}else{
 					const uint64_t copy_amount =
 						(std::get<2>(playback_vector[start_playback_iter]).size() > bytes_to_write-data_push_size) ?
-						 bytes_to_write-data_push_size : std::get<2>(playback_vector[start_playback_iter]).size();
-						 data_to_push.insert(
+						bytes_to_write-data_push_size : std::get<2>(playback_vector[start_playback_iter]).size();
+					data_to_push.insert(
 						data_to_push.end(),
 						std::get<2>(playback_vector[start_playback_iter]).begin(),
 						std::get<2>(playback_vector[start_playback_iter]).begin()+copy_amount);
