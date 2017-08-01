@@ -26,10 +26,25 @@ static std::string atom_wrap_title(std::string data){
 }
 
 NET_HTTP_FILE_DRIVER_MEDIUM_INIT(atom){	
+	STD_STATE_INIT(
+		net_http_file_driver_state_t,
+		file_driver_state_ptr,
+		net_http_file_driver_atom_state_t,
+		atom_state_ptr);
+	return file_driver_state_ptr;
 }
 
 NET_HTTP_FILE_DRIVER_MEDIUM_CLOSE(atom){
+	STD_STATE_CLOSE(
+		file_driver_state_ptr,
+		net_http_file_driver_atom_state_t);
 }
 
 NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
+	STD_STATE_GET_PTR(
+		file_driver_state_ptr,
+		net_http_file_driver_atom_state_t,
+		atom_state_ptr);
+	std::vector<uint8_t> retval;
+	return retval;
 }
