@@ -45,6 +45,11 @@ private:
 	id_t_ wallet_set_id = ID_BLANK_ID;
 	id_t_ tv_channel_id = ID_BLANK_ID;
 
+	// TODO: convert over from name & desc to Vorbis comments for
+	// all metadata nonsense. We can create our own Vorbis comments
+	// and use them internally (maybe inline binding Bitcoin wallets?)
+	/* std::vector<uint8_t> vorbis_comments; */
+	
 	std::vector<uint8_t> name;
 	std::vector<uint8_t> desc;
 public:
