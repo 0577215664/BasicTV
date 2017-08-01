@@ -449,3 +449,12 @@ std::vector<std::string> convert::vector::vectorize_string_with_divider(
 	}
 	return retval;
 }
+
+std::string convert::time::to_iso8601(
+	uint64_t time_micro_s){
+	time_t time_sec = time_micro_s/1000000;
+	struct tm *timeinfo = gmtime(&time_sec);
+	char timestr[30];
+	strftime(timestr, sizeof(timestr), "%FT%TZ", timeinfo);
+	return timestr;
+}

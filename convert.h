@@ -139,6 +139,10 @@ namespace convert{
 			std::vector<uint64_t> samples,
 			uint8_t bit_depth);
 	};
+	namespace time{
+		std::string to_iso8601(
+			uint64_t time_micro_s);
+	};
 };
 
 #endif
