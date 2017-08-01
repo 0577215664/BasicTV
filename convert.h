@@ -111,6 +111,9 @@ namespace convert{
 		// as it progresses
 		std::vector<uint8_t> collapse_2d_vector(
 			std::vector<std::vector<uint8_t> > vector);
+		std::vector<std::string> vectorize_string_with_divider(
+			std::string payload,
+			std::string divider);
 	};
 	namespace color{
 		uint64_t to(std::tuple<uint64_t, uint64_t, uint64_t, uint8_t> color);

@@ -309,6 +309,7 @@ uint8_t convert::type::to(std::string type){
 	CONV_CHECK_TYPE("net_http_t", TYPE_NET_HTTP_T);
 	CONV_CHECK_TYPE("net_http_file_t", TYPE_NET_HTTP_FILE_T);
 	CONV_CHECK_TYPE("tv_frame_numerical_t", TYPE_TV_FRAME_NUMERICAL_T);
+	CONV_CHECK_TYPE("net_http_file_driver_state_t", TYPE_NET_HTTP_FILE_DRIVER_STATE_T);
 	P_V_S(type, P_WARN);
 	print("unknown type has been passed, returning zero", P_ERR);
 	return 0;
@@ -380,6 +381,8 @@ std::string convert::type::from(uint8_t type){
 		return "net_http_file_t";
 	case TYPE_TV_FRAME_NUMERICAL_T:
 		return "tv_frame_numerical_t";
+	case TYPE_NET_HTTP_FILE_DRIVER_STATE_T:
+		return "net_http_file_driver_state_t";
 	case 0:
 		print("zero type, something went wrong earlier", P_WARN);
 		return "NOTYPE";
@@ -421,4 +424,28 @@ uint64_t convert::audio::metadata_to_duration_micro_s(
 	uint8_t bit_depth,
 	uint8_t channel_count){
 	return (size/(sampling_freq*(bit_depth/8)))*channel_count;
+}
+
+std::vector<std::string> convert::vector::vectorize_string_with_divider(
+	std::string payload,
+	std::string divider){
+	std::vector<std::string> retval;
+	for(uint64_t i = 0;i < payload.size();i++){
+		uint64_t div_pos =
+			payload.find_first_of(
+				divider.c_str());
+		if(div_pos != std::string::npos){
+			retval.push_back(
+				payload.substr(
+					0,
+					div_pos-divider.size()));
+			P_V_S(retval[retval.size()-1], P_VAR);
+			payload.erase(
+				div_pos,
+				payload.size());
+		}else{
+			print("vectorization still has data left over, probably shouldn't happen", P_WARN);
+		}
+	}
+	return retval;
 }

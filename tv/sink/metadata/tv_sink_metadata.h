@@ -6,7 +6,7 @@
 #include "../../../state.h"
 
 /*
-  Interface for generating and sending metadata out to the clearnet. 
+  Interface for generating and sending metadata. 
 
   The current (and superior) system in place is Atom 1.0.
 
@@ -16,6 +16,8 @@
   In the case of Atom, we can use the HTTP POST header to pull
   channels, hashes, and whatever (and RSS if I/somebody else makes
   an implementation for it)
+
+  TODO: add support for wiringPi and the HD44780U series of displays
  */
 
 #define TV_SINK_METADATA_ATOM 1

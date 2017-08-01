@@ -11,6 +11,41 @@ net_http_t::net_http_t() : id(this, TYPE_NET_HTTP_T){
 net_http_t::~net_http_t(){
 }
 
+// convert::vector::vectorize_string_with_divider \n is the first dimension
+// convert::vector::vectorize_string_with_divider ' ' is the second dimension
+typedef std::vector<std::vector<std::string> > net_http_data_t;
+
+std::array<std::string, 3> net_http_pull_get(
+	std::vector<std::string> payload){
+}
+
+// HTTP header is the first part, second part is the packet payload
+std::pair<std::vector<std::vector<std::string> >, std::vector<uint8_t> > net_http_standardize_header(
+	std::string payload){
+	std::pair<std::vector<std::vector<std::string> >, std::vector<uint8_t> > retval;
+	ASSERT(payload.find("\r\n") != std::string::npos, P_ERR);
+	std::string header =
+		payload.substr(
+			0,
+			payload.find("\r\n"));
+	retval.second =
+		convert::string::to_bytes(
+			payload.substr(
+				payload.find("\r\n")+2,
+				payload.size()));
+	std::vector<std::string> tmp =
+		convert::vector::vectorize_string_with_divider(
+			header,
+			"\n");
+	for(uint64_t i = 0;i < tmp.size();i++){
+		retval.first.push_back(
+			convert::vector::vectorize_string_with_divider(
+				tmp[i],
+				" "));
+	}
+	return retval;
+}
+
 void net_http_init(){
 	// TODO: make this a setting
 	net_http_t *http_data_ptr =
@@ -60,7 +95,6 @@ static void net_http_add_file_conn(
 static void net_http_send_file_conn(
 	net_http_t *http_data_ptr,
 	net_socket_t *socket_ptr){
-
 }
 
 static void net_http_update_buffer(

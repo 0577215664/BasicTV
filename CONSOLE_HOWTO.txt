@@ -1,0 +1,110 @@
+BasicTV is a flexible piece of software, but the flexibility comes at the cost
+of having to learn some verbage and phrasing.
+
+TV SYSTEM
+The tv_item_t contains a two-dimensional array of IDs, going down the array is
+a list of the different frames, and left and right is the order in which they
+are broadcast (if loading a file to the network, all frames are generated and
+put into the tv_item_t whole). There are no restrictions on the number or type
+of frames to bind to a type, but the telnet interface only allows binding one
+at the moment.
+
+The tv_channel_t contains any metadata about all items under a channel. A title,
+a description, possibly an image in the future, and more can be bound to it.
+
+All streaming data is encapsulated in a tv_frame_*_t type. Any streaming input
+or output, to or from BasicTV, happens through a tv_sink_state_t, bound to a
+tv_sink_medium_t. Sinks can be an input, an output or both, but any sink state
+can only be one. There are only two output sinks and one input sink.
+
+AUDIO_HARDWARE is an output only sink, using PortAudio, which plays to the
+speakers
+
+NUMERICAL_TCP_ACCEPT is an input and output sink. Data is written to it by
+opening TCP port 59051 and writing data in the following format:
+[UUID FOR NUMERICAL DEVICE] [VALUE] [UNIT] [TIMESTAMP OF SAMPLE MICROSECONDS]
+
+"UUID FOR NUMERICAL DEVICE" is just a randomly chosen number, preferably
+incrementing from zero, to seperate sensors from each other. 
+
+"VALUE" is a decimal or up-to-64-bit signed number from the device
+
+"UNIT" is not used currently, so set it to '0' to follow formatting requirements
+
+"TIMESTAMP OF SAMPLE MICROSECONDS" is the timestamp of when the sample was
+taken. You don't need true microsecond precision, but a millisecond converting
+up should work fine. As TCP is a connection protocol, and data is guaranteed to
+arrive in order, data will not fall out of order if you use the same timestamp.
+
+tv_window_t contains any information needed to play or record data from a sink,
+determined by the input/output sink state setting. In order to add a frame and
+use the tv_window_t type, it needs to be bound to a tv_sink_state_t, as well as
+adding a 'mapping' vector. The mapping vector is not used at the moment, but
+would be used for situations where the sink has multiple outputs it needs to
+fill for one input (UUID FOR NUMERICAL DEVICE, Vorbis I channel mappings for
+audio, etc).
+
+TV MANAGER
+The TV manager is the only interface into playback and broadcasting to the
+network at the moment.
+
+To access the TV manager, open a TCP connection (telnet) to BasicTV, port
+59000 (default, changable with --conport) and type tv_manager (after yo
+see BasicTV console).
+
+WARNING: tv_manager, as currently implemented, blocks the main thread of
+execution. If you want to service data to others, or have a responsive node
+for other tasks, please leave when you aren't actively working.
+
+TV Manager has the following commands
+	(1) Load TV Item to Channel
+	(2) Bind TV Item to Window
+	(3) Play Loaded TV Item in 10 Seconds
+	(4) Change Item in Window
+	(5) List TV Channels, Items, Sinks
+	(6) List TV Sinks
+	(7) Create a Sink
+	(8) Create TV Channel
+	(9) Exit TV Manager
+
+
+LOADING A WAVE FILE
+Because of legacy code and simplicity, you can load a WAVE file without
+a TV sink.
+
+First, you need to create a TV channel with the metadata about the stream.
+Choosing option #8 prompts you for a name, a description, and a wallet set ID
+(no proper interface exists for creating wallet sets, so type "NULL").
+
+After running this, you should see a table with a hex-string. This is the UUID
+for the tv_channel_t. Copy this.
+
+Now choose #1 to load an item and bind it to a channel, paste that channel ID.
+A start time offset doesn't matter if you are the one listening to it, since
+you can easily rewind to ten seconds before live, so a value of 0 will work.
+Fill out a name and description of the item you wish to broadcast. From this
+prompt, you can choose either an audio frame or a numerical frame to bind to
+the item (remember, more than one is possible internally, but the telnet
+interface is clunky enough with one type). You want to pick audio.
+
+Since there is no sink input possible through audio, we are prompted to load it
+directly from a file inside of the console. The WAVE data needs to be encoded
+in 16-bit depth, 4800Hz, and mono, as this is the BasicTV-wide standard with
+raw audio (altough different formats are widely supported, currently there is
+no way to do raw to raw audio conversions for Opus, so we adopted their internal
+standards). This can be done with  ffmpeg:
+'ffmpeg -i input.wav -ac 1 -ar 48000 -sample_fmt s16 output.wav'
+Specify WAVE as the frame format, and the file is loaded into memory as a type.
+
+PLAYING A WAVE FILE
+
+If you are connecting to a formal network, there should be some pre-loaded
+frames already there. You need to specify a bootstrap node, or simply run the
+connect.sh command in the root of the directory. Let your node run for a minute,
+then open tv_manager and choose option #5 to get a breakdown of all data on the
+network. Choose an item you like from the list (if there's something there).
+If there is nothing there, you should refer to LOADING A WAVE FILE if you want
+to listen, and copy the Item ID.
+
+Choose option #3 and enter the Item ID. Choose option #9 to exit the tv_manager,
+entering the main loop, and start playback.

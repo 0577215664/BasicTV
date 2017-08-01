@@ -4,7 +4,6 @@
 #include "../../id/id.h"
 #include "../../id/id_api.h"
 
-
 #include <functional>
 #include <string>
 #include <vector>
@@ -29,7 +28,7 @@
 typedef std::pair<std::vector<uint8_t>, std::vector<uint8_t> > net_http_file_conn_request_line_t;
 
 /*
-  The HTTP code (should) handle all the input code in one of two ways:
+  The HTTP code (should) handle all file downloads in one of two ways:
   
   If NET_HTTP_FILE_CONN_INSTANCE_PAYLOD_DEFINITE is true, then set the
   size of the payload vector in the 'Content-Length' HTTP header, and offload
