@@ -1,4 +1,5 @@
 #include "net_http.h"
+#include "net_http_file_driver.h"
 #include "../net.h"
 #include <tuple>
 #include <algorithm>

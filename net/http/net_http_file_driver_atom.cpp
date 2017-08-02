@@ -102,6 +102,14 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(atom){
 		file_driver_state_ptr,
 		net_http_file_driver_atom_state_t,
 		atom_state_ptr);
+	// socket_id isn't used too much internally
+	file_driver_state_ptr->set_socket_id(
+		socket_id);
+	file_driver_state_ptr->set_service_id(
+		service_id);
+	file_driver_state_ptr->set_min_valid_url(
+		convert::string::to_bytes(
+			"feed/atom"));
 	return file_driver_state_ptr;
 }
 
@@ -117,49 +125,30 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 		net_http_file_driver_atom_state_t,
 		atom_state_ptr);
 	std::string retval_str;
-	
-	uint64_t socket_pos =
-		file_driver_state_ptr->find_iter_socket_service(
-			[&socket_id](const std::tuple<id_t_, id_t_, void*> &elem){
-				return std::get<1>(elem) == socket_id;
-			});
-	std::vector<std::tuple<std::string, std::string, std::string> > item_metadata;
-	if(socket_pos < file_driver_state_ptr->get_size_socket_service()){
-		try{
-			const std::tuple<id_t_, id_t_, void*> socket_tuple =
-				file_driver_state_ptr->get_elem_socket_service(
-					socket_pos);
-			tv_channel_t *channel_ptr =
-				PTR_DATA(std::get<0>(socket_tuple),
-					 tv_channel_t);
-			net_proto::request::add_type_hash_whitelist(
-				{TYPE_TV_ITEM_T},
-				get_id_hash(std::get<0>(socket_tuple)));
-			std::vector<id_t_> item_vector =
-				ID_TIER_CACHE_GET(
-					TYPE_TV_ITEM_T);
+	try{
+		net_proto::request::add_type_hash_whitelist(
+			{TYPE_TV_ITEM_T},
+			get_id_hash(file_driver_state_ptr->get_service_id()));
+		std::vector<id_t_> item_vector =
+			ID_TIER_CACHE_GET(
+				TYPE_TV_ITEM_T);
+		retval_str +=
+			atom_tv_channel_to_prefix(
+				file_driver_state_ptr->get_service_id());
+		for(uint64_t i = 0;i < item_vector.size();i++){
+			CONTINUE_IF_DIFF_OWNER(
+				file_driver_state_ptr->get_service_id(),
+				item_vector[i]);
 			retval_str +=
-				atom_tv_channel_to_prefix(
-					std::get<1>(socket_tuple));
-			for(uint64_t i = 0;i < item_vector.size();i++){
-				CONTINUE_IF_DIFF_OWNER(
-				        std::get<0>(socket_tuple),
+				atom_tv_item_to_entry(
 					item_vector[i]);
-				retval_str +=
-					atom_tv_item_to_entry(
-						item_vector[i]);
-			}
-			retval_str +=
-				atom_tv_channel_to_suffix(
-					std::get<1>(socket_tuple)); // channel_id isn't used currently
-		}catch(...){
-			print("unexpected exception caught", P_ERR);
 		}
-	}else{
-		print("socket is not bound to a servicable item", P_WARN);
+		retval_str +=
+			atom_tv_channel_to_suffix(
+				file_driver_state_ptr->get_service_id()); // channel_id isn't used currently
+	}catch(...){
+		print("unexpected exception caught", P_ERR);
 	}
-	
-	
 	return convert::string::to_bytes(
-		retval_str);;
+		retval_str);
 }

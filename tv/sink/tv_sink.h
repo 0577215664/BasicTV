@@ -11,7 +11,6 @@
 #include "../../id/id.h"
 #include "../../util.h"
 
-
 // referenced via ID through tv_window_t, so we need ID integration
 struct tv_sink_state_t{
 private:
