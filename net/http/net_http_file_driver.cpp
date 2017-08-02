@@ -25,4 +25,5 @@ id_t_ net_http_file_driver_state_from_url(std::vector<uint8_t> url){
 			return file_state_ptr->id.get_id();
 		}
 	}
+	return ID_BLANK_ID;
 }

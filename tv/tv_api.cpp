@@ -61,3 +61,6 @@ id_t_ tv::chan::rand_id(uint64_t flags){
 	return channel_id.at(id_from_start);
 }
 
+id_t_ tv::request::all_ids_of_channel(id_t_ channel_id){
+	
+}

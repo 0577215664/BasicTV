@@ -159,6 +159,15 @@ static void net_proto_fill_type_requests(){
 						tmp_vector.begin(),
 						tmp_vector.end());
 				}
+				if(proto_type_request->get_hash() != blank_hash){
+					for(uint64_t c = 0;c < type_vector.size();c++){
+						if(get_id_hash(type_vector[c]) != proto_type_request->get_hash()){
+							type_vector.erase(
+								type_vector.begin()+c);
+							c--;
+						}
+					}
+				}
 				const std::vector<id_t_> real_payload =
 					remove_ids_from_vector(
 						type_vector,

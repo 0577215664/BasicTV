@@ -47,6 +47,10 @@ namespace tv{
 				std::vector<id_t_> data);
 		};
 	};
+	namespace request{
+		id_t_ all_ids_of_channel(
+			id_t_ channel_id);
+	}; // specific requests with a TV-based nomenclature
 	// layout is defined through tv_window_t
 };
 

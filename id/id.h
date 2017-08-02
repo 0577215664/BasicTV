@@ -9,105 +9,69 @@
 #include <random>
 #include <cstdlib>
 
+#include <algorithm>
+#include <functional>
+
 /*
   id_t: ID and pointer system for the networking system
  */
 
+#define GET_RAW(data_to_get, type, id_str) type get_##data_to_get(){return data_to_get;}	
+#define SET_RAW(data_to_set, type, id_str) void set_##data_to_set(const type datum){if(data_to_set != datum){id_str;}data_to_set = (type)datum;}	
+#define GET_ID_RAW(data_to_get, id_str) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
+#define SET_ID_RAW(data_to_set, id_str) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){id_str;}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
+#define GET_SET_ID_RAW(data, id_str) GET_RAW(data, id_t_, id_str);SET_RAW(data, id_t_, id_str)
+#define GET_SET_RAW(data, type, id_str) GET_RAW(data, type, id_str);SET_RAW(data, type, id_str)
 
-#define GET(data_to_get, type)				\
-	type get_##data_to_get(){return data_to_get;}	
-
-#define SET(data_to_set, type)						\
-	void set_##data_to_set(const type datum){if(data_to_set != datum){id.mod_inc();}data_to_set = (type)datum;}	
-
-#define GET_ID(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
-
-#define SET_ID(data_to_set) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){id.mod_inc();}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
-		
-
-#define GET_SET_ID(data)			\
-	GET(data, id_t_)			\
-	SET(data, id_t_)			\
-
-#define GET_SET(data, type)			\
-	GET(data, type)				\
-	SET(data, type)				\
-
-#define ADD_DEL_VECTOR(data_to_set, type)				\
-	void add_##data_to_set(type datum){id.mod_inc();for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
-	void del_##data_to_set(type datum){id.mod_inc();for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
-	void append_##data_to_set(std::vector<type> datum){id.mod_inc();data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());}
-	/* std::vector<type> pull_erase_until_entry_##data_to_set(type datum){ */
-
-#define GET_SIZE_VECTOR(data_to_size)\
-	uint64_t get_size_##data_to_size(){return data_to_size.size();}
+#define FULL_VECTOR_CONTROL_RAW(data_to_set, type, id_str) ADD_DEL_VECTOR_RAW(data_to_set, type, id_str)
+#define ADD_DEL_VECTOR_RAW(data_to_set, type, id_str)				\
+	void add_##data_to_set(type datum){id_str;for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
+	void del_##data_to_set(type datum){id_str;for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
+	type get_elem_##data_to_set(uint64_t pos){return data_to_set.at(pos);} \
+	void append_##data_to_set(std::vector<type> datum){id_str;data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
+	std::vector<type> pull_erase_until_entry_##data_to_set(type datum){std::vector<type> retval;uint64_t dist;if((dist = std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum))) != data_to_set.size()){id_str;retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);}return retval;} \
+	uint64_t get_size_##data_to_set(){return data_to_set.size();}	\
+	uint64_t find_iter_##data_to_set(std::function<bool(const type)> function_){return std::distance(data_to_set.begin(),std::find_if(data_to_set.begin(), data_to_set.end(), function_));}
 
 
-// INHERITED STUFF (saves a pointer to data_id_t on list_virtual_data call)
-#define GET_V(data_to_get, type)				\
-	type get_##data_to_get(){return data_to_get;}	
+// no prefix == standard exportable datatype, refer to id through mod_inc normally
 
-#define SET_V(data_to_set, type)						\
-	void set_##data_to_set(const type datum){if(data_to_set != datum){id->mod_inc();}data_to_set = (type)datum;}	
+#define GET(a, b) GET_RAW(a, b, id.mod_inc())
+#define SET(a, b) GET_SET_RAW(a, b, id.mod_inc())
+#define GET_ID(a) GET_ID_RAW(a, id.mod_inc())
+#define SET_ID(a) SET_ID_RAW(a, id.mod_inc())
+#define GET_SET_ID(a) GET_SET_ID_RAW(a, id.mod_inc())
+#define GET_SET(a, b) GET_SET_RAW(a, b, id.mod_inc())
+#define FULL_VECTOR_CONTROL(a, b) FULL_VECTOR_CONTROL_RAW(a, b, id.mod_inc())
+#define ADD_DEL_VECTOR(a, b) FULL_VECTOR_CONTROL(a, b)
 
-#define GET_ID_V(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
+// V == Virtual inheritance (id is stored as a ptr)
 
-#define SET_ID_V(data_to_set) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){id->mod_inc();}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
-		
+#define GET_V(a, b) GET_RAW(a, b, id->mod_inc())
+#define SET_V(a, b) GET_SET(a, b, id->mod_inc())
+#define GET_ID_V(a) GET_ID(a, id->mod_inc())
+#define SET_ID_V(a) SET_ID(a, id->mod_inc())
+#define GET_SET_ID_V(a) GET_SET_ID_RAW(a, id->mod_inc())
+#define GET_SET_V(a, b) GET_SET_RAW(a, b, id->mod_inc())
+#define FULL_VECTOR_CONTROL_V(a, b) FULL_VECTOR_CONTROL_RAW(a, b, id->mod_inc())
+#define ADD_DEL_VECTOR_V(a, b) FULL_VECTOR_CONTROL_V(a, b)
 
-#define GET_SET_ID_V(data)			\
-	GET_V(data, id_t_)			\
-	SET_V(data, id_t_)			\
+// S == Simple (no ID to register with)
 
-#define GET_SET_V(data, type)			\
-	GET_V(data, type)				\
-	SET_V(data, type)				\
-
-#define ADD_DEL_VECTOR_V(data_to_set, type)				\
-	void add_##data_to_set(type datum){id->mod_inc();for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
-	void del_##data_to_set(type datum){id->mod_inc();for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
-	void append_##data_to_set(std::vector<type> datum){id->mod_inc();data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
-
-#define GET_SIZE_VECTOR_V(data_to_size)\
-	uint64_t get_size_##data_to_size(){return data_to_size.size();}
-
-
-
-// SIMPLE (no mod_inc)
-
-#define GET_S(data_to_get, type)				\
-	type get_##data_to_get(){return data_to_get;}	
-
-#define SET_S(data_to_set, type)						\
-	void set_##data_to_set(type datum){data_to_set = datum;}	
-
-// can only warn, since most of the code isn't exception-safe enough,
-// and there are valid use cases for setting a blank ID
-
-#define GET_ID_S(data_to_get) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
-
-#define SET_ID_S(data_to_set) void set_##data_to_set(id_t_ datum){if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
-		
-
-#define GET_SET_ID_S(data)			\
-	GET_S(data, id_t_)			\
-	SET_S(data, id_t_)			\
-
-#define GET_SET_S(data, type)			\
-	GET_S(data, type)				\
-	SET_S(data, type)				\
-
-#define ADD_DEL_VECTOR_S(data_to_set, type)				\
-	void add_##data_to_set(type datum){for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
-	void del_##data_to_set(type datum){for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
-	void append_##data_to_set(std::vector<type> datum){data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
-
-#define GET_SIZE_VECTOR_S(data_to_size)\
-	uint64_t get_size_##data_to_size(){return data_to_size.size();}
+#define GET_S(a, b) GET_RAW(a, b, )
+#define SET_S(a, b) GET_SET(a, b, )
+#define GET_ID_S(a) GET_ID(a, )
+#define SET_ID_S(a) SET_ID(a, )
+#define GET_SET_ID_S(a) GET_SET_ID_RAW(a, )
+#define GET_SET_S(a, b) GET_SET_RAW(a, b, )
+#define FULL_VECTOR_CONTROL_S(a, b) FULL_VECTOR_CONTROL_RAW(a, b, )
+#define ADD_DEL_VECTOR_S(a, b) FULL_VECTOR_CONTROL_S(a, b)
 
 
 #define ADD_DATA(x) id.add_data_raw((uint8_t*)&x, sizeof(x))
 #define ADD_DATA_PTR(x) id->add_data_raw((uint8_t*)&x, sizeof(x))
+
+#define CONTINUE_IF_DIFF_OWNER(id_one, id_two) if(likely(get_id_hash(id_one) != get_id_hash(id_two))){continue;}
 
 typedef std::array<uint8_t, 41> id_t_;
 typedef uint64_t uuid_t_;

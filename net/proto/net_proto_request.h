@@ -12,6 +12,10 @@
   On arrival, it can remove or append the obsolete ones
  */
 
+/*
+  TODO: standardize and simplify a lot of this code
+ */
+
 struct net_proto_request_bare_t{
 private:
 	uint64_t request_time = 0;
@@ -73,11 +77,14 @@ struct net_proto_type_request_t : public net_proto_request_set_t{
 private:
 	// type simplifies to 8-bits
 	std::vector<type_t_> type;
+	// whitelist by hash
+	hash_t_ hash;
 public:
 	data_id_t id;
 	net_proto_type_request_t();
 	~net_proto_type_request_t();
 	GET_SET(type, std::vector<type_t_>);
+	GET_SET(hash, hash_t_);
 };
 
 /*

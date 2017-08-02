@@ -14,6 +14,10 @@ namespace net_proto{
 		void del_fast_routine_type(std::string type);
 		void add_slow_routine_type(std::string type);
 		void del_slow_routine_type(std::string type);
+
+		void add_type_hash_whitelist(
+			std::vector<type_t_> type,
+			hash_t_ hash);
 	};
 	namespace peer{
 		void set_self_peer_id(id_t_ self_peer_id_);

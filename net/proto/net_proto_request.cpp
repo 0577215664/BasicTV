@@ -136,6 +136,7 @@ net_proto_type_request_t::net_proto_type_request_t() : id(this, TYPE_NET_PROTO_T
 	list_set_virtual_data(&id);
 	list_bare_virtual_data(&id);
 	id.add_data_one_byte_vector(&type, ~0);
+	id.add_data_raw(&(hash[0]), sizeof(hash));
 	id.set_lowest_global_flag_level(
 		ID_DATA_NETWORK_RULE_PUBLIC,
 		ID_DATA_EXPORT_RULE_NEVER,
@@ -507,4 +508,28 @@ void net_proto_requests_loop(){
 	net_proto_all_request_cleanup();
 	net_proto_routine_request_loop();
 	net_proto_simple_request_loop();
+}
+
+void net_proto::request::add_type_hash_whitelist(
+	std::vector<type_t_> type,
+	hash_t_ hash){
+	net_proto_type_request_t *type_request =
+		new net_proto_type_request_t;
+	type_request->set_type(
+		type);
+	type_request->set_hash(
+		hash); // one hash per type request
+	type_request->set_ttl_micro_s(
+		10*1000*1000); // arbitrary
+	id_t_ arbitrary_id;
+	set_id_uuid(&arbitrary_id, 0);
+	set_id_hash(&arbitrary_id, hash);
+	set_id_type(&arbitrary_id, 0);
+	type_request->set_destination_peer_id(
+		net_proto::peer::optimal_peer_for_id(
+			arbitrary_id));
+	type_request->set_origin_peer_id(
+		net_proto::peer::get_self_as_peer());
+	type_request->update_request_time();
+	
 }
