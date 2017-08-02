@@ -16,7 +16,7 @@
   The BasicTV Atom feed allows for downloading different bitrate audio/video
   files from the node, which don't inherently have to exist at those bitrates,
   but can be generated on the fly
- */
+*/
 
 static std::string atom_get_prefix(){
 	return "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
@@ -38,8 +38,8 @@ static std::string atom_tv_channel_to_prefix(
 	std::string retval =
 		"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 		"<feed xmlns=\"http://www.w3.org/2005/Atom\">"
-		"<title>" + convert::string::from_bytes(channel_ptr->get_name()) + "</title>"
-		"<subtitle>" + convert::string::from_bytes(channel_ptr->get_description()) + "</subtitle>"
+		"<title>" + (channel_ptr->search_for_param(VORBIS_COMMENT_PARAM_TITLE).at(0)) + "</title>"
+		"<subtitle>" + (channel_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0)) + "</subtitle>"
 		"<link href=\"" "[INSERT URL HERE]" "\" rel=\"self\" />"
 		"<id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>"
 		"<updated>2003-12-13T18:30:02Z</updated>";
@@ -59,19 +59,22 @@ static std::string atom_tv_item_to_entry(
 		PTR_DATA(item_id,
 			 tv_item_t);
 	PRINT_IF_NULL(item_ptr, P_UNABLE);
+	// TODO: make direct mappings between the (soon to be implemeneted)
+	// Vorbis comments and Atom/XML tags (crypto integration through
+	// atom feeds!)
 	std::string retval =
 		"<entry>"
-		"<title>Atom-Powered Robots Run Amok</title>"
-		"<link href=\"http://example.org/2003/12/13/atom03\" />"
-		"<link rel=\"alternate\" type=\"text/html\" href=\"http://example.org/2003/12/13/atom03.html\"/>"
-		"<link rel=\"edit\" href=\"http://example.org/2003/12/13/atom03/edit\"/>"
-		"<id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>"
-		"<updated>2003-12-13T18:30:02Z</updated>"
-		"<summary>Some text.</summary>"
-		"<content type=\"xhtml\">"
-		"<div xmlns=\"http://www.w3.org/1999/xhtml\">"
-		"<p>This is the entry content.</p>"
-		"</div>"
+		"<title>" + item_ptr->search_for_param(VORBIS_COMMENT_PARAM_TITLE).at(0) + "</title>"
+		"<link href=\"" "[INSERT VALID URL HERE]" "\" />"
+		// "<link rel=\"alternate\" type=\"text/html\" href=\"http://example.org/2003/12/13/atom03.html\"/>"
+		// "<link rel=\"edit\" href=\"http://example.org/2003/12/13/atom03/edit\"/>"
+		"<id>urn:uuid:" + convert::array::id::to_hex(item_id) + "</id>"
+		"<updated>" + convert::time::to_iso8601(item_ptr->get_start_time_micro_s()) + "</updated>"
+		"<summary>" + (item_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0)) +"</summary>"
+		"<content type=\"xhtml\">" // change this
+		// "<div xmlns=\"http://www.w3.org/1999/xhtml\">"
+		// "<p>This is the entry content.</p>"
+		// "</div>"
 		"</content>"
 		"<author>"
 		"<name>John Doe</name>"
@@ -101,7 +104,7 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 		file_driver_state_ptr,
 		net_http_file_driver_atom_state_t,
 		atom_state_ptr);
-	std::vector<uint8_t> retval;
+	std::string retval_str;
 	
 	uint64_t socket_pos =
 		file_driver_state_ptr->find_iter_socket_service(
@@ -134,21 +137,26 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 				/*
 				  TODO: allow for Vorbis comments to be used,
 				  and pull whatever we need through regex
-				 */
+				*/
 				item_metadata.push_back(
 					std::make_tuple(
-						convert::string::from_bytes(
-							item_ptr->get_name()),
-						convert::string::from_bytes(
-							item_ptr->get_desc()),
+						item_ptr->search_for_param(VORBIS_COMMENT_PARAM_TITLE).at(0),
+						item_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0),
 						convert::array::id::to_hex(
 							item_vector[i])));
 			}
+			retval_str +=
+				atom_tv_channel_to_prefix(
+					std::get<1>(socket_tuple));
+
 		}catch(...){
 			print("unexpected exception caught", P_ERR);
 		}
 	}else{
 		print("socket is not bound to a servicable item", P_WARN);
 	}
-	return retval;
+	
+	
+	return convert::string::to_bytes(
+		retval_str);;
 }

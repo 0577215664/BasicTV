@@ -1,6 +1,3 @@
-#include "../main.h"
-#include "../util.h"
-#include "../id/id.h"
 #ifndef TV_ITEM_H
 #define TV_ITEM_H
 /*
@@ -24,6 +21,11 @@
   to prevent piracy and nonsense problems.
  */
 
+#include "../main.h"
+#include "../util.h"
+#include "../id/id.h"
+
+#include "tv_meta.h"
 
 #define TV_ITEM_STREAMING (1 << 0)
 #define TV_ITEM_AUDIO (1 << 1)
@@ -31,7 +33,7 @@
 #define TV_ITEM_TEXT (1 << 3)
 #define TV_ITEM_NUMBER (1 << 4)
 
-struct tv_item_t{
+struct tv_item_t : public tv_meta_t{
 private:
 	// Vector of ID SETS
 	// can have variable lengths associated with them

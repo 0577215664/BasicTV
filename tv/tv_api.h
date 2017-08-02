@@ -51,6 +51,13 @@ namespace tv{
 		id_t_ all_ids_of_channel(
 			id_t_ channel_id);
 	}; // specific requests with a TV-based nomenclature
+	namespace metadata{
+		namespace vorbis_comment{
+			std::pair<std::string, std::string> search_vectors(
+				std::vector<std::vector<std::vector<uint8_t> > > vectors,
+				std::string first_component);
+		};
+	};
 	// layout is defined through tv_window_t
 };
 

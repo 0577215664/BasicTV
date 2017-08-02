@@ -311,10 +311,10 @@ void console_t::tv_manager_load_item_to_channel(
 	std::string desc =
 		tv_manager_read_string(
 			console_inbound_socket);
-	new_item->set_desc(
-		std::vector<uint8_t>(
-			desc.c_str(),
-			desc.c_str()+desc.size()));
+	new_item->add_param(
+		VORBIS_COMMENT_PARAM_DESCRIPTION,
+		desc,
+		true);
 	print_socket("Item Type (1: Audio, 2: Numerical)");
 	const std::string item_type =
 		tv_manager_read_string(
@@ -524,16 +524,19 @@ void console_t::tv_manager_list_channels_and_items(){
 			print_socket("NULL CHANNEL\n");
 			continue;
 		}
-		std::vector<std::string> datum(
-			{convert::array::id::to_hex(item_vector[i]),
-					convert::string::from_bytes(item_ptr->get_name()),
-					convert::string::from_bytes(item_ptr->get_desc()),
-					(BETWEEN(item_ptr->get_start_time_micro_s(), get_time_microseconds(), item_ptr->get_end_time_micro_s())) ? "Yes" : "No",
-					convert::array::id::to_hex(item_ptr->get_tv_channel_id())
-					// "Wallet Set ID: " + convert::array::id::to_hex(channel->get_wallet_set_id()), // temporary
-					});
-		output_table.push_back(
-			datum);
+		std::vector<std::string> datum;
+		try{
+			datum = std::vector<std::string>(
+				{convert::array::id::to_hex(item_vector[i]),
+						item_ptr->search_for_param(VORBIS_COMMENT_PARAM_TITLE).at(0),
+						item_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0),
+						(BETWEEN(item_ptr->get_start_time_micro_s(), get_time_microseconds(), item_ptr->get_end_time_micro_s())) ? "Yes" : "No",
+						convert::array::id::to_hex(item_ptr->get_tv_channel_id())
+						// "Wallet Set ID: " + convert::array::id::to_hex(channel->get_wallet_set_id()), // temporary
+						});
+			output_table.push_back(
+				datum);
+		}catch(...){}
 	}
 }
 
@@ -620,12 +623,14 @@ void console_t::tv_manager_create_tv_channel(
 	tv_channel_t *channel_ptr = nullptr;
 	try{
 		channel_ptr = new tv_channel_t;
-		channel_ptr->set_name(
-			convert::string::to_bytes(
-				name_str));
-		channel_ptr->set_description(
-			convert::string::to_bytes(
-				desc_str));
+		channel_ptr->add_param(
+			VORBIS_COMMENT_PARAM_TITLE,
+			name_str,
+			true); // replace
+		channel_ptr->add_param(
+			VORBIS_COMMENT_PARAM_DESCRIPTION,
+			desc_str,
+			true);
 		if(wallet_set_id_str != "NULL"){
 			channel_ptr->set_wallet_set_id(
 				convert::array::id::from_hex(

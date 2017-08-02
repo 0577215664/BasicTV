@@ -414,9 +414,10 @@ static void tv_init_test_webcam(){
 	}
 	id_api::linked_list::link_vector(
 		vector_array, 10);
-	channel->set_description(
-		convert::string::to_bytes(
-			"BasicTV Webcam Test Channel"));
+	channel->add_param(
+		VORBIS_COMMENT_PARAM_TITLE,
+		"BasicTV Webcam Test Channel",
+		true);
 	// no harm in adding everything
 	item->add_frame_id(vector_array);
 	item->set_tv_channel_id(channel->id.get_id());

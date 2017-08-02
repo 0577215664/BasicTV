@@ -184,8 +184,10 @@ DEC_CMD(tv_test_audio){
 	ID_DATA_MAKE_TMP(channel->id);
 	ID_DATA_MAKE_TMP(window->id);
 	ID_DATA_MAKE_TMP(item->id);
-	channel->set_description(
-		convert::string::to_bytes("BasicTV Audio Test"));
+	channel->add_param(
+		VORBIS_COMMENT_PARAM_DESCRIPTION,
+		"BasicTV Audio Test",
+		true);
 	std::vector<id_t_> all_frame_audios =
 		console_tv_load_samples_to_frames(
 			console_tv_load_samples_from_file(

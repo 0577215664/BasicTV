@@ -1,7 +1,10 @@
-#include "../main.h"
-#include "tv.h"
 #ifndef TV_CHANNEL_H
 #define TV_CHANNEL_H
+
+#include "../main.h"
+#include "tv.h"
+
+#include "tv_meta.h"
 /*
   tv_channel_t:
   TV channel is a description of what a channel is. The actual stream
@@ -19,23 +22,14 @@
   TODO: make sure this works with all Unicode stuff
  */
 
-struct tv_channel_t{
+struct tv_channel_t : public tv_meta_t{
 private:
-	std::vector<uint8_t> name;
-	std::vector<uint8_t> description;
 	id_t_ wallet_set_id = ID_BLANK_ID;
 public:
 	data_id_t id;
 	tv_channel_t();
 	~tv_channel_t();
 	GET_SET_ID(wallet_set_id);
-	GET_SET(name, std::vector<uint8_t>);
-	GET_SET(description, std::vector<uint8_t>);
-	
-	/* void set_desc(std::string desc); */
-	/* std::string get_desc(); */
-
-
 };
 
 #endif
