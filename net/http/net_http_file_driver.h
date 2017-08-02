@@ -2,10 +2,13 @@
 #define NET_HTTP_FILE_DRIVER_H
 /*
   File drivers create downloadable content based on data we have in loadable
-  tiers. This is also responsible for converting it to a downloadable/streamable
-  format (coupling Opus & VP9/VP9 to WebM, etc), as well as any re-encoding that
-  happens through HTTP GET requests
- */
+  tiers, and in any HTTP GET requests sent on the request. This is also
+  responsible for converting it to a downloadable/streamable format (coupling
+  Opus & VP9/VP9 to WebM, etc), as well as any re-encoding that happens through
+  HTTP GET requests
+
+  The main use case is Atom feeds and audio/video files
+*/
 
 #include "../../id/id.h"
 #include "../../id/id_api.h"

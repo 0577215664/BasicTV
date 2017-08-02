@@ -42,7 +42,7 @@ static std::string atom_tv_channel_to_prefix(
 		"<subtitle>" + (channel_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0)) + "</subtitle>"
 		"<link href=\"" "[INSERT URL HERE]" "\" rel=\"self\" />"
 		"<id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>"
-		"<updated>2003-12-13T18:30:02Z</updated>";
+		"<updated>" + convert::time::to_iso8601(0) +"</updated>"; // channels don't have a bound time
 	return retval;
 }
 
@@ -59,6 +59,24 @@ static std::string atom_tv_item_to_entry(
 		PTR_DATA(item_id,
 			 tv_item_t);
 	PRINT_IF_NULL(item_ptr, P_UNABLE);
+	tv_channel_t *channel_ptr =
+		PTR_DATA(item_ptr->get_tv_channel_id(),
+			 tv_channel_t);
+	std::string atom_author = "UNKNOWN";
+	std::string atom_author_email = "UNKNOWN";
+	if(channel_ptr != nullptr){
+		// TODO: allow for multiple authors and emails
+		try{
+			atom_author =
+				channel_ptr->search_for_param(
+					VORBIS_COMMENT_PARAM_TITLE).at(0);
+		}catch(...){}
+		// try{
+			// atom_author_email =
+			// 	channel_ptr->search_for_param(
+			// 		VORBIS_COMMENT_PARAM_CONTACT).at(0);
+		// }catch(...){}
+	}
 	// TODO: make direct mappings between the (soon to be implemeneted)
 	// Vorbis comments and Atom/XML tags (crypto integration through
 	// atom feeds!)
@@ -66,19 +84,13 @@ static std::string atom_tv_item_to_entry(
 		"<entry>"
 		"<title>" + item_ptr->search_for_param(VORBIS_COMMENT_PARAM_TITLE).at(0) + "</title>"
 		"<link href=\"" "[INSERT VALID URL HERE]" "\" />"
-		// "<link rel=\"alternate\" type=\"text/html\" href=\"http://example.org/2003/12/13/atom03.html\"/>"
-		// "<link rel=\"edit\" href=\"http://example.org/2003/12/13/atom03/edit\"/>"
+		"<link rel=\"enclosure\" href=\"" + "[INSERT VALID AUDIO FILE DRIVER URL HERE]" + "\"/>"
 		"<id>urn:uuid:" + convert::array::id::to_hex(item_id) + "</id>"
 		"<updated>" + convert::time::to_iso8601(item_ptr->get_start_time_micro_s()) + "</updated>"
 		"<summary>" + (item_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0)) +"</summary>"
-		"<content type=\"xhtml\">" // change this
-		// "<div xmlns=\"http://www.w3.org/1999/xhtml\">"
-		// "<p>This is the entry content.</p>"
-		// "</div>"
-		"</content>"
 		"<author>"
-		"<name>John Doe</name>"
-		"<email>johndoe@example.com</email>"
+		"<name>" + atom_author + "</name>"
+		"<email>" + atom_author_email + "</email>"
 		"</author>"
 		"</entry>";
 	return retval;
@@ -126,29 +138,20 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 			std::vector<id_t_> item_vector =
 				ID_TIER_CACHE_GET(
 					TYPE_TV_ITEM_T);
+			retval_str +=
+				atom_tv_channel_to_prefix(
+					std::get<1>(socket_tuple));
 			for(uint64_t i = 0;i < item_vector.size();i++){
 				CONTINUE_IF_DIFF_OWNER(
 				        std::get<0>(socket_tuple),
 					item_vector[i]);
-				tv_item_t *item_ptr =
-					PTR_DATA(item_vector[i],
-						 tv_item_t);
-				CONTINUE_IF_NULL(item_ptr, P_WARN);
-				/*
-				  TODO: allow for Vorbis comments to be used,
-				  and pull whatever we need through regex
-				*/
-				item_metadata.push_back(
-					std::make_tuple(
-						item_ptr->search_for_param(VORBIS_COMMENT_PARAM_TITLE).at(0),
-						item_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0),
-						convert::array::id::to_hex(
-							item_vector[i])));
+				retval_str +=
+					atom_tv_item_to_entry(
+						item_vector[i]);
 			}
 			retval_str +=
-				atom_tv_channel_to_prefix(
-					std::get<1>(socket_tuple));
-
+				atom_tv_channel_to_suffix(
+					std::get<1>(socket_tuple)); // channel_id isn't used currently
 		}catch(...){
 			print("unexpected exception caught", P_ERR);
 		}
