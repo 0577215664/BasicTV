@@ -1,0 +1,212 @@
+BasicTV is a very advanced digital tape deck.
+
+        All writing flows from a TV input sink, to a TV window, to write to TV
+frames in order. All reading flows from a TV frame through a TV window towards a
+TV output sink.
+
+TV windows are tape heads
+TV frames is the tape
+TV sinks are audio jacks
+
+Not included in the tape analogy are TV items and TV channels. Items create
+metadata (Vorbis comments) on an item-by-item basis, whereas a TV channel
+defines metadata, and is used to group TV items by creator. If I had to
+include them in the tape analogy...
+
+TV items are the tape shrouds
+TV channels are the artist/creator/organization
+
+TV windows operate on 64-bit signed offsets of real time, so you can place them
+in the future and in the past freely. Any number of TV windows can be created
+and used at anytime.
+
+There are two default audio codecs in BasicTV: Opus (for lossy) and YAQ (for lossless).
+YAQ is a homebrew, optimized losselss audio codec designed specifically for BasicTV,
+but has many use cases as a streaming-optimized audio codec (see Situation 4).
+
+There is no video codec support yet, but VP9 is the planned default.
+
+All of these situations are visualized with the tape deck model (TV windows
+are tape heads, streams are tapes, adn sinks are aux cords to/from).
+
+SITUATION 1
+-----------
+You want to listen in on a podcast, music, or any audio-only stream. Your
+configuration would look something like this:
+
+
+               [AUDIO HARDWARE OUTPUT SINK FOR AUDIO STREAM 1]
+                                      |
+                                      |
+                             |----------------|
+                             |   TV Window    |
+-------------------------------------------------------------------------
+AUDIO STREAM 1   AUDIO STREAM 1   AUDIO STREAM 1   AUDIO STREAM 1   AUDIO
+-------------------------------------------------------------------------
+                             |   TV Window    |
+                             |----------------|
+
+
+[AUDIO HARDWARE SINK] currently is a PortAudio callback setup, playing on your
+physical speakers at your location.
+
+
+SITUATION 2
+-----------
+You want to play a video with audio. Your configuration would look something
+like this:
+
+               [AUDIO HARDWARE OUTPUT SINK FOR AUDIO STREAM 1]
+                                      |
+                                      |
+               [VIDEO HARDWARE OUTPUT SINK FOR VIDEO STREAM 1]
+                                      |
+                                      |
+                             |----------------|
+                             |   TV Window    |
+-------------------------------------------------------------------------
+AUDIO STREAM 1   AUDIO STREAM 1   AUDIO STREAM 1   AUDIO STREAM 1   AUDIO
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+VIDEO STREAM 1   VIDEO STREAM 1   VIDEO STREAM 1   VIDEO STREAM 1   VIDEO
+-------------------------------------------------------------------------
+                             |   TV Window    |
+                             |----------------|
+
+SITUATION 3
+-----------
+You want to record a podcast, and you want to incorporate it into your elaborate
+and beautiful JACK setup. You want dedicated streams for individual people, callers,
+and what not. You configuration would look something like this.
+
+                             |----------------|
+                             |   TV Window    |
+-------------------------------------------------------------------------
+AUDIO STREAM 1   AUDIO STREAM 1   AUDIO STREAM 1   AUDIO STREAM 1   AUDIO
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+AUDIO STREAM 2   AUDIO STREAM 2   AUDIO STREAM 2   AUDIO STREAM 2   AUDIO
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+AUDIO STREAM 3   AUDIO STREAM 3   AUDIO STREAM 3   AUDIO STREAM 3   AUDIO
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+AUDIO STREAM 4   AUDIO STREAM 4   AUDIO STREAM 4   AUDIO STREAM 4   AUDIO
+-------------------------------------------------------------------------
+                             |   TV Window    |
+                             |----------------|
+                                      |
+                                      |
+                     [JACK INPUT SINK FOR AUDIO STREAM 1]
+                                      |
+                                      |
+                     [JACK INPUT SINK FOR AUDIO STREAM 2]
+                                      |
+                                      |
+                     [JACK INPUT SINK FOR AUDIO STREAM 3]
+                                      |
+                                      |
+                     [JACK INPUT SINK FOR AUDIO STREAM 4]
+                     
+SITUATION 4
+-----------
+You want to make a live audio stream, but are self-conscious about disk size
+and networking issues, but still want a high quality audio feed. You are using
+16-bit 48kHz stereo, so you are streaming at 192kbps.
+
+There are two ways of doing this: re-encoding Opus to different frames or using YAQ.
+
+SITUATION 4.1: OPUS ENCODINGS
+-----------------------------
+Your configuration would look something like this (recording):
+
+                             |----------------|
+                             |   TV Window    |
+-------------------------------------------------------------------------
+AUDIO STREAM 1   AUDIO STREAM 1   AUDIO STREAM 1   AUDIO STREAM 1   AUDIO (6kbps mono)
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+AUDIO STREAM 2   AUDIO STREAM 2   AUDIO STREAM 2   AUDIO STREAM 2   AUDIO (24kbps mono)
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+AUDIO STREAM 3   AUDIO STREAM 3   AUDIO STREAM 3   AUDIO STREAM 3   AUDIO (64kbps stereo)
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+AUDIO STREAM 4   AUDIO STREAM 4   AUDIO STREAM 4   AUDIO STREAM 4   AUDIO (192kbps stereo)
+-------------------------------------------------------------------------
+                             |   TV Window    |
+                             |----------------|
+                                      |
+                                      |
+       [INPUT SINK FOR AUDIO STREAM 1-4, CODED WITH DIFFERENT BITRATES]
+
+Once streams are sent out to the network, they should only be modified under
+specific circumstances (linking old frames with new frames, updating cryptocurrency
+wallet sets, etc), or otherwise re-encoding specifics could corrupt the stream
+information.
+
+The actual encoding rate is 286kbps
+
+SITUATION 4.2 YAQ
+-----------------
+Your configuration would look something like this (recording):
+
+                             |----------------|
+                             |   TV Window    |
+---------------------------------------------------------------------------------
+AUDIO STREAM 1.0   AUDIO STREAM 1.0   AUDIO STREAM 1.0   AUDIO STREAM 1.0   AUDIO (24kbps)
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+AUDIO STREAM 1.1   AUDIO STREAM 1.1   AUDIO STREAM 1.1   AUDIO STREAM 1.1   AUDIO (24kbps)
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+AUDIO STREAM 1.2   AUDIO STREAM 1.2   AUDIO STREAM 1.2   AUDIO STREAM 1.2   AUDIO (24kbps)
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+AUDIO STREAM 1.3   AUDIO STREAM 1.3   AUDIO STREAM 1.3   AUDIO STREAM 1.3   AUDIO (24kbps)
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+AUDIO STREAM 1.4   AUDIO STREAM 1.4   AUDIO STREAM 1.4   AUDIO STREAM 1.4   AUDIO (24kbps)
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+AUDIO STREAM 1.5   AUDIO STREAM 1.5   AUDIO STREAM 1.5   AUDIO STREAM 1.5   AUDIO (24kbps)
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+AUDIO STREAM 1.6   AUDIO STREAM 1.6   AUDIO STREAM 1.6   AUDIO STREAM 1.6   AUDIO (24kbps)
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+AUDIO STREAM 1.7   AUDIO STREAM 1.7   AUDIO STREAM 1.7   AUDIO STREAM 1.7   AUDIO (24kbps)
+---------------------------------------------------------------------------------
+                             |   TV Window    |
+                             |----------------|
+                                      |
+                                      |
+             [INPUT SINK FOR AUDIO STREAM 1-4 AS RAW SAMPLES VIA YAQ]
+
+YAQ takes the raw waveform and creates multiple low quality raw waveforms that can be layed
+over each other, in a set of specific orders (hence the sub-versions), to recreate the original
+stream. YAQ is computationally easy, since it offloads all compression to BasicTV's zSTD/XZ
+compression.
+
+AUDIO STREAM 1.0 is known to be required for audio playback, but this isn't strictly true.
+However, AUDIO STREAM 1.0 is most likely mapped to the left channel, which would carry the
+most relevant sound information (most of the time), and as such is the first to be requested.
+
+YAQ processes the waveform like this:
+16-bit 48kHz 2 channels across 1 level
+16-bit 48kHz 1 channels across 2 levels
+8-bit 48kHz 1 channels across 4 levels
+8-bit 24kHz 1 channels across 8 levels
+
+Depth-splitting is default and is recommended, channel splitting is default as well. The
+only input into how many levels are created is by the number of times the sampling frequency
+is halved.
+
+BasicTV streams, although immutable, are naturally lost when no peers have the information and the
+broadcasting node doesn't keep it. The normal approach is to shave off the highest quality stream
+information. This provides a gentle aging process to the audio feed, since it can shave off the top,
+and, since it is stateless between levels, can allow us to jump around between levels if we have to
+(namely switching from stereo to mono and upmixing the stream information).
+
+The actual encoding rate is 192kbps.
+
