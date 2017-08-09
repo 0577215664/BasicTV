@@ -84,6 +84,10 @@ public:
 	std::vector<uint8_t> recv_all_buffer();
 	bool activity();
 
+	// TODO: should probably move code over to ADD_DEL_VECTOR
+	// TODO: allow for mutex locking through ADD_DEL_VECTOR
+	ADD_DEL_VECTOR(recv_buffer, uint8_t);
+	
 	void set_proxy_id(id_t_ proxy_id_);
 	id_t_ get_proxy_id();
 

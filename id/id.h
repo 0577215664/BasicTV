@@ -30,8 +30,10 @@
 	type get_elem_##data_to_set(uint64_t pos){return data_to_set.at(pos);} \
 	void append_##data_to_set(std::vector<type> datum){id_str;data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
 	std::vector<type> pull_erase_until_entry_##data_to_set(type datum){std::vector<type> retval;uint64_t dist;if((dist = std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum))) != data_to_set.size()){id_str;retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);}return retval;} \
+	std::vector<type> pull_erase_until_pos_##data_to_set(uint64_t entry){std::vector<type> retval;uint64_t dist = entry;ASSERT(data_to_set.size() <= dist, P_UNABLE);id_str;retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);return retval;} \
 	uint64_t get_size_##data_to_set(){return data_to_set.size();}	\
-	uint64_t find_iter_##data_to_set(std::function<bool(const type)> function_){return std::distance(data_to_set.begin(),std::find_if(data_to_set.begin(), data_to_set.end(), function_));}
+	uint64_t find_iter_##data_to_set(std::function<bool(const type)> function_){return std::distance(data_to_set.begin(),std::find_if(data_to_set.begin(), data_to_set.end(), function_));}	\
+	uint64_t find_##data_to_set(type datum){return std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum));}
 
 
 // no prefix == standard exportable datatype, refer to id through mod_inc normally

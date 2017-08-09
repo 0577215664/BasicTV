@@ -145,10 +145,14 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 		}
 		retval_str +=
 			atom_tv_channel_to_suffix(
-				file_driver_state_ptr->get_service_id()); // channel_id isn't used currently
+				file_driver_state_ptr->get_service_id());
 	}catch(...){
 		print("unexpected exception caught", P_ERR);
 	}
-	return convert::string::to_bytes(
-		retval_str);
+	// TODO: if hanging was a lot less common, we can wait a second or
+	// two to update our list (probably not a good idea)
+	return std::make_pair(
+		convert::string::to_bytes(
+			retval_str),
+		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);
 }

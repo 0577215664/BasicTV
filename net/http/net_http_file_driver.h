@@ -3,6 +3,9 @@
 #include "../../id/id.h"
 #include "../../id/id_api.h"
 #include "../../state.h"
+ 
+#define NET_HTTP_FILE_DRIVER_PAYLOAD_PROGRESS (1 << 0)
+#define NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE (1 << 1)
 
 // one state per socket per servicing ID
 struct net_http_file_driver_state_t : public state_t{
@@ -30,7 +33,7 @@ public:
 
 #define NET_HTTP_FILE_DRIVER_MEDIUM_INIT(medium_) net_http_file_driver_state_t *net_http_file_driver_##medium_##_init(uint8_t medium, id_t_ service_id, id_t_ socket_id)
 #define NET_HTTP_FILE_DRIVER_MEDIUM_CLOSE(medium_) void net_http_file_driver_##medium_##_close(net_http_file_driver_state_t *file_driver_state_ptr)
-#define NET_HTTP_FILE_DRIVER_MEDIUM_PULL(medium_) std::vector<uint8_t> net_http_file_driver_##medium_##_pull(net_http_file_driver_state_t *file_driver_state_ptr)
+#define NET_HTTP_FILE_DRIVER_MEDIUM_PULL(medium_) std::pair<std::vector<uint8_t>, uint8_t> net_http_file_driver_##medium_##_pull(net_http_file_driver_state_t *file_driver_state_ptr)
 
 struct net_http_file_driver_medium_t{
 	uint8_t medium = 0;
@@ -42,7 +45,7 @@ struct net_http_file_driver_medium_t{
 	void (*close)(
 		net_http_file_driver_state_t* state_ptr);
 
-	std::vector<uint8_t> (*pull)(
+	std::pair<std::vector<uint8_t>, uint8_t> (*pull)(
 		net_http_file_driver_state_t* state_ptr);
 };
 
