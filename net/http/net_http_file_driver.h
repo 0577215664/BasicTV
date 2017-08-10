@@ -11,8 +11,6 @@
 struct net_http_file_driver_state_t : public state_t{
 private:
 	std::vector<uint8_t> outbound_data;
-	std::vector<uint8_t> min_valid_url;
-	
 	id_t_ socket_id;
 	id_t_ service_id;
 public:
@@ -20,7 +18,6 @@ public:
 	net_http_file_driver_state_t();
 	~net_http_file_driver_state_t();
 
-	GET_SET(min_valid_url, std::vector<uint8_t>);
 	GET_SET_ID(socket_id);
 	GET_SET_ID(service_id);
 	
@@ -37,6 +34,7 @@ public:
 
 struct net_http_file_driver_medium_t{
 	uint8_t medium = 0;
+	std::string min_valid_url;
 	
 	net_http_file_driver_state_t* (*init)(
 		uint8_t medium,
@@ -51,6 +49,9 @@ struct net_http_file_driver_medium_t{
 
 extern net_http_file_driver_medium_t net_http_file_driver_get_medium(
 	uint8_t medium);
+
+extern net_http_file_driver_medium_t net_http_file_driver_get_medium_from_url(
+	std::string url);
 
 extern id_t_ net_http_file_driver_state_from_url(std::vector<uint8_t> url);
 

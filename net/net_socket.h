@@ -43,11 +43,10 @@ private:
 
 	bool thread_running = true;
 	
-	uint8_t status = 0;
-	std::vector<uint8_t> local_buffer;
 	// raw socket for SDL
 	SDLNet_SocketSet socket_set = nullptr;
 	TCPsocket socket = nullptr;
+
 	void socket_check();
 	id_t_ proxy_id = ID_BLANK_ID;
 	

@@ -35,6 +35,7 @@ public:
 	net_http_t();
 	~net_http_t();
 	GET_SET_ID(conn_socket_id);
+	GET_SET(non_bound_sockets, std::vector<id_t_>);
 	ADD_DEL_VECTOR(non_bound_sockets, id_t_);
 };
 

@@ -107,9 +107,6 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(atom){
 		socket_id);
 	file_driver_state_ptr->set_service_id(
 		service_id);
-	file_driver_state_ptr->set_min_valid_url(
-		convert::string::to_bytes(
-			"feed/atom"));
 	return file_driver_state_ptr;
 }
 
