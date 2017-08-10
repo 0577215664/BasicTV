@@ -71,11 +71,11 @@ static std::string atom_tv_item_to_entry(
 				channel_ptr->search_for_param(
 					VORBIS_COMMENT_PARAM_TITLE).at(0);
 		}catch(...){}
-		// try{
-			// atom_author_email =
-			// 	channel_ptr->search_for_param(
-			// 		VORBIS_COMMENT_PARAM_CONTACT).at(0);
-		// }catch(...){}
+		try{
+			atom_author_email =
+				channel_ptr->search_for_param(
+					VORBIS_COMMENT_PARAM_CONTACT).at(0);
+		}catch(...){}
 	}
 	// TODO: make direct mappings between the (soon to be implemeneted)
 	// Vorbis comments and Atom/XML tags (crypto integration through

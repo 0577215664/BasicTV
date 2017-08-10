@@ -30,6 +30,7 @@ private:
 	// connection has been opened, but we don't have any
 	// HTTP header information (or not enough to completely parse)
 	std::vector<id_t_> non_bound_sockets;
+	std::vector<id_t_> bound_file_driver_states;
 public:
 	data_id_t id;
 	net_http_t();
@@ -37,6 +38,8 @@ public:
 	GET_SET_ID(conn_socket_id);
 	GET_SET(non_bound_sockets, std::vector<id_t_>);
 	ADD_DEL_VECTOR(non_bound_sockets, id_t_);
+	GET_SET(bound_file_driver_states, std::vector<id_t_>);
+	ADD_DEL_VECTOR(bound_file_driver_states, id_t_);
 };
 
 extern void net_http_init();

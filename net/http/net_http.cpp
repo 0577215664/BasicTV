@@ -44,6 +44,31 @@ static std::vector<std::vector<std::string> > net_http_read_header(
 	return retval;
 }
 
+
+// TODO: escape "var" with IRI
+static std::string net_http_var_from_path(
+	std::string path,
+	std::string var){
+	std::string retval;
+	const uint64_t var_start_pos =
+		path.find(
+			var,
+			path.find_first_of('?'));
+	const uint64_t equal_pos =
+		path.find(
+			'=',
+			var_start_pos);
+	const uint64_t div_pos =
+		path.find(
+			'&',
+			var_start_pos);
+	retval =
+		path.substr(
+			equal_pos+1,
+			div_pos-equal_pos);
+	return retval;
+}
+
 void net_http_init(){
 	// TODO: make this a setting
 	net_http_t *http_data_ptr =
@@ -91,28 +116,60 @@ static void net_http_push_conn_to_file(
 		ID_TIER_CACHE_GET(
 			TYPE_NET_HTTP_FILE_DRIVER_STATE_T);
 	for(uint64_t c = 0;c < non_bound_sockets.size();c++){
-		net_socket_t *socket_ptr =
-			PTR_DATA(non_bound_sockets[c],
-				 net_socket_t);
-		CONTINUE_IF_NULL(socket_ptr, P_WARN);
-		std::vector<std::vector<std::string> > header =
-			net_http_read_header(
-				socket_ptr);
-		if(header.size() == 0){
-			continue;
+		try{
+			net_socket_t *socket_ptr =
+				PTR_DATA(non_bound_sockets[c],
+					 net_socket_t);
+			CONTINUE_IF_NULL(socket_ptr, P_WARN);
+			std::vector<std::vector<std::string> > header =
+				net_http_read_header(
+					socket_ptr);
+			if(header.size() == 0){
+				continue;
+			}
+			if(header[0].size() == 0){
+				print("fix the header exporting (returned an empty vector)", P_ERR);
+				continue;
+			}
+			std::string url = header[0].at(1);
+			net_http_file_driver_medium_t file_driver_medium =
+				net_http_file_driver_get_medium_from_url(
+					url.substr(
+						1, url.size()));
+			net_http_file_driver_state_t *file_driver_state_ptr =
+				file_driver_medium.init(
+					convert::array::id::from_hex(
+						net_http_var_from_path(
+							url, "channel_id")),
+					non_bound_sockets[c]);
+					
+			/*
+			  Pull HTTP GET data from the sockets
+			  Run it through net_http_file_driver_get_medium_from_url
+			*/
+			non_bound_sockets.erase(
+				non_bound_sockets.begin()+c);
+		}catch(...){
+			print("caught an exception", P_WARN);
 		}
-		
-		/*
-		  Pull HTTP GET data from the sockets
-		  Run it through net_http_file_driver_get_medium_from_url
-		 */
 	}
+	http_data_ptr->set_non_bound_sockets(
+		non_bound_sockets);
 	print("finish me", P_CRIT);
 }
 
 static void net_http_packetize_file_to_conn(
 	net_http_t *http_data_ptr,
 	net_socket_t *socket_ptr){
+	std::vector<id_t_> bound_file_driver_states = 
+		http_data_ptr->get_bound_file_driver_states();
+	for(uint64_t i = 0;i < bound_file_driver_states.size();i++){
+		net_http_file_driver_state_t *file_driver_state_ptr =
+			PTR_DATA(bound_file_driver_states[i],
+				 net_http_file_driver_state_t);
+		CONTINUE_IF_NULL(file_driver_state_ptr, P_WARN);
+		print("fork this file off into different stuff, we need header stuff here", P_CRIT);
+	}
 }
 
 static std::vector<uint8_t> net_http_pull_header_from_socket(
@@ -148,10 +205,16 @@ void net_http_loop(){
 				 net_socket_t);
 		CONTINUE_IF_NULL(socket_ptr, P_WARN);
 
+		// get the actual socket, put as non-bound
 		net_http_accept_conn(
 			http_data_ptr,
 			socket_ptr);
+		// interpret connections and offload to file drivers
 		net_http_push_conn_to_file(
+			http_data_ptr,
+			socket_ptr);
+		// pull data from file drivers and send through a socket
+		net_http_packetize_file_to_conn(
 			http_data_ptr,
 			socket_ptr);
 	}
