@@ -142,6 +142,8 @@ namespace convert{
 	namespace time{
 		std::string to_iso8601(
 			uint64_t time_micro_s);
+		std::string to_http_time(
+			uint64_t time_micro_s);
 	};
 };
 

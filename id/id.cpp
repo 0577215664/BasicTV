@@ -162,13 +162,6 @@ void data_id_t::add_data(void *ptr_,
 			peer_rules_));
 }
 
-void data_id_t::rsa_decrypt_backlog(){
-	for(uint64_t i = 0;i < rsa_backlog.size();i++){
-		import_data(rsa_backlog[i]);
-	}
-	rsa_backlog.clear();
-}
-
 data_id_ptr_t::data_id_ptr_t(void *ptr_,
 			     std::vector<uint32_t> length_,
 			     uint8_t flags_,

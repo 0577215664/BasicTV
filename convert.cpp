@@ -430,23 +430,27 @@ std::vector<std::string> convert::vector::vectorize_string_with_divider(
 	std::string payload,
 	std::string divider){
 	std::vector<std::string> retval;
-	for(uint64_t i = 0;i < payload.size();i++){
-		uint64_t div_pos =
-			payload.find_first_of(
-				divider.c_str());
-		if(div_pos != std::string::npos){
-			retval.push_back(
-				payload.substr(
-					0,
-					div_pos-divider.size()));
-			P_V_S(retval[retval.size()-1], P_VAR);
-			payload.erase(
-				div_pos,
-				payload.size());
-		}else{
-			print("vectorization still has data left over, probably shouldn't happen", P_WARN);
-		}
+	uint64_t div_pos;
+	while((div_pos = payload.find_first_of(divider.c_str())) != std::string::npos){
+		retval.push_back(
+			payload.substr(
+				0,
+				div_pos));
+		P_V_S(retval[retval.size()-1], P_VAR);
+		payload.erase(
+			0,
+			div_pos+1);
 	}
+	if(payload.size() >= divider.size() &&
+	   payload.substr(
+		   payload.size()-divider.size(),
+		   divider.size()) == divider){
+		payload.erase(
+			payload.size()-divider.size(),
+			divider.size());
+	}
+	retval.push_back(
+		payload); // final
 	return retval;
 }
 
@@ -456,5 +460,14 @@ std::string convert::time::to_iso8601(
 	struct tm *timeinfo = gmtime(&time_sec);
 	char timestr[30];
 	strftime(timestr, sizeof(timestr), "%FT%TZ", timeinfo);
+	return timestr;
+}
+
+std::string convert::time::to_http_time(
+	uint64_t time_micro_s){
+	time_t time_sec = time_micro_s/1000000;
+	struct tm *timeinfo = gmtime(&time_sec);
+	char timestr[30];
+	strftime(timestr, sizeof(timestr), "%a, %d %b %Y %H:%M:%S %Z", timeinfo);
 	return timestr;
 }

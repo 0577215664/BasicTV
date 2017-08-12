@@ -1,13 +1,13 @@
-#include "net_http.h"
+#include "../../net_http.h"
 #include "net_http_file_driver.h"
 #include "net_http_file_driver_atom.h"
 
-#include "../../state.h"
+#include "../../../../state.h"
 
-#include "../../tv/tv_item.h"
-#include "../../tv/tv_channel.h"
+#include "../../../../tv/tv_item.h"
+#include "../../../../tv/tv_channel.h"
 
-#include "../../net/proto/net_proto_api.h"
+#include "../../../proto/net_proto_api.h"
 
 /*
   Atom shouldn't worry about populating the channel_vector right now, but it
@@ -35,13 +35,22 @@ static std::string atom_tv_channel_to_prefix(
 	tv_channel_t *channel_ptr =
 		PTR_DATA(channel_id,
 			 tv_channel_t);
+	std::string title;
+	std::string subtitle;
+	if(channel_ptr != nullptr){
+		title = (channel_ptr->search_for_param(VORBIS_COMMENT_PARAM_TITLE).at(0));
+		subtitle = (channel_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0));
+	}else{
+		title = "NOTITLE";
+		subtitle = "NOSUBTITLE";
+	}
 	std::string retval =
 		"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 		"<feed xmlns=\"http://www.w3.org/2005/Atom\">"
-		"<title>" + (channel_ptr->search_for_param(VORBIS_COMMENT_PARAM_TITLE).at(0)) + "</title>"
-		"<subtitle>" + (channel_ptr->search_for_param(VORBIS_COMMENT_PARAM_DESCRIPTION).at(0)) + "</subtitle>"
+		"<title>" + title + "</title>"
+		"<subtitle>" + subtitle + "</subtitle>"
 		"<link href=\"" "[INSERT URL HERE]" "\" rel=\"self\" />"
-		"<id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>"
+		"<id>urn:uuid:" + convert::array::id::to_hex(channel_id) + "</id>"
 		"<updated>" + convert::time::to_iso8601(0) +"</updated>"; // channels don't have a bound time
 	return retval;
 }
@@ -96,6 +105,7 @@ static std::string atom_tv_item_to_entry(
 	return retval;
 }
 
+// a blank service ID just returns all items we have locally
 NET_HTTP_FILE_DRIVER_MEDIUM_INIT(atom){	
 	STD_STATE_INIT(
 		net_http_file_driver_state_t,
@@ -107,6 +117,8 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(atom){
 		socket_id);
 	file_driver_state_ptr->set_service_id(
 		service_id);
+	file_driver_state_ptr->set_medium(
+		NET_HTTP_FILE_DRIVER_MEDIUM_ATOM);
 	return file_driver_state_ptr;
 }
 
@@ -123,9 +135,11 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 		atom_state_ptr);
 	std::string retval_str;
 	try{
-		net_proto::request::add_type_hash_whitelist(
-			{TYPE_TV_ITEM_T},
-			get_id_hash(file_driver_state_ptr->get_service_id()));
+		if(file_driver_state_ptr->get_service_id() != ID_BLANK_ID){
+			net_proto::request::add_type_hash_whitelist(
+				{TYPE_TV_ITEM_T},
+				get_id_hash(file_driver_state_ptr->get_service_id()));
+		}
 		std::vector<id_t_> item_vector =
 			ID_TIER_CACHE_GET(
 				TYPE_TV_ITEM_T);
@@ -133,9 +147,11 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 			atom_tv_channel_to_prefix(
 				file_driver_state_ptr->get_service_id());
 		for(uint64_t i = 0;i < item_vector.size();i++){
-			CONTINUE_IF_DIFF_OWNER(
-				file_driver_state_ptr->get_service_id(),
-				item_vector[i]);
+			if(file_driver_state_ptr->get_service_id() != ID_BLANK_ID){
+				CONTINUE_IF_DIFF_OWNER(
+					file_driver_state_ptr->get_service_id(),
+					item_vector[i]);
+			}
 			retval_str +=
 				atom_tv_item_to_entry(
 					item_vector[i]);
@@ -148,6 +164,8 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 	}
 	// TODO: if hanging was a lot less common, we can wait a second or
 	// two to update our list (probably not a good idea)
+	file_driver_state_ptr->set_payload_status(
+		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);
 	return std::make_pair(
 		convert::string::to_bytes(
 			retval_str),

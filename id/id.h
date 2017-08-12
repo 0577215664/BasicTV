@@ -15,8 +15,10 @@
 /*
   id_t: ID and pointer system for the networking system
  */
+#define GET_CONST_PTR_RAW(data_to_get, type, id_str) type const * get_const_ptr_##data_to_get(){return (type const *)&data_to_get;}
+#define GET_RAW(data_to_get, type, id_str) type get_##data_to_get(){return data_to_get;}GET_CONST_PTR_RAW(data_to_get, type, id_str);
 
-#define GET_RAW(data_to_get, type, id_str) type get_##data_to_get(){return data_to_get;}	
+
 #define SET_RAW(data_to_set, type, id_str) void set_##data_to_set(const type datum){if(data_to_set != datum){id_str;}data_to_set = (type)datum;}	
 #define GET_ID_RAW(data_to_get, id_str) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
 #define SET_ID_RAW(data_to_set, id_str) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){id_str;}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
@@ -30,15 +32,17 @@
 	type get_elem_##data_to_set(uint64_t pos){return data_to_set.at(pos);} \
 	void append_##data_to_set(std::vector<type> datum){id_str;data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
 	std::vector<type> pull_erase_until_entry_##data_to_set(type datum){std::vector<type> retval;uint64_t dist;if((dist = std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum))) != data_to_set.size()){id_str;retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);}return retval;} \
-	std::vector<type> pull_erase_until_pos_##data_to_set(uint64_t entry){std::vector<type> retval;uint64_t dist = entry;ASSERT(data_to_set.size() <= dist, P_UNABLE);id_str;retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);return retval;} \
+	std::vector<type> pull_erase_until_pos_##data_to_set(uint64_t entry){std::vector<type> retval;uint64_t dist = entry;ASSERT(data_to_set.size() >= dist, P_UNABLE);id_str;retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);return retval;} \
 	uint64_t get_size_##data_to_set(){return data_to_set.size();}	\
 	uint64_t find_iter_##data_to_set(std::function<bool(const type)> function_){return std::distance(data_to_set.begin(),std::find_if(data_to_set.begin(), data_to_set.end(), function_));}	\
-	uint64_t find_##data_to_set(type datum){return std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum));}
+	uint64_t find_##data_to_set(type datum){return std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum));}\
+	uint64_t search_dist_##data_to_set(std::vector<type> datum){return std::distance(data_to_set.begin(), std::search(data_to_set.begin(), data_to_set.end(), datum.begin(), datum.end()));}\
 
 
 // no prefix == standard exportable datatype, refer to id through mod_inc normally
 
 #define GET(a, b) GET_RAW(a, b, id.mod_inc())
+#define GET_CONST_PTR(a, b) GET_CONST_PTR_RAW(a, b, id.mod_inc())
 #define SET(a, b) GET_SET_RAW(a, b, id.mod_inc())
 #define GET_ID(a) GET_ID_RAW(a, id.mod_inc())
 #define SET_ID(a) SET_ID_RAW(a, id.mod_inc())
@@ -50,6 +54,7 @@
 // V == Virtual inheritance (id is stored as a ptr)
 
 #define GET_V(a, b) GET_RAW(a, b, id->mod_inc())
+#define GET_CONST_PTR_V(a, b) GET_CONST_PTR_RAW(a, b, id->mod_inc())
 #define SET_V(a, b) GET_SET(a, b, id->mod_inc())
 #define GET_ID_V(a) GET_ID(a, id->mod_inc())
 #define SET_ID_V(a) SET_ID(a, id->mod_inc())
@@ -61,6 +66,7 @@
 // S == Simple (no ID to register with)
 
 #define GET_S(a, b) GET_RAW(a, b, )
+#define GET_CONST_PTR_S(a, b) GET_CONST_PTR_RAW(a, b, )
 #define SET_S(a, b) GET_SET(a, b, )
 #define GET_ID_S(a) GET_ID(a, )
 #define SET_ID_S(a) SET_ID(a, )
@@ -198,7 +204,6 @@ private:
 	id_t_ id = ID_BLANK_ID;
 	void *ptr = nullptr;
 	id_t_ encrypt_pub_key_id = ID_BLANK_ID;
-	std::vector<std::vector<uint8_t> > rsa_backlog;
 	std::vector<data_id_ptr_t> data_vector;
 	std::pair<std::vector<uint8_t>, std::vector<uint8_t> > linked_list;
 
@@ -240,7 +245,6 @@ public:
 	// but just not handled in this function)
 	std::vector<uint8_t> export_data(uint8_t flags_, uint8_t extra, uint8_t network_flags, uint8_t export_flags, uint8_t peer_flags);
 	void import_data(std::vector<uint8_t> data);
-	void rsa_decrypt_backlog();
 	uint64_t get_last_access_timestamp_micro_s(){return last_access_timestamp_micro_s;}
 	void set_lowest_global_flag_level(uint8_t network_rules,
 					  uint8_t export_rules,
