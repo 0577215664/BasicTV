@@ -27,6 +27,8 @@ const std::string frontpage_test =
 NET_HTTP_FILE_DRIVER_MEDIUM_PULL(frontpage){
 	file_driver_state_ptr->set_payload_status(
 		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);
+	file_driver_state_ptr->set_mime_type(
+		"text/html");
 	return std::make_pair(
 		convert::string::to_bytes(frontpage_test),
 		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);

@@ -3,6 +3,7 @@
 
 #include "net_http_file_driver_atom.h"
 #include "net_http_file_driver_frontpage.h"
+#include "net_http_file_driver_download.h"
 
 // TODO: make sure all lookups to file_driver_medium check for the longest
 // valid min_url so everything doesn't get sent to the frontpage ("")
@@ -17,7 +18,12 @@ static const std::vector<net_http_file_driver_medium_t> file_driver_medium =
 					"atom",
 					net_http_file_driver_atom_init,
 					net_http_file_driver_atom_close,
-					net_http_file_driver_atom_pull}
+					net_http_file_driver_atom_pull},
+	(net_http_file_driver_medium_t){NET_HTTP_FILE_DRIVER_MEDIUM_DOWNLOAD,
+					"download",
+					net_http_file_driver_download_init,
+					net_http_file_driver_download_close,
+					net_http_file_driver_download_pull}
 };
 
 net_http_file_driver_state_t::net_http_file_driver_state_t() : id(this, TYPE_NET_HTTP_FILE_DRIVER_STATE_T){

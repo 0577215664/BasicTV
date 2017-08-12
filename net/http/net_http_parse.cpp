@@ -7,28 +7,20 @@ const static std::vector<uint8_t> http_header_divider = {'\r', '\n', '\r', '\n'}
 
 std::string http::header::make_header(
 	uint8_t medium,
+	std::string mime_type,
 	uint8_t payload_status, // full or incomplete,
 	uint64_t payload_size){ // size of current payload (only used if payload_status == PAYLOAD_COMPLETE)
-	std::string mime_type;
-	switch(medium){
-	case NET_HTTP_FILE_DRIVER_MEDIUM_ATOM:
-		mime_type = "application/atom+xml";
-		break;
-	default:
-		mime_type = "text/plain";
-		break;
-	}
 	std::string retval =
 		"HTTP/1.1 200 OK\r\n"
 		"Date: " + convert::time::to_http_time(get_time_microseconds()) + "\r\n"
 		"Content-Type: " + mime_type + "\r\n"
 		"Server: BasicTV\r\n";
+		"Connection: close\r\n";
 	switch(payload_status){
 	case NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE:
 		retval += "Content-Length: " + std::to_string(payload_size) + "\r\n";
 		break;
 	case NET_HTTP_FILE_DRIVER_PAYLOAD_PROGRESS:
-		retval += "Connection: close\r\n";
 	default:
 		break;
 	}

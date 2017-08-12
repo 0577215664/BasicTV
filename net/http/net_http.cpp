@@ -131,7 +131,8 @@ static NET_HTTP_FILE_DRIVER_FUNCTION(packetize_file_to_conn){
 	std::vector<uint8_t> http_packet =
 		convert::string::to_bytes(
 			http::header::make_header(
-				file_driver_state_ptr->get_medium(), // MIME type
+				file_driver_state_ptr->get_medium(),
+				file_driver_state_ptr->get_mime_type(),
 				pull_data.second,
 				pull_data.first.size()));
 	http_packet.insert(
@@ -149,9 +150,7 @@ static NET_HTTP_FILE_DRIVER_FUNCTION(remove_stale){
 	const bool emptied =
 		socket_ptr->get_const_ptr_send_buffer()->size() == 0;	
 	if(serviced && emptied){
-		sleep_ms(1000);
 		print("removing a finished HTTP connection", P_WARN);
-
 		socket_ptr->disconnect();
 		ID_TIER_DESTROY(socket_ptr->id.get_id());
 		socket_ptr = nullptr;
