@@ -174,13 +174,28 @@ namespace transcode{
 		// 3. different interface and libraries are used (not simple,
 		// as much as more complex if they were integrated)
 
+		// so...
+		
+		// 1. prevents needing any reference to tv_transcode_encode_state_ptr
+		// (via the API)
+		// 2. audio prop is replaced by a file_audio_format (required
+		// for simplicity, maybe I can auto-detect files one day)
+		// 3. once I move to CMake, it'll be easier to segment what is
+		// and what is not compiled in
+		
 		// TODO: allow for returning vorbis comments with the codec'd
 		// information so we can bind it to a tv_item_t
 		namespace file{
 			std::vector<std::vector<uint8_t> > to_codec(
 				std::vector<uint8_t> file_data,
-				tv_audio_prop_t *output_audio_prop,
-				uint8_t file_audio_prop = 0);
+				uint8_t file_audio_format, 
+				tv_audio_prop_t *output_audio_prop);
+			std::vector<uint8_t> to_raw(
+				std::vector<uint8_t> file_data,
+				uint8_t file_audio_format, 
+				uint32_t *sampling_freq,
+				uint8_t *bit_depth,
+				uint8_t *channel_count);
 		};
 	};
 };

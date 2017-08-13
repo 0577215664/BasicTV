@@ -119,8 +119,12 @@ TV_SINK_MEDIUM_INIT(audio_hardware){
 			1;
 		output_parameters.sampleFormat =
 			paInt16; // Convert from native unsigned
+		const PaDeviceInfo *dev_info =
+			Pa_GetDeviceInfo(
+				output_parameters.device);
+		ASSERT(dev_info != nullptr, P_ERR);
 		output_parameters.suggestedLatency =
-			Pa_GetDeviceInfo(output_parameters.device)->defaultLowInputLatency;
+			dev_info->defaultLowInputLatency;
 		output_parameters.hostApiSpecificStreamInfo =
 			nullptr;
 

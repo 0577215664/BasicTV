@@ -15,9 +15,11 @@
 void tv_init(){
 	// auto-initializes the PortAudio system since this is the first
 	// right now we pull this from ID_TIER_CACHE_GET
-	tv::sink::state::init(
-		TV_SINK_MEDIUM_AUDIO_HARDWARE,
-		TV_SINK_MEDIUM_FLOW_DIRECTION_OUT);
+	if(settings::get_setting("audio") == "true"){
+		tv::sink::state::init(
+			TV_SINK_MEDIUM_AUDIO_HARDWARE,
+			TV_SINK_MEDIUM_FLOW_DIRECTION_OUT);
+	}
 	tv::sink::state::init(
 		TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT,
 		TV_SINK_MEDIUM_FLOW_DIRECTION_IN); // writing

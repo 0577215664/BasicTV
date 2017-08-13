@@ -4,6 +4,8 @@
 #include <utility>
 #include <chrono>
 
+#include <ogg/ogg.h> // technically audio and video
+
 #define TV_FRAME_TYPE_AUDIO 1
 #define TV_FRAME_TYPE_VIDEO 2
 #define TV_FRAME_TYPE_TEXT 3
