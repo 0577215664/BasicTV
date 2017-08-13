@@ -9,6 +9,7 @@
 
 // one state per socket per servicing ID
 
+
 typedef std::vector<std::pair<std::string, std::string> > net_http_pretty_darn_hacky_t;
 struct net_http_file_driver_state_t : public state_t{
 private:
@@ -45,12 +46,12 @@ struct net_http_file_driver_medium_t{
 	
 	net_http_file_driver_state_t* (*init)(
 		std::string url,
-		id_t_ socket_id); // socket to send it on
+		id_t_ socket_id) = nullptr; // socket to send it on
 	void (*close)(
-		net_http_file_driver_state_t* state_ptr);
+		net_http_file_driver_state_t* state_ptr) = nullptr;
 
 	std::pair<std::vector<uint8_t>, uint8_t> (*pull)(
-		net_http_file_driver_state_t* state_ptr);
+		net_http_file_driver_state_t* state_ptr) = nullptr;
 };
 
 extern net_http_file_driver_medium_t net_http_file_driver_get_medium(
