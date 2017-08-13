@@ -21,17 +21,17 @@
 static const std::vector<net_http_file_driver_medium_t> file_driver_medium =
 {
 	(net_http_file_driver_medium_t){NET_HTTP_FILE_DRIVER_MEDIUM_FRONTPAGE,
-					"",
+					(const std::string)(""),
 					net_http_file_driver_frontpage_init,
 					net_http_file_driver_frontpage_close,
 					net_http_file_driver_frontpage_pull},
 	(net_http_file_driver_medium_t){NET_HTTP_FILE_DRIVER_MEDIUM_ATOM,
-					"atom",
+					(const std::string)("atom"),
 					net_http_file_driver_atom_init,
 					net_http_file_driver_atom_close,
 					net_http_file_driver_atom_pull},
 	(net_http_file_driver_medium_t){NET_HTTP_FILE_DRIVER_MEDIUM_DOWNLOAD,
-					"download",
+					(const std::string)("download"),
 					net_http_file_driver_download_init,
 					net_http_file_driver_download_close,
 					net_http_file_driver_download_pull}

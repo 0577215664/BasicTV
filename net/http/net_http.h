@@ -9,15 +9,10 @@
 #include <vector>
 
 /*
-  HTTP workflow:
-  net_http_t conn_socket accepts requests and pulls the GET header
-  GET header's URL is ran over all net_http_file_driver_medium_ts,
-  gives to the first (or all?) min_valid_urls
-  net_http_file_driver_state_t returns the vector and a 
-  variable to let net_http_t know where the EOF is (PAYLOAD_PROGRESS
-  or PAYLOAD_COMPLETE)
-  net_http_t, once the transfer is complete, is responsible for deleting
-  the TCP socket and the net_http_file_driver_state_t
+  The HTTP sink is meant for long term playback to software, normally not
+  on this computer. All requests for data initiate from outside of this
+  program, there are no latencies to deal with. However, it is possible
+  to stream live through HTTP by requesting a currently viewed stream.
  */
 
 // HTTP interface, bound to a socket

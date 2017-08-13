@@ -1,8 +1,9 @@
 #ifndef TV_SINK_H
 #define TV_SINK_H
 /*
-  Standard interface for reading to and writing from any source of
-  any type.
+  TV sinks are designed for real-time playback to software, like playing
+  audio to a speaker, RTSP streaming, or any situation where this program
+  initiates sending and managing the stream
 
   TODO: should probably be renamed to TV_SINK_STREAM, since TV_SINK_METADATA
   also exists, and has a seperate interface
@@ -47,9 +48,6 @@ public:
 
 #define TV_SINK_MEDIUM_AUDIO_HARDWARE 1
 #define TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT 2
-
-/* #define TV_SINK_MEDIUM_AUDIO_RTSP 2 */
-/* #define TV_SINK_MEDIUM_AUDIO_FILE 3 */
 
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_IN 1
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_OUT 2
