@@ -166,7 +166,6 @@ void init(){
 	settings::set_setting("throw_level", std::to_string(P_CRIT));
 	// shouldn't need to disable other stuff
 	settings::set_setting("run_tests", "false");
-	settings::set_setting("data_folder", ((std::string)getenv("HOME"))+"/.BasicTV/");
 	settings::set_setting("print_backtrace", "false");
 	settings::set_setting("print_color", "true");
 

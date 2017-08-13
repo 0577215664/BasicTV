@@ -150,10 +150,10 @@ static void net_proto_fill_type_requests(){
 				std::vector<id_t_> type_vector;
 				std::vector<type_t_> all_types =
 					proto_type_request->get_type();
-				for(uint64_t i = 0;i < all_types.size();i++){
+				for(uint64_t c = 0;c < all_types.size();c++){
 					std::vector<id_t_> tmp_vector =
 						ID_TIER_CACHE_GET(
-							all_types[i]);
+							all_types[c]);
 					type_vector.insert(
 						type_vector.end(),
 						tmp_vector.begin(),
