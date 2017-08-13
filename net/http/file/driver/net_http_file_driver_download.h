@@ -3,6 +3,8 @@
 
 #include "net_http_file_driver.h"
 
+// complex means that individual streams from the item are
+// picked
 #define NET_HTTP_FILE_DRIVER_DOWNLOAD_STATE_FLAG_COMPLEX (1 << 0)
 
 struct net_http_file_driver_download_state_t{

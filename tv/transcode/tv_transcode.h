@@ -168,7 +168,20 @@ namespace transcode{
 				std::vector<uint8_t> unsigned_payload,
 				uint8_t bit_depth);
 		};
-		
+		// File interface is a lot simpler, since:
+		// 1. no shared state between calls
+		// 2. no specificed input audio prop (outside of file data)
+		// 3. different interface and libraries are used (not simple,
+		// as much as more complex if they were integrated)
+
+		// TODO: allow for returning vorbis comments with the codec'd
+		// information so we can bind it to a tv_item_t
+		namespace file{
+			std::vector<std::vector<uint8_t> > to_codec(
+				std::vector<uint8_t> file_data,
+				tv_audio_prop_t *output_audio_prop,
+				uint8_t file_audio_prop = 0);
+		};
 	};
 };
 
