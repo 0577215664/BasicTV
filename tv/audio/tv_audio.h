@@ -2,7 +2,6 @@
 #define TV_AUDIO_H
 #include "../../id/id.h"
 #include "../../util.h"
-#include <SDL2/SDL_mixer.h>
 #include <algorithm> // std::reverse
 
 // 48000 is the default for Opus

@@ -14,7 +14,7 @@ std::string http::header::make_header(
 		"HTTP/1.1 200 OK\r\n"
 		"Date: " + convert::time::to_http_time(get_time_microseconds()) + "\r\n"
 		"Content-Type: " + mime_type + "\r\n"
-		"Server: BasicTV\r\n";
+		"Server: BasicTV\r\n"
 		"Connection: close\r\n";
 	switch(payload_status){
 	case NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE:
@@ -148,5 +148,22 @@ std::string http::header::get::value_from_var_list(
 			return var_list[i].second;
 		}
 	}
+	print("value not found in var list", P_UNABLE);
 	return "";
+}
+
+id_t_ http::header::get::pull_id(
+	std::vector<std::pair<std::string, std::string> > var_list,
+	std::string var){
+	id_t_ retval = ID_BLANK_ID;
+	try{
+		retval =
+			convert::array::id::from_hex(
+				http::header::get::value_from_var_list(
+					var_list,
+					var));
+	}catch(...){
+		print("can't interpret ID, returning blank", P_WARN);
+	}
+	return retval;
 }

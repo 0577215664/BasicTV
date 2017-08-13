@@ -8,8 +8,6 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(frontpage){
 		frontpage_state_ptr);
 	file_driver_state_ptr->set_socket_id(
 		socket_id);
-	file_driver_state_ptr->set_service_id(
-		service_id);
 	file_driver_state_ptr->set_medium(
 		NET_HTTP_FILE_DRIVER_MEDIUM_FRONTPAGE);
 	return file_driver_state_ptr;

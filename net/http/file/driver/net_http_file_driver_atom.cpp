@@ -1,6 +1,7 @@
 #include "../../net_http.h"
 #include "net_http_file_driver.h"
 #include "net_http_file_driver_atom.h"
+#include "../../net_http_parse.h"
 
 #include "../../../../state.h"
 
@@ -115,8 +116,15 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(atom){
 	// socket_id isn't used too much internally
 	file_driver_state_ptr->set_socket_id(
 		socket_id);
+	const std::vector<std::pair<std::string, std::string> > var_list =
+		http::header::get::var_list(
+			url);
+	file_driver_state_ptr->set_var_list(
+		var_list);
 	file_driver_state_ptr->set_service_id(
-		service_id);
+		http::header::get::pull_id(
+			var_list,
+			"channel_id"));
 	file_driver_state_ptr->set_medium(
 		NET_HTTP_FILE_DRIVER_MEDIUM_ATOM);
 	return file_driver_state_ptr;

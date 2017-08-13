@@ -26,6 +26,9 @@ namespace http{
 			std::string value_from_var_list(
 				std::vector<std::pair<std::string, std::string> > var_list,
 				std::string var);
+			id_t_ pull_id(
+				std::vector<std::pair<std::string, std::string> > var_list,
+				std::string var);
 		};
 	};
 };

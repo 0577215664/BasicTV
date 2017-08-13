@@ -9,8 +9,6 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(download){
 		download_state_ptr);
 	file_driver_state_ptr->set_socket_id(
 		socket_id);
-	file_driver_state_ptr->set_service_id(
-		service_id);
 	file_driver_state_ptr->set_medium(
 		NET_HTTP_FILE_DRIVER_MEDIUM_DOWNLOAD);
 	return file_driver_state_ptr;
@@ -28,6 +26,7 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(download){
 		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);
 	file_driver_state_ptr->set_mime_type(
 		"application/ogg"); // make more complicated later on
+	
 	return std::pair<std::vector<uint8_t>, uint8_t>(
 		std::vector<uint8_t>({}),
 		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);

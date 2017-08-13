@@ -7,6 +7,17 @@
 
 // TODO: make sure all lookups to file_driver_medium check for the longest
 // valid min_url so everything doesn't get sent to the frontpage ("")
+
+/*
+  FRONTPAGE is a user interface to generated webpages
+
+  ATOM is an Atom feed that takes channel_id as an input (through the
+  service_id)
+
+  DOWNLOAD serves out tv_item_ts that we have locally in a file format
+  specified in the HTTP GET
+ */
+
 static const std::vector<net_http_file_driver_medium_t> file_driver_medium =
 {
 	(net_http_file_driver_medium_t){NET_HTTP_FILE_DRIVER_MEDIUM_FRONTPAGE,

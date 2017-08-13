@@ -77,19 +77,6 @@ static void net_http_push_conn_to_file(
 					header,
 					"GET",
 					1); // first entry after "GET"
-			id_t_ target_id = ID_BLANK_ID;
-			try{
-				const std::string target_id_str =
-					http::header::get::value_from_var_list(
-						http::header::get::var_list(
-							url),
-						"channel_id");
-				if(target_id_str != ""){
-					target_id =
-						convert::array::id::from_hex(
-							target_id_str);
-				}
-			}catch(...){}
 			if(url.size() > 0){
 				if(url[0] == '/'){
 					url.erase(
@@ -101,7 +88,7 @@ static void net_http_push_conn_to_file(
 					url);
 			net_http_file_driver_state_t *file_driver_state_ptr =
 				file_driver_medium.init(
-					target_id,
+					url,
 					non_bound_sockets[c]);
 			http_data_ptr->add_bound_file_driver_states(
 				file_driver_state_ptr->id.get_id());
