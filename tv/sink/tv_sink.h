@@ -62,6 +62,27 @@ public:
 
 struct tv_sink_medium_t{
 public:
+	tv_sink_medium_t(
+		uint8_t flow_direction_,
+		uint8_t medium_,
+		tv_sink_state_t* (*init_)(
+			uint8_t flow_direction),
+		void (*close_)(
+			tv_sink_state_t *state_ptr),
+		std::vector<id_t_> (*pull_)(
+			tv_sink_state_t *state_ptr,
+			uint8_t mapping), 
+		void (*push_)(
+			tv_sink_state_t *state_ptr,
+			int64_t window_offset_micro_s,
+			std::vector<id_t_> frames)){
+		flow_direction = flow_direction_;
+		medium = medium_;
+		init = init_;
+		close = close_;
+		pull = pull_;
+		push = push_;
+	}
 	uint8_t flow_direction = 0;
 	uint8_t medium = 0;
 
