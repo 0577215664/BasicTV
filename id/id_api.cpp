@@ -49,6 +49,16 @@ std::vector<type_t_> encrypt_blacklist = {
 	TYPE_NET_PROTO_ID_REQUEST_T
 };
 
+// no export/import operations are done for these types
+std::vector<type_t_> mem_only_types = {
+	TYPE_ID_TIER_STATE_T,
+	TYPE_NET_HTTP_T,
+	TYPE_TV_SINK_STATE_T,
+	TYPE_NET_HTTP_FILE_DRIVER_STATE_T,
+	TYPE_NET_SOCKET_T,
+	TYPE_NET_PROTO_SOCKET_T
+};
+
 std::vector<id_t_> id_api::sort::fingerprint(std::vector<id_t_> tmp){
 	// TODO: actually get the finerprints
 	return tmp;
@@ -490,7 +500,7 @@ bool encrypt_blacklist_type(type_t_ type_){
 #define ID_IMPORT(x) memcpy(&x, data.data()+vector_pos, sizeof(x));vector_pos += sizeof(x)
 
 #pragma warning("strip_to_only_rules removed a lot of sanity checks for clarity, should REALLY re-add");
-#pragma warning("strip_to_only_rules just does a  pass through, OK for now if we delete from all tiers for everything")
+#pragma warning("strip_to_only_rules just does a pass through, OK for now if we delete from all tiers for everything")
 
 std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 	std::vector<uint8_t> data,

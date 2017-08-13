@@ -70,6 +70,7 @@ namespace id_api{
 };
 
 extern std::vector<type_t_> encrypt_blacklist;
+extern std::vector<type_t_> mem_only_types;
 extern bool encrypt_blacklist_type(type_t_ type);
 
 #endif

@@ -38,48 +38,83 @@ void net_proto_loop(){
   they are reset).
  */
 
+static id_t_ net_proto_init_new_peer(){
+	const uint16_t tmp_port =
+		settings::get_setting_unsigned_def(
+			"net_interface_ip_tcp_port",
+			58486);
+	std::string ip_addr =
+		settings::get_setting(
+			"net_interface_ip_hostname");
+	if(ip_addr == ""){
+		ip_addr = net_get_ip();
+	}else{
+		print("assuming the hostname of " + ip_addr, P_NOTE);
+	}
+	P_V(tmp_port, P_NOTE);
+	P_V_S(ip_addr, P_NOTE);
+	net_proto_peer_t *proto_peer_ptr =
+		new net_proto_peer_t;
+	proto_peer_ptr->id.set_lowest_global_flag_level(
+		ID_DATA_NETWORK_RULE_PUBLIC,
+		ID_DATA_EXPORT_RULE_ALWAYS,
+		ID_DATA_RULE_UNDEF);
+	net_interface_ip_address_t *ip_address_ptr =
+		new net_interface_ip_address_t;
+	ip_address_ptr->id.set_lowest_global_flag_level(
+		ID_DATA_NETWORK_RULE_PUBLIC,
+		ID_DATA_EXPORT_RULE_ALWAYS,
+		ID_DATA_RULE_UNDEF);
+	ip_address_ptr->set_medium_modulation_encapsulation(
+		NET_INTERFACE_MEDIUM_IP,
+		NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP,
+		NET_INTERFACE_MEDIUM_PACKET_ENCAPSULATION_TCP);
+	ip_address_ptr->set_address_data(
+		ip_addr,
+		tmp_port,
+		NET_INTERFACE_IP_ADDRESS_NAT_TYPE_NONE);
+	proto_peer_ptr->set_address_id(
+		ip_address_ptr->id.get_id());
+	return proto_peer_ptr->id.get_id();
+}
+
 static void net_proto_init_self_peer(){
 	if(net_proto::peer::get_self_as_peer() != ID_BLANK_ID){
 		print("We already have local peer data (at init), where did it come from?", P_ERR);
 	}
 	if(settings::get_setting("net_interface_ip_tcp_enabled") == "true"){
-		const uint16_t tmp_port =
-			settings::get_setting_unsigned_def(
-				"net_interface_ip_tcp_port",
-				58486);
-		std::string ip_addr =
-			settings::get_setting(
-				"net_interface_ip_hostname");
-		if(ip_addr == ""){
-			ip_addr = net_get_ip();
-		}else{
-			print("assuming the hostname of " + ip_addr, P_NOTE);
+		std::vector<id_t_> proto_peer_id;
+		std::vector<id_t_> proto_peer_vector =
+			ID_TIER_CACHE_GET(
+				TYPE_NET_PROTO_PEER_T);
+		for(uint64_t i = 0;i < proto_peer_vector.size();i++){
+			if(PTR_ID(proto_peer_vector[i], net_proto_peer_t) == nullptr){
+				// no use to us if we can't access it now
+				ID_TIER_DESTROY(proto_peer_vector[i]);
+				continue;
+			}
+			if(unlikely(get_id_hash(proto_peer_vector[i]) ==
+				    get_id_hash(production_priv_key_id))){
+				proto_peer_id.push_back(
+					proto_peer_vector[i]);
+			}
 		}
-		P_V(tmp_port, P_NOTE);
-		P_V_S(ip_addr, P_NOTE);
-		net_proto_peer_t *proto_peer_ptr =
-			new net_proto_peer_t;
-		proto_peer_ptr->id.set_lowest_global_flag_level(
-			ID_DATA_RULE_UNDEF,
-			ID_DATA_EXPORT_RULE_NEVER,
-			ID_DATA_RULE_UNDEF);
-		net_interface_ip_address_t *ip_address_ptr =
-			new net_interface_ip_address_t;
-		ip_address_ptr->set_medium_modulation_encapsulation(
-			NET_INTERFACE_MEDIUM_IP,
-			NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP,
-			NET_INTERFACE_MEDIUM_PACKET_ENCAPSULATION_TCP);
-		ip_address_ptr->set_address_data(
-			ip_addr,
-			tmp_port,
-			NET_INTERFACE_IP_ADDRESS_NAT_TYPE_NONE);
-		proto_peer_ptr->set_address_id(
-			ip_address_ptr->id.get_id());
-		net_proto::peer::set_self_peer_id(
-			proto_peer_ptr->id.get_id());
-		P_V_S(net_interface::ip::raw::to_readable(
-			      ip_address_ptr->get_address()), P_VAR);
-		P_V(ip_address_ptr->get_port(), P_VAR);
+		if(proto_peer_id.size() == 0){
+			print("my pre-existing proto peer info isn't here, making a new set", P_NOTE);
+			net_proto::peer::set_self_peer_id(
+				net_proto_init_new_peer());
+		}else if(proto_peer_id.size() == 1){
+			print("reading in my only pre-existing proto peer info", P_NOTE);
+			net_proto::peer::set_self_peer_id(
+				proto_peer_id[0]);
+		}else{
+			print("we have more than one net_proto_peer_t, wiping all of them and starting over", P_WARN);
+			for(uint64_t i = 0;i < proto_peer_id.size();i++){
+				ID_TIER_DESTROY(proto_peer_id[i]);
+			}
+			net_proto::peer::set_self_peer_id(
+				net_proto_init_new_peer());
+		}
 	}
 	if(settings::get_setting("net_interface_ip_udp_enabled") == "true"){
 		print("we have no UDP support, disable it in the settings", P_ERR);

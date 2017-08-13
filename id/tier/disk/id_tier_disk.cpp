@@ -30,8 +30,10 @@ std::vector<std::pair<id_t_, mod_inc_t_> > gen_id_buffer(
 		std::string mod_inc_component;
 		try{
 			uint64_t underscore_pos =
-				all_files[i].find_last_of(
-					'_');
+				all_files[i].substr(
+					all_files[i].find_last_of(SLASH),
+					all_files[i].size()).find_last_of(
+						'_') + all_files[i].find_last_of(SLASH);
 			if(underscore_pos == std::string::npos){
 				continue;
 			}
@@ -95,6 +97,14 @@ ID_TIER_DEL_STATE(disk){
 static std::string gen_filename(id_t_ id, mod_inc_t_ mod_inc){
 	return convert::array::id::to_hex(id) + "_"  + std::to_string(mod_inc);
 }
+
+// TODO: move from nodisk over to actually parsing and removing
+// cache information as well. Cache information shouldn't be exported
+// anyways, but we can get more granularity when it comes to where
+// data actually goes
+
+// strip_to_only_rules attempts to do this, but what's being asked is
+// pretty impossible with the current exporting model
 
 ID_TIER_ADD_DATA(disk){
 	GET_ALL_STATE_PTR(disk);

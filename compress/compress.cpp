@@ -55,9 +55,9 @@ std::vector<uint8_t> compressor::decompress(std::vector<uint8_t> data){
 		print("invalid compression scheme for compressed data", P_ERR);
 		HANG();
 	}
-	const long double compression_ratio =
-		((long double)data.size())/((long double)retval.size());
-	P_V(compression_ratio, P_DEBUG);
+	// const long double compression_ratio =
+	// 	((long double)data.size())/((long double)retval.size());
+	// P_V(compression_ratio, P_DEBUG);
 	return retval;
 }
 

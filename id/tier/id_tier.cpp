@@ -4,10 +4,14 @@
 #include "id_tier_cache.h"
 #include "disk/id_tier_disk.h"
 
+#include "../../settings.h"
+
 // default directory relies on HOME path
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+
+#include "../../file.h"
 
 std::vector<type_t_> memory_locked = {
 	TYPE_ID_TIER_STATE_T
@@ -17,8 +21,8 @@ std::vector<std::pair<uint8_t, uint8_t> > all_tiers = {
 	{ID_TIER_MAJOR_MEM, 0},
 	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED},
 	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED},
-	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED}//,
-	// {ID_TIER_MAJOR_DISK, 0}
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED},
+	{ID_TIER_MAJOR_DISK, 0}
 };
 
 std::vector<id_tier_medium_t> id_tier_medium = {
@@ -235,6 +239,11 @@ void id_tier::operation::shift_data_to_state(
 					// probably set to completely non-exportable
 					continue;
 				}
+				// TODO: make an interface for mediums that
+				// can just ask if an ID can be exported based
+				// on the type and all that jazz so we don't
+				// have to redundantly compress stuff in
+				// cases where it can't
 				shift_payload =
 					id_api::raw::force_to_extra(
 						shift_payload,
@@ -246,10 +255,10 @@ void id_tier::operation::shift_data_to_state(
 					id_vector->erase(
 						id_vector->begin()+i);
 				}catch(...){
-					print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (set)", P_WARN);
+					// print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (set)", P_WARN);
 				}
 			}catch(...){
-				print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (get)", P_WARN);
+				// print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (get)", P_WARN);
 			}
 		}
 	}
@@ -412,20 +421,29 @@ static void id_tier_init_disk(){
 			tier_state_ptr->get_payload());
 	ASSERT(disk_state_ptr != nullptr, P_ERR);
 
+	
+	std::string path;
+	try{
+		path =
+			settings::get_setting(
+				"data_folder");
+		if(path[path.size()-1] != SLASH){
+			path += std::string(1, SLASH);
+		}
+	}catch(...){}
+	if(path == ""){
 #ifdef __linux
-	struct passwd *pw = getpwuid(getuid());
-	const std::string home_path =
-		pw->pw_dir;
+		struct passwd *pw = getpwuid(getuid());
+		path = pw->pw_dir + (std::string)"/.";
 #else
-	const std::string home_path =
-		"";
+		path = "";
 #endif
-	const std::string full_path =
-		home_path + "/.BasicTV/";
-	P_V_S(full_path, P_VAR);
+		path += "BasicTV";
+	}
+	P_V_S(path, P_VAR);
 	disk_state_ptr->path =
 		convert::string::to_bytes(
-			full_path);
+			path);
 	disk_medium_ptr.update_cache(
 		tier_state_ptr->id.get_id());
 }
@@ -480,7 +498,7 @@ void id_tier_init(){
 	id_tier_init_cache();
 	// disk seems to be working fine, but tier shfiting code doesn't
 	// debug it with cache tiers first, then enable disk
-	// id_tier_init_disk();
+	id_tier_init_disk();
 }
 
 #define COPY_UP 1
@@ -530,7 +548,21 @@ static std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
 		if(get_id_type(a_id) == TYPE_ID_TIER_STATE_T){
 			continue;
 		}
+		if(std::find(
+			   mem_only_types.begin(),
+			   mem_only_types.end(),
+			   get_id_type(a_id)) != mem_only_types.end()){
+			// we assume its in memory currently
+			continue;
+		}
 		for(uint64_t b = 0;b < second_id_buffer.size();b++){
+			if(std::find(
+				   mem_only_types.begin(),
+				   mem_only_types.end(),
+				   get_id_type(std::get<0>(second_id_buffer[b]))) != mem_only_types.end()){
+				// we assume its in memory currently	
+				continue;
+			}
 			if(std::get<0>(second_id_buffer[b]) == a_id){
 				const mod_inc_t_ a_mod_inc =
 					std::get<1>(first_id_buffer[a]);
@@ -607,7 +639,9 @@ void id_tier_loop(){
 					// of the rules
 					// print("couldn't shift data over", P_SPAM);
 				}else{
-					print("shifted data from tier " + id_breakdown(from_id) + " to " + id_breakdown(to_id), P_SPAM);
+					// update this if we have bulk transfers
+					// refer to tiers as tier major and tier minor
+					// print("shifted data " + id_breakdown(std::get<0>(move_logic[a])) + " from tier " + id_breakdown(from_id) + " to " + id_breakdown(to_id), P_SPAM);
 				}
 			}
 		}
