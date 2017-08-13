@@ -20,21 +20,21 @@
 
 static std::vector<net_http_file_driver_medium_t> file_driver_medium =
 {
-	(net_http_file_driver_medium_t){NET_HTTP_FILE_DRIVER_MEDIUM_FRONTPAGE,
-					(const std::string)"",
-					net_http_file_driver_frontpage_init,
-					net_http_file_driver_frontpage_close,
-					net_http_file_driver_frontpage_pull},
-	(net_http_file_driver_medium_t){NET_HTTP_FILE_DRIVER_MEDIUM_ATOM,
-					(const std::string)"atom",
+	net_http_file_driver_medium_t(NET_HTTP_FILE_DRIVER_MEDIUM_FRONTPAGE,
+				      "",
+				      net_http_file_driver_frontpage_init,
+				      net_http_file_driver_frontpage_close,
+				      net_http_file_driver_frontpage_pull),
+	net_http_file_driver_medium_t(NET_HTTP_FILE_DRIVER_MEDIUM_ATOM,
+					"atom",
 					net_http_file_driver_atom_init,
 					net_http_file_driver_atom_close,
-					net_http_file_driver_atom_pull},
-	(net_http_file_driver_medium_t){NET_HTTP_FILE_DRIVER_MEDIUM_DOWNLOAD,
-					(const std::string)"download",
+					net_http_file_driver_atom_pull),
+	net_http_file_driver_medium_t(NET_HTTP_FILE_DRIVER_MEDIUM_DOWNLOAD,
+					"download",
 					net_http_file_driver_download_init,
 					net_http_file_driver_download_close,
-					net_http_file_driver_download_pull}
+					net_http_file_driver_download_pull)
 };
 
 net_http_file_driver_state_t::net_http_file_driver_state_t() : id(this, TYPE_NET_HTTP_FILE_DRIVER_STATE_T){

@@ -52,6 +52,23 @@ struct net_http_file_driver_medium_t{
 
 	std::pair<std::vector<uint8_t>, uint8_t> (*pull)(
 		net_http_file_driver_state_t* state_ptr) = nullptr;
+
+	net_http_file_driver_medium_t(
+		uint8_t medium_,
+		std::string min_valid_url_,
+		net_http_file_driver_state_t* (*init_)(
+			std::string url,
+			id_t_ socket_id),
+		void (*close_)(
+			net_http_file_driver_state_t* state_ptr),
+		std::pair<std::vector<uint8_t>, uint8_t> (*pull_)(
+			net_http_file_driver_state_t* state_ptr)){
+		medium = medium_;
+		min_valid_url = min_valid_url_;
+		init = init_;
+		close = close_;
+		pull = pull_;
+	}
 };
 
 extern net_http_file_driver_medium_t net_http_file_driver_get_medium(
