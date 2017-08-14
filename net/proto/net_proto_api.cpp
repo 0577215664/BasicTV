@@ -250,7 +250,7 @@ void net_proto::socket::connect(id_t_ peer_id_, uint32_t min){
 	PRINT_IF_NULL(ip_address_ptr, P_UNABLE);
 	if(net_proto_self_reference(
 		   ip_address_ptr)){
-		print("not connecting to myself", P_ERR);
+		print("not connecting to myself", P_NOTE);
 		return;
 	}
 	const uint64_t sockets_open =
