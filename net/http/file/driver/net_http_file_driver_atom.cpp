@@ -19,18 +19,6 @@
   but can be generated on the fly
 */
 
-static std::string atom_get_prefix(){
-	return "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
-}
-
-static std::string atom_wrap_to_feed(std::string data){
-	return "<feed xmlns=\"http://www.w3.org/2005/Atom\">" + data + "</feed>";
-}
-
-static std::string atom_wrap_title(std::string data){
-	return "<title>" + data + "</title>";
-}
-
 static std::string atom_tv_channel_to_prefix(
 	id_t_ channel_id){
 	tv_channel_t *channel_ptr =

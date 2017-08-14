@@ -193,31 +193,31 @@ static SDL_Surface* tv_render_frame_to_surface_fast_copy(tv_frame_video_t *frame
   better as well. 
  */
 
-static tv_frame_video_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_t bpc){
-	tv_frame_video_t *frame = new tv_frame_video_t;
-	frame->set_all(x_,
-		       y_,
-		       TV_FRAME_DEFAULT_BPC,
-		       TV_FRAME_DEFAULT_RED_MASK,
-		       TV_FRAME_DEFAULT_GREEN_MASK,
-		       TV_FRAME_DEFAULT_BLUE_MASK,
-		       0);
-	if(unlikely(bpc != 8)){
-		print("BPC is not supported", P_ERR);
-	}
-	for(uint64_t y = 0;y < y_;y++){
-		for(uint64_t x = 0;x < x_;x++){
-			frame->set_pixel(x,
-					 y,
-					 std::make_tuple(
-						 (x^y)&255,
-						 (x^y)&255,
-						 (x^y)&255,
-						 8));
-		}
-	}
-	return frame;
-}
+// static tv_frame_video_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_t bpc){
+// 	tv_frame_video_t *frame = new tv_frame_video_t;
+// 	frame->set_all(x_,
+// 		       y_,
+// 		       TV_FRAME_DEFAULT_BPC,
+// 		       TV_FRAME_DEFAULT_RED_MASK,
+// 		       TV_FRAME_DEFAULT_GREEN_MASK,
+// 		       TV_FRAME_DEFAULT_BLUE_MASK,
+// 		       0);
+// 	if(unlikely(bpc != 8)){
+// 		print("BPC is not supported", P_ERR);
+// 	}
+// 	for(uint64_t y = 0;y < y_;y++){
+// 		for(uint64_t x = 0;x < x_;x++){
+// 			frame->set_pixel(x,
+// 					 y,
+// 					 std::make_tuple(
+// 						 (x^y)&255,
+// 						 (x^y)&255,
+// 						 (x^y)&255,
+// 						 8));
+// 		}
+// 	}
+// 	return frame;
+// }
 
 static SDL_Rect tv_render_gen_window_rect(SDL_Surface *surface){
 	SDL_Rect window_rect;
@@ -327,101 +327,101 @@ void tv_video_loop(){
 	}
 }
 
-static void tv_init_test_menu(){
-	tv_window_t *window =
-		new tv_window_t;
-	tv_item_t *item =
-		new tv_item_t;
-	tv_menu_t *menu =
-		new tv_menu_t;
-	menu->set_menu_entry(0, "*takes a bow*");
-	// menu->set_menu_entry(0, "BasicTV");
-	// menu->set_menu_entry(1, "is");
-	// menu->set_menu_entry(2, "going");
-	// menu->set_menu_entry(3, "to");
-	// menu->set_menu_entry(4, "be");
-	// menu->set_menu_entry(5, "great");
-	item->add_frame_id({menu->get_frame_id()});
-	window->set_item_id(item->id.get_id());
-}
+// static void tv_init_test_menu(){
+// 	tv_window_t *window =
+// 		new tv_window_t;
+// 	tv_item_t *item =
+// 		new tv_item_t;
+// 	tv_menu_t *menu =
+// 		new tv_menu_t;
+// 	menu->set_menu_entry(0, "*takes a bow*");
+// 	// menu->set_menu_entry(0, "BasicTV");
+// 	// menu->set_menu_entry(1, "is");
+// 	// menu->set_menu_entry(2, "going");
+// 	// menu->set_menu_entry(3, "to");
+// 	// menu->set_menu_entry(4, "be");
+// 	// menu->set_menu_entry(5, "great");
+// 	item->add_frame_id({menu->get_frame_id()});
+// 	window->set_item_id(item->id.get_id());
+// }
 
-static void tv_init_test_test_card(uint64_t x_res,
-				   uint64_t y_res){
-	tv_window_t *window =
-		new tv_window_t;
-	window->id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
-	tv_channel_t *channel =
-		new tv_channel_t;
-	channel->id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
-	tv_item_t *item =
-		new tv_item_t;
-	item->id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
-	tv_frame_video_t *frame_video =
-		tv_frame_gen_xor_frame(x_res, y_res, 8);
-	frame_video->id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
-	// done initializing
-	window->set_item_id(channel->id.get_id());
-	item->add_frame_id({frame_video->id.get_id()});
-	// window->set_active_streams(
-	// 	frame_video->id.get_id());
-}
+// static void tv_init_test_test_card(uint64_t x_res,
+// 				   uint64_t y_res){
+// 	tv_window_t *window =
+// 		new tv_window_t;
+// 	window->id.set_lowest_global_flag_level(
+// 		ID_DATA_NETWORK_RULE_NEVER,
+// 		ID_DATA_EXPORT_RULE_NEVER,
+// 		ID_DATA_RULE_UNDEF);
+// 	tv_channel_t *channel =
+// 		new tv_channel_t;
+// 	channel->id.set_lowest_global_flag_level(
+// 		ID_DATA_NETWORK_RULE_NEVER,
+// 		ID_DATA_EXPORT_RULE_NEVER,
+// 		ID_DATA_RULE_UNDEF);
+// 	tv_item_t *item =
+// 		new tv_item_t;
+// 	item->id.set_lowest_global_flag_level(
+// 		ID_DATA_NETWORK_RULE_NEVER,
+// 		ID_DATA_EXPORT_RULE_NEVER,
+// 		ID_DATA_RULE_UNDEF);
+// 	tv_frame_video_t *frame_video =
+// 		tv_frame_gen_xor_frame(x_res, y_res, 8);
+// 	frame_video->id.set_lowest_global_flag_level(
+// 		ID_DATA_NETWORK_RULE_NEVER,
+// 		ID_DATA_EXPORT_RULE_NEVER,
+// 		ID_DATA_RULE_UNDEF);
+// 	// done initializing
+// 	window->set_item_id(channel->id.get_id());
+// 	item->add_frame_id({frame_video->id.get_id()});
+// 	// window->set_active_streams(
+// 	// 	frame_video->id.get_id());
+// }
 
-/*
-  I made no effort to match the actual speed with the replay speed.
-  This can be done easily by creating the TTL from the start time and
-  the creation time of the next frame. One advantage is how I can alter
-  the frame rate to see how fast the code can render it.
- */
+// /*
+//   I made no effort to match the actual speed with the replay speed.
+//   This can be done easily by creating the TTL from the start time and
+//   the creation time of the next frame. One advantage is how I can alter
+//   the frame rate to see how fast the code can render it.
+//  */
 
-static void tv_init_test_webcam(){
-	tv_window_t *window =
-		new tv_window_t;
-	tv_channel_t *channel =
-		new tv_channel_t;
-	tv_dev_video_t *dev =
-	 	new tv_dev_video_t("/dev/video0");
-	tv_item_t *item =
-		new tv_item_t;
-	// anything added to a tv_item_t array needs to have some
-	// linkage through tv_frame_t items anyways
-	std::vector<id_t_> vector_array;
-	// Without an offset, the frames are obsolete before they
-	// are rendered
-	const uint64_t refresh_rate = (1000.0*1000.0)/dev->get_frame_interval_micro_s(); // just an estimate
-	P_V(refresh_rate, P_DEBUG);
-	const uint64_t time_start = get_time_microseconds();
-	for(uint64_t i = 0;i < 60;i++){
-		tv_frame_video_t *video =
-			PTR_DATA(dev->update(), tv_frame_video_t);
-		video->set_standard(time_start+(i*(1000*1000/refresh_rate))+(1000*1000*20),
-				    (1000000/refresh_rate),
-				    i);
-		vector_array.push_back(video->id.get_id());
-	}
-	id_api::linked_list::link_vector(
-		vector_array, 10);
-	channel->add_param(
-		VORBIS_COMMENT_PARAM_TITLE,
-		"BasicTV Webcam Test Channel",
-		true);
-	// no harm in adding everything
-	item->add_frame_id(vector_array);
-	item->set_tv_channel_id(channel->id.get_id());
-	window->set_item_id(item->id.get_id());
-	// window->add_active_stream_id(vector_array[0]);
-}
+// static void tv_init_test_webcam(){
+// 	tv_window_t *window =
+// 		new tv_window_t;
+// 	tv_channel_t *channel =
+// 		new tv_channel_t;
+// 	tv_dev_video_t *dev =
+// 	 	new tv_dev_video_t("/dev/video0");
+// 	tv_item_t *item =
+// 		new tv_item_t;
+// 	// anything added to a tv_item_t array needs to have some
+// 	// linkage through tv_frame_t items anyways
+// 	std::vector<id_t_> vector_array;
+// 	// Without an offset, the frames are obsolete before they
+// 	// are rendered
+// 	const uint64_t refresh_rate = (1000.0*1000.0)/dev->get_frame_interval_micro_s(); // just an estimate
+// 	P_V(refresh_rate, P_DEBUG);
+// 	const uint64_t time_start = get_time_microseconds();
+// 	for(uint64_t i = 0;i < 60;i++){
+// 		tv_frame_video_t *video =
+// 			PTR_DATA(dev->update(), tv_frame_video_t);
+// 		video->set_standard(time_start+(i*(1000*1000/refresh_rate))+(1000*1000*20),
+// 				    (1000000/refresh_rate),
+// 				    i);
+// 		vector_array.push_back(video->id.get_id());
+// 	}
+// 	id_api::linked_list::link_vector(
+// 		vector_array, 10);
+// 	channel->add_param(
+// 		VORBIS_COMMENT_PARAM_TITLE,
+// 		"BasicTV Webcam Test Channel",
+// 		true);
+// 	// no harm in adding everything
+// 	item->add_frame_id(vector_array);
+// 	item->set_tv_channel_id(channel->id.get_id());
+// 	window->set_item_id(item->id.get_id());
+// 	// window->add_active_stream_id(vector_array[0]);
+// }
 
 void tv_video_init(){
 	if(settings::get_setting("video") == "true"){

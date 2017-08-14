@@ -10,33 +10,6 @@
 
 static id_t_ self_peer_id = ID_BLANK_ID;
 
-static id_t_ net_proto_preferable_id_from_hash(
-	std::array<uint8_t, 32> hash){
-		id_t_ matching_hash_peer_id =
-		ID_BLANK_ID;
-	std::vector<id_t_> peer_vector =
-		ID_TIER_CACHE_GET(
-			TYPE_NET_PROTO_PEER_T);
-	for(uint64_t i = 0;i < peer_vector.size();i++){
-		if(unlikely(hash ==
-			    get_id_hash(peer_vector[i]))){
-			matching_hash_peer_id =
-				peer_vector[i];
-		}
-	}
-	if(matching_hash_peer_id == ID_BLANK_ID){
-		print("can't find matching hash, adding a random connected peer", P_WARN);
-		matching_hash_peer_id =
-			net_proto::peer::random_connected_peer_id();
-	}
-	if(matching_hash_peer_id == ID_BLANK_ID){
-		print("no connected peers to facilitate request", P_WARN);
-	}
-	return matching_hash_peer_id;
-}
-
-
-
 void net_proto::peer::set_self_peer_id(id_t_ self_peer_id_){
 	self_peer_id = self_peer_id_;
 }

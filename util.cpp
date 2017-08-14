@@ -118,23 +118,6 @@ std::string print_color_text(std::string data, int level){
 	}
 }
 
-/*
-  TODO: I need to optimize this function (pre-load print level, I can
-  assume changes in settings can be reflected in variable changes
-  pretty easily, or offload updating from settings file to another
-  thread).
- */
-
-static bool print_is_sane(std::string data){
-	for(uint64_t i = 0;i < data.size();i++){
-		if((data[i] < 32 || data[i] == 127) && (data[i] != 10 || data[i] != '\n' || data[i] != '\r')){
-			// std::cout << (int)data[i] << std::endl;
-			// return false;
-		}
-	}
-	return true;
-}
-
 static uint64_t print_level = P_VAR;
 static uint64_t print_delay_milli_s = 0;
 static bool print_backtrace = false;

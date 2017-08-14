@@ -508,6 +508,7 @@ void net_proto_requests_loop(){
 	net_proto_all_request_cleanup();
 	net_proto_routine_request_loop();
 	net_proto_simple_request_loop();
+	net_proto_create_linked_list_request_loop();
 }
 
 void net_proto::request::add_type_hash_whitelist(
