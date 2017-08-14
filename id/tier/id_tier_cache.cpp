@@ -12,7 +12,7 @@ ID_TIER_INIT_STATE(cache){
 	id_tier_cache_state_t *cache_state_ptr =
 		new id_tier_cache_state_t;
 	tier_state_ptr->set_medium(
-		ID_TIER_MEDIUM_CACHE); // ?
+		ID_TIER_MEDIUM_CACHE);
 	tier_state_ptr->set_payload(
 		cache_state_ptr);
 	return tier_state_ptr->id.get_id();
@@ -65,8 +65,9 @@ ID_TIER_ADD_DATA(cache){
 		wrote = true;
 	}
 	tier_state_ptr->add_id_buffer(
-		std::make_pair(id_new,
-			       mod_inc_new));
+		std::make_tuple(id_new,
+			       mod_inc_new,
+			       data.size()));
 }
 
 ID_TIER_DEL_ID(cache){

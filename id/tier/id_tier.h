@@ -43,20 +43,25 @@
 #define ID_TIER_GET_ID(medium) std::vector<uint8_t> id_tier_##medium##_get_id(id_t_ state_id, id_t_ id)
 #define ID_TIER_UPDATE_CACHE(medium) void id_tier_##medium##_update_cache(id_t_ state_id)
 
-typedef std::pair<id_t_, mod_inc_t_> id_buffer_t;
+typedef std::tuple<id_t_, mod_inc_t_, uint64_t> id_buffer_t;
 
 struct id_tier_state_t{
 private:
 	uint8_t medium = 0;
 	uint8_t tier_major = 0;
 	uint8_t tier_minor = 0;	
+	// storage
 	uint64_t total_size_bytes = 0;
 	uint64_t used_bytes = 0;
 	uint64_t free_bytes = 0;
-	std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
+	uint64_t max_bytes = 0;
+	// restrictions/buffers
+	// ID, mod_inc, approx size on medium (0 for mem/tier 0)
+	std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > id_buffer;
 	std::vector<uint8_t> allowed_extra;
 	uint64_t last_state_refresh_micro_s = 0;
 	uint64_t refresh_interval_micro_s = 0;
+	// sub-state pointer (state_ptr)
 	void *payload = nullptr;
 public:
 	data_id_t id;
@@ -69,6 +74,7 @@ public:
 	GET_SET(total_size_bytes, uint64_t);
 	GET_SET(used_bytes, uint64_t);
 	GET_SET(free_bytes, uint64_t);
+	GET_SET(max_bytes, uint64_t);
 	void del_id_buffer(id_t_ id);
 	ADD_DEL_VECTOR(id_buffer, id_buffer_t);
 	GET_SET(id_buffer, std::vector<id_buffer_t>);
@@ -106,7 +112,7 @@ public:
 namespace id_tier{
 	id_tier_medium_t get_medium(
 		uint8_t medium_type);
-	
+
 	namespace state_tier{
 		id_t_ only_state_of_tier(
 			uint8_t tier_major,
@@ -142,6 +148,14 @@ namespace id_tier{
 			uint8_t data_extra);
 	};
 	namespace lookup{
+		namespace id_mod_inc_size{
+			std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > from_tier(
+				std::vector<std::pair<uint8_t, uint8_t> > tier_vector);
+			std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > from_state(
+				std::vector<id_t_> state_vector);
+			std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > from_state(
+				id_tier_state_t* tier_state_ptr);
+		};
 		namespace id_mod_inc{
 			std::vector<std::pair<id_t_, mod_inc_t_> > from_tier(
 				std::vector<std::pair<uint8_t, uint8_t> > tier_vector);
@@ -193,6 +207,17 @@ namespace id_tier{
 			id_t_ id,
 			std::string type,
 			std::vector<std::pair<uint8_t, uint8_t> > tier_vector);
+	};
+	// GC is handled in the id_tier loop
+	// This interface only allows for returning a list of preferable IDs
+	// that need to be deleted from the ID tier
+	namespace gc{
+		std::vector<id_t_> to_remove(
+			id_t_ id_tier_state_id,
+			uint64_t new_size);
+		std::vector<id_t_> to_remove(
+			id_tier_state_t *id_tier_state_ptr,
+			uint64_t new_size);
 	};
 };
 

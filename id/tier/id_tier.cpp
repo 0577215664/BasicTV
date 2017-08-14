@@ -141,7 +141,8 @@ std::vector<std::tuple<id_t_, uint8_t, uint8_t> > id_tier::operation::valid_stat
 				 id_tier_state_t);
 		CONTINUE_IF_NULL(id_tier_state_ptr, P_WARN);
 		std::vector<std::pair<id_t_, mod_inc_t_> > state_cache =
-			id_tier_state_ptr->get_id_buffer();
+			id_tier::lookup::id_mod_inc::from_state(
+				id_tier_state_ptr);
 		print("don't bother right now", P_CRIT);
 		std::vector<id_t_> all_ids =
 			id_tier::lookup::ids::from_state(
@@ -389,7 +390,7 @@ bool id_tier_state_t::is_allowed_extra(extra_t_ extra_, id_t_ id_){
 
 void id_tier_state_t::del_id_buffer(id_t_ id_){
 	for(uint64_t i = 0;i < id_buffer.size();i++){
-		if(id_buffer[i].first == id_){
+		if(std::get<0>(id_buffer[i]) == id_){
 			id_buffer.erase(
 				id_buffer.begin()+i);
 			break;

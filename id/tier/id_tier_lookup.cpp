@@ -5,7 +5,16 @@
 std::vector<std::pair<id_t_, mod_inc_t_> > id_tier::lookup::id_mod_inc::from_state(
 	id_tier_state_t *tier_state_ptr){
 	ASSERT(tier_state_ptr != nullptr, P_ERR);
-	return tier_state_ptr->get_id_buffer();
+	const std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > *id_buffer =
+		tier_state_ptr->get_const_ptr_id_buffer();
+	std::vector<std::pair<id_t_, mod_inc_t_> > retval;
+	for(uint64_t i = 0;i < id_buffer->size();i++){
+		retval.push_back(
+			std::make_pair(
+				std::get<0>((*id_buffer)[i]),
+				std::get<1>((*id_buffer)[i])));
+	}
+	return retval;
 }
 
 std::vector<std::pair<id_t_, mod_inc_t_> > id_tier::lookup::id_mod_inc::from_state(
@@ -47,6 +56,54 @@ std::vector<std::pair<id_t_, mod_inc_t_> > id_tier::lookup::id_mod_inc::from_tie
 	}
 	return retval;
 }
+
+
+std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > id_tier::lookup::id_mod_inc_size::from_state(
+	id_tier_state_t *tier_state_ptr){
+	ASSERT(tier_state_ptr != nullptr, P_ERR);
+	return tier_state_ptr->get_id_buffer();
+}
+
+std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > id_tier::lookup::id_mod_inc_size::from_state(
+	std::vector<id_t_> state_vector){
+	std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > retval;
+	for(uint64_t i = 0;i < state_vector.size();i++){
+		try{
+			std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > tmp =
+				from_state(
+					PTR_DATA(state_vector[i],
+						 id_tier_state_t));
+			ASSERT(tmp.size() > 0, P_UNABLE);
+			retval.insert(
+				retval.end(),
+				tmp.begin(),
+				tmp.end());
+		}catch(...){}
+	}
+	return retval;
+}
+
+std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > id_tier::lookup::id_mod_inc_size::from_tier(
+	std::vector<std::pair<uint8_t, uint8_t> > tier_vector){
+	std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > retval;
+	for(uint64_t i = 0;i < tier_vector.size();i++){
+		try{
+			std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > tmp =
+				from_state(
+					PTR_DATA(id_tier::state_tier::only_state_of_tier(
+							 tier_vector[i].first,
+							 tier_vector[i].second),
+						 id_tier_state_t));
+			ASSERT(tmp.size() > 0, P_UNABLE);
+			retval.insert(
+				retval.end(),
+				tmp.begin(),
+				tmp.end());
+		}catch(...){}
+	}
+	return retval;
+}
+
 
 std::vector<id_t_> id_tier::lookup::ids::from_state(
 	id_tier_state_t *tier_state_ptr){

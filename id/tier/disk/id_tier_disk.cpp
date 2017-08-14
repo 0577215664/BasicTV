@@ -13,9 +13,9 @@
   one giant folder
  */
 
-std::vector<std::pair<id_t_, mod_inc_t_> > gen_id_buffer(
+std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > gen_id_buffer(
 	std::vector<uint8_t> path){
-	std::vector<std::pair<id_t_, mod_inc_t_> > retval;
+	std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > retval;
 	const std::vector<std::string> all_files =
 		system_handler::find(
 			convert::string::from_bytes(
@@ -55,15 +55,16 @@ std::vector<std::pair<id_t_, mod_inc_t_> > gen_id_buffer(
 		P_V_S(id_component, P_DEBUG);
 		P_V_S(mod_inc_component, P_DEBUG);
 		retval.push_back(
-			std::make_pair(
+			std::make_tuple(
 				convert::array::id::from_hex(id_component),
-				std::stoull(mod_inc_component)));
+				std::stoull(mod_inc_component),
+				file::prop::get::size(all_files[i])));
 	}
 	return retval;
 }
 
 static mod_inc_t_ mod_inc_from_id_buffer(
-	std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer,
+	std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > id_buffer,
 	id_t_ id){
 	for(uint64_t i = 0;i < id_buffer.size();i++){
 		if(unlikely(std::get<0>(id_buffer[i]) == id)){
@@ -132,9 +133,10 @@ ID_TIER_ADD_DATA(disk){
 			disk_state_ptr->path);
 	file::write_file_vector(pathname + "/" + filename, data);
 	tier_state_ptr->add_id_buffer(
-		std::make_pair(
+		std::make_tuple(
 			new_id,
-			mod_inc_new));
+			mod_inc_new,
+			data.size()));
 }
 
 ID_TIER_DEL_ID(disk){

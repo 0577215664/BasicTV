@@ -25,5 +25,11 @@ namespace file{
 
 	std::vector<uint8_t> read_file_vector(std::string file);
 	void write_file_vector(std::string file, std::vector<uint8_t> raw_data);
+
+	namespace prop{
+		namespace get{
+			uint64_t size(std::string path);
+		};
+	};
 }
 #endif

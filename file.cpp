@@ -172,3 +172,12 @@ void file::write_file_vector(std::string file, std::vector<uint8_t> raw_data){
 		raw_data.size());
 	out.close();
 }
+
+uint64_t file::prop::get::size(std::string path){
+	std::ifstream in(path, std::ifstream::ate | std::ifstream::binary);
+	const uint64_t retval =
+		static_cast<uint64_t>(
+			in.tellg());
+	in.close();
+	return retval;
+}

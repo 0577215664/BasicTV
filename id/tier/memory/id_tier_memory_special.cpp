@@ -12,8 +12,9 @@ void id_tier_mem_regen_state_cache(){
 	for(uint64_t c = 0;c < TYPE_COUNT+1;c++){
 		for(uint64_t i = 0;i < id_vector[c].size();i++){
 			id_buffer.push_back(
-				std::make_pair(id_vector[c][i]->get_id(),
-					       id_vector[c][i]->get_mod_inc()));
+				std::make_pair(
+					id_vector[c][i]->get_id(),
+					id_vector[c][i]->get_mod_inc()));
 		}
 	}
 }
@@ -22,8 +23,17 @@ void id_tier_mem_update_state_cache(
 	id_tier_state_t *tier_state_ptr){
 	// Probably could use some pointer magic
 	ASSERT(tier_state_ptr != nullptr, P_ERR);
+	std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > new_buffer;
+	new_buffer.reserve((sizeof(id_t_)+sizeof(mod_inc_t_)+8)*id_buffer.size());
+	for(uint64_t i = 0;i < id_buffer.size();i++){
+		new_buffer.push_back(
+			std::make_tuple(
+				std::get<0>(id_buffer[i]),
+				std::get<1>(id_buffer[i]),
+				0));
+	}
 	tier_state_ptr->set_id_buffer(
-		id_buffer);
+		new_buffer);
 }
 
 /*
