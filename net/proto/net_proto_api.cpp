@@ -202,6 +202,42 @@ static uint64_t all_con_req_to_peer(id_t_ peer_id_){
 	return retval;
 }
 
+static bool net_proto_self_reference(
+	net_interface_ip_address_t *ip_address_ptr){
+	const std::pair<std::vector<uint8_t>, uint8_t> ip_addr =
+		ip_address_ptr->get_address();
+	switch(ip_addr.second){
+	case NET_INTERFACE_IP_ADDRESS_TYPE_IPV4:
+		if(ip_addr.first.size() != 4){
+			return false;
+		}
+		// NBO
+		return (ip_addr.first[0] == 1 &&
+			ip_addr.first[1] == 0 &&
+			ip_addr.first[2] == 0 &&
+			ip_addr.first[3] == 127) ||
+			(ip_addr.first[0] == 0 &&
+			 ip_addr.first[1] == 0 &&
+			 ip_addr.first[2] == 0 &&
+			 ip_addr.first[3] == 0);
+	case NET_INTERFACE_IP_ADDRESS_TYPE_IPV6:
+		if(ip_addr.first.size() != 16){
+			return false;
+		}
+		return ip_addr.first[0] == 1 &&
+			std::vector<uint8_t>(
+				ip_addr.first.begin()+1,
+				ip_addr.first.end()) ==
+			std::vector<uint8_t>(
+				15, 0);
+	case NET_INTERFACE_IP_ADDRESS_TYPE_DOMAIN:
+		return false; // best guess
+	default:
+		print("unrecognized address type", P_ERR);
+	}
+	return false;
+}
+
 void net_proto::socket::connect(id_t_ peer_id_, uint32_t min){
 	std::vector<id_t_> retval;
 	net_proto_peer_t *proto_peer_ptr =
@@ -212,6 +248,11 @@ void net_proto::socket::connect(id_t_ peer_id_, uint32_t min){
 		PTR_DATA(proto_peer_ptr->get_address_id(),
 			 net_interface_ip_address_t);
 	PRINT_IF_NULL(ip_address_ptr, P_UNABLE);
+	if(net_proto_self_reference(
+		   ip_address_ptr)){
+		print("not connecting to myself", P_ERR);
+		return;
+	}
 	const uint64_t sockets_open =
 		all_proto_socket_of_peer(peer_id_).size();
 	const uint64_t pending_con_req =

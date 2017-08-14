@@ -204,7 +204,6 @@ void id_tier::operation::shift_data_to_state(
 		if(start_state_ptr->get_tier_major() == 0 &&
 		   get_id_hash((*id_vector)[i]) !=
 		   get_id_hash(production_priv_key_id)){
-			print("can't export data from tier 0 we can't encrypt", P_DEBUG);
 			continue;
 		}
 		if(std::find(

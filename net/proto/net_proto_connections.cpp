@@ -159,7 +159,7 @@ void net_proto_create_random_connections(){
 			64); // semi-reasonable max
 	std::vector<id_t_> peer_id_vector =
 		ID_TIER_CACHE_GET(
-			"net_proto_peer_t");
+			TYPE_NET_PROTO_PEER_T);
 	std::random_shuffle(
 		peer_id_vector.begin(),
 		peer_id_vector.end());

@@ -96,7 +96,7 @@ std::vector<uint8_t> compressor::zstd::from(std::vector<uint8_t> data){
 	// can't seem to get ZSTD_findDecompressedSize to work fine
 	// WAY too much, but it should work fine
 	const uint64_t out_size =
-		(20*data.size())+512;
+		(20*data.size())+65536;
 	uint8_t *out_data = new uint8_t[out_size];
 	size_t out_true_size = 0;
 	if(dictionary == 0){
