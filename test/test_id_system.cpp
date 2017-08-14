@@ -26,6 +26,7 @@ static void unload_nuke_reload(T ptr){
 }
 
 void test::id_system::transport::proper(){
+	std::raise(SIGINT);
 	const std::vector<id_t_> old =
 		{production_priv_key_id,
 		 production_priv_key_id,
@@ -38,6 +39,7 @@ void test::id_system::transport::proper(){
 	id_api::print_id_vector(
 		item_ptr->get_frame_id_vector().at(0),
 		P_DEBUG);
+	std::raise(SIGINT);
 	unload_nuke_reload(&item_ptr);
 	id_api::print_id_vector(
 		item_ptr->get_frame_id_vector().at(0),
@@ -88,7 +90,7 @@ void test::id_system::linked_list(){
 		frame_audio_vector.push_back(
 			(new tv_frame_audio_t)->id.get_id());
 	}
-	for(uint64_t i = 0;i < frame_audio_vector.size();i++){
+	for(uint64_t i = 1;i < frame_audio_vector.size();i++){
 		print("creating new linked list of depth " + std::to_string(i), P_SPAM);
 		id_api::linked_list::link_vector(
 			frame_audio_vector,

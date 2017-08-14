@@ -375,7 +375,7 @@ static void generic_fetch(uint8_t *ptr, uint64_t start, uint64_t size, uint8_t *
 	convert::nbo::from(ptr, size); // checks for one byte length
 }
 
-#pragma warning("only memory is used with the new tier system at the moment")
+#pragma message("only memory is used with the new tier system at the moment")
 
 void id_api::add_data(std::vector<uint8_t> data){
 	// TODO: shuld inbound data be loaded directly into here?
@@ -499,8 +499,8 @@ bool encrypt_blacklist_type(type_t_ type_){
 #define ID_SHIFT(x) vector_pos += sizeof(x)
 #define ID_IMPORT(x) memcpy(&x, data.data()+vector_pos, sizeof(x));vector_pos += sizeof(x)
 
-#pragma warning("strip_to_only_rules removed a lot of sanity checks for clarity, should REALLY re-add");
-#pragma warning("strip_to_only_rules just does a pass through, OK for now if we delete from all tiers for everything")
+#pragma message("strip_to_only_rules removed a lot of sanity checks for clarity, should REALLY re-add")
+#pragma message("strip_to_only_rules just does a pass through, OK for now if we delete from all tiers for everything")
 
 std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 	std::vector<uint8_t> data,
@@ -508,6 +508,12 @@ std::vector<uint8_t> id_api::raw::strip_to_only_rules(
 	std::vector<uint8_t> export_rules,
 	std::vector<uint8_t> peer_rules){
 
+	if(network_rules.size() > 0 ||
+	   export_rules.size() > 0 ||
+	   peer_rules.size() > 0){
+		print("strip_to_only_rules can't actually operate, so returning invalid data", P_WARN);
+	}
+	
 	return data;
 	// uint32_t vector_pos = 0;
 	// id_t_ trans_id = ID_BLANK_ID;
@@ -635,14 +641,6 @@ void id_api::assert_valid_id(id_t_ id){
 
 void id_api::assert_valid_id(std::vector<id_t_> id){
 	for(uint64_t i = 0;i < id.size();i++){
-		const hash_t_ hash =
-			get_id_hash(id[i]);
-		// P_V(get_id_uuid(id[i]), P_VAR);
-		// P_V_S(convert::number::to_hex(
-		// 	    std::vector<uint8_t>(
-		// 		    hash.begin(),
-		// 		    hash.end())), P_VAR);
-		// P_V(get_id_type(id[i]), P_VAR);
 		assert_valid_id(id[i]);
 	}
 }

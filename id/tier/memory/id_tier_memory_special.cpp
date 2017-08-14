@@ -6,8 +6,6 @@ extern std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
 
 
 void id_tier_mem_regen_state_cache(){
-	const uint64_t old_size =
-		id_buffer.size();
 	id_buffer.clear();
 	for(uint64_t c = 0;c < TYPE_COUNT+1;c++){
 		for(uint64_t i = 0;i < id_vector[c].size();i++){

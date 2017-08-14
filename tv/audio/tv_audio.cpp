@@ -6,9 +6,6 @@ tv_audio_prop_t::tv_audio_prop_t(){
 tv_audio_prop_t::~tv_audio_prop_t(){
 }
 
-static void *audio_playback_struct_ptr = nullptr;
-static uint8_t audio_playback = 0;
-
 void tv_audio_prop_t::list_virtual_data(data_id_t *id){
 	id->add_data_raw(&flags, sizeof(flags));
 	id->add_data_raw(&format, sizeof(format));

@@ -372,8 +372,6 @@ void console_t::tv_manager_load_item_to_channel(
 			     "and send data in the following format\n"
 			     "[UNIQUE NUMBER PER NUMERICAL DEVICE] [VALUE] [UNIT] [TIMESTAMP MICRO S]\n"
 			     "Viewers, once they bind the type to a window, should connect to their BasicTV nodes (port 59050)\n");
-		tv_window_t *window_ptr =
-			new tv_window_t;
 		tv_frame_numerical_t *frame_numerical_ptr =
 			new tv_frame_numerical_t;
 		// this is only here so there is a common pointer that both
@@ -462,8 +460,7 @@ void console_t::tv_manager_bind_item_to_window(
 	print_socket("everything should be loaded nicely now, right?\n");
 }
 
-void console_t::tv_manager_list_window_streams(
-	net_socket_t *console_inbound_socket){
+void console_t::tv_manager_list_window_streams(){
 	std::vector<id_t_> window_vector =
 		ID_TIER_CACHE_GET(
 			TYPE_TV_WINDOW_T);
@@ -493,7 +490,6 @@ void console_t::tv_manager_list_window_streams(
 			output_table.push_back(
 				{id_str, sink_str});
 		}
-		
 	}
 }
 
@@ -822,7 +818,7 @@ DEC_CMD(tv_manager){
 			tv_manager_play_loaded_item_live(console_inbound_socket);
 			break;
 		case 4:
-			tv_manager_list_window_streams(console_inbound_socket);
+			tv_manager_list_window_streams();
 			break;
 		case 5:
 			tv_manager_list_channels_and_items();

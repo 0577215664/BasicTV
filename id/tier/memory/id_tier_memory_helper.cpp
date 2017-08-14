@@ -11,13 +11,13 @@ data_id_t *mem_helper::lookup::id(id_t_ id_){
 	const type_t_ id_type =
 		get_id_type(id_);
 	for(uint64_t i = 0;i < id_vector[id_type].size();i++){
-		if(unlikely(get_id_hash(id_vector[id_type][i]->get_id(true)) == blank_hash)){
-			P_V_S(id_breakdown(id_vector[id_type][i]->get_id(true)), P_NOTE);
-			ASSERT(get_id_hash(id_vector[id_type][i]->get_id(true)) != blank_hash, P_WARN);
+		if(unlikely(get_id_hash(id_vector[id_type][i]->get_id()) == blank_hash)){
+			P_V_S(id_breakdown(id_vector[id_type][i]->get_id()), P_NOTE);
+			ASSERT(get_id_hash(id_vector[id_type][i]->get_id()) != blank_hash, P_WARN);
 		}
 		try{
 			const id_t_ list_id =
-				id_vector[id_type][i]->get_id(true);
+				id_vector[id_type][i]->get_id();
 			const bool matching_nonhash =
 				get_id_uuid(list_id) == get_id_uuid(id_) &&
 				get_id_type(list_id) == get_id_type(id_);

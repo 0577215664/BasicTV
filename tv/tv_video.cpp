@@ -219,8 +219,7 @@ static tv_frame_video_t *tv_frame_gen_xor_frame(uint64_t x_, uint64_t y_, uint8_
 	return frame;
 }
 
-static SDL_Rect tv_render_gen_window_rect(tv_window_t *window,
-					  SDL_Surface *surface){
+static SDL_Rect tv_render_gen_window_rect(SDL_Surface *surface){
 	SDL_Rect window_rect;
 	window_rect.w = surface->w;
 	window_rect.x = 0;
@@ -312,8 +311,7 @@ static void tv_render_all(){
 				 tv_frame_video_t);
 		CONTINUE_IF_NULL(frame_video, P_SPAM);
 		SDL_Rect sdl_window_rect = 
-			tv_render_gen_window_rect(window,
-						  sdl_window_surface);
+			tv_render_gen_window_rect(sdl_window_surface);
 		tv_render_frame_to_screen_surface(frame_video,
 						  sdl_window_surface,
 						  sdl_window_rect);

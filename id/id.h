@@ -219,7 +219,7 @@ public:
 	~data_id_t();
 	// getters and setters
 	// skip check for hash, only used internally
-	id_t_ get_id(bool skip = false);
+	id_t_ get_id();
 	/*
 	  SHOULD ONLY BE USED TO BOOTSTRAP
 	 */

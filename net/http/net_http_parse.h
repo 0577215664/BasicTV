@@ -11,7 +11,6 @@
 namespace http{
 	namespace header{
 		std::string make_header(
-			uint8_t medium,
 			std::string mime_type,
 			uint8_t payload_status,
 			uint64_t payload_size = 0);

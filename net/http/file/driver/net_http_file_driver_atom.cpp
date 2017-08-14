@@ -56,8 +56,7 @@ static std::string atom_tv_channel_to_prefix(
 	return retval;
 }
 
-static std::string atom_tv_channel_to_suffix(
-	id_t_ channel_id){
+static std::string atom_tv_channel_to_suffix(){
 	std::string retval =
 		"</feed>";
 	return retval;
@@ -165,8 +164,7 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 					item_vector[i]);
 		}
 		retval_str +=
-			atom_tv_channel_to_suffix(
-				file_driver_state_ptr->get_service_id());
+			atom_tv_channel_to_suffix();
 	}catch(...){
 		print("unexpected exception caught", P_ERR);
 	}

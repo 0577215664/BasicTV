@@ -112,7 +112,6 @@ static std::vector<std::vector<id_t_> >  net_http_file_driver_download_new_item_
  */
 
 static std::vector<uint8_t> net_http_file_driver_download_ogg_packetize(
-	net_http_file_driver_state_t *file_driver_state_ptr,
 	net_http_file_driver_download_state_t *download_state_ptr,
 	std::vector<std::vector<id_t_> > packet_vector){
 	ASSERT(download_state_ptr->ogg_state != nullptr, P_ERR);
@@ -189,7 +188,6 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(download){
 		"application/ogg"); // make more complicated later on
 	return std::pair<std::vector<uint8_t>, uint8_t>(
 		net_http_file_driver_download_ogg_packetize(
-			file_driver_state_ptr,
 			download_state_ptr,
 			net_http_file_driver_download_new_item_data(
 				file_driver_state_ptr,

@@ -81,7 +81,7 @@ static void send_from_buffer(
 						ptr->get_tcp_socket(),
 						send_buffer.data(),
 						send_buffer.size());
-				if(sent_bytes < send_buffer.size()){
+				if(sent_bytes < static_cast<int64_t>(send_buffer.size())){
 					print("SDLNet_TCP_Send failed with " + (std::string)(SDL_GetError()), P_WARN);
 					*send_running = false;
 					break;
