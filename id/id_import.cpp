@@ -145,7 +145,7 @@ void data_id_t::import_data(std::vector<uint8_t> data){
 		P_V(get_id_type(id), P_WARN);
 		print("can't import a mis-matched type", P_ERR);
 	}
-	ASSERT((get_id_uuid(trans_id) & 0x00000000) != 0, P_ERR); // transport bug whan another ID is sent
+	ASSERT((get_id_uuid(trans_id) & 0xFFFFFFFF) != 0, P_ERR); // transport bug whan another ID is sent
 	set_id(trans_id);
 	transport_i_t trans_i = 0;
 	transport_size_t trans_size = 0;
