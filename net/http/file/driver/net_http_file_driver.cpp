@@ -51,6 +51,7 @@ net_http_file_driver_medium_t net_http_file_driver_get_medium(
 		}
 	}
 	print("can't find HTTP file driver medium", P_ERR);
+	return net_http_file_driver_medium_t(0, "", nullptr, nullptr, nullptr);
 }
 
 net_http_file_driver_medium_t net_http_file_driver_get_medium_from_url(

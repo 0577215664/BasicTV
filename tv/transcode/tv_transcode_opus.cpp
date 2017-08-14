@@ -67,12 +67,6 @@ static bool assert_fix_opus_prop(tv_audio_prop_t *audio_prop){
 	return tainted;
 }
 
-static void assert_opus_prop(tv_audio_prop_t audio_prop){
-	if(assert_fix_opus_prop(&audio_prop)){
-		print("assertion on sane opus values failed", P_ERR);
-	}
-}
-
 #pragma message("opus_encode_init_state doesn't set CTLs for bitrate or specific encoder flags")
 
 tv_transcode_encode_state_t *opus_encode_init_state(tv_audio_prop_t *audio_prop){

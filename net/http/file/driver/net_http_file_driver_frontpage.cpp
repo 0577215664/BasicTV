@@ -10,6 +10,9 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(frontpage){
 		socket_id);
 	file_driver_state_ptr->set_medium(
 		NET_HTTP_FILE_DRIVER_MEDIUM_FRONTPAGE);
+	if(url.size() > 1){ // technically HTTP GET, we don't see our own domain
+		print("url is suspiciously large for this stage in development (frontpage)", P_WARN);
+	}
 	return file_driver_state_ptr;
 }
 

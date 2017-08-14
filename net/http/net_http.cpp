@@ -7,8 +7,18 @@
 
 #include "../../settings.h"
 
+#include "../../util.h"
+
 #define NET_HTTP_FILE_DRIVER_FUNCTION(function) void net_http_##function(net_http_t *http_data_ptr, net_http_file_driver_state_t *file_driver_state_ptr, net_http_file_driver_medium_t file_driver_medium, net_socket_t *socket_ptr)
 
+// also here so i can cleanup the warnings
+
+#define NET_HTTP_FILE_DRIVER_SANE()				\
+	ASSERT(http_data_ptr != nullptr, P_ERR);		\
+	ASSERT(file_driver_state_ptr != nullptr, P_ERR);	\
+	ASSERT(socket_ptr != nullptr, P_ERR);		\
+	ASSERT(file_driver_medium.medium != 0, P_ERR);	\
+	
 net_http_t::net_http_t() : id(this, TYPE_NET_HTTP_T){
 }
 
@@ -104,6 +114,7 @@ static void net_http_push_conn_to_file(
 }
 
 static NET_HTTP_FILE_DRIVER_FUNCTION(packetize_file_to_conn){
+	NET_HTTP_FILE_DRIVER_SANE();
 	if(file_driver_state_ptr->get_payload_status() == NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE){
 		return;
 	}
@@ -118,7 +129,6 @@ static NET_HTTP_FILE_DRIVER_FUNCTION(packetize_file_to_conn){
 	std::vector<uint8_t> http_packet =
 		convert::string::to_bytes(
 			http::header::make_header(
-				file_driver_state_ptr->get_medium(),
 				file_driver_state_ptr->get_mime_type(),
 				pull_data.second,
 				pull_data.first.size()));
@@ -131,6 +141,7 @@ static NET_HTTP_FILE_DRIVER_FUNCTION(packetize_file_to_conn){
 }
 
 static NET_HTTP_FILE_DRIVER_FUNCTION(remove_stale){
+	NET_HTTP_FILE_DRIVER_SANE();
 	const bool serviced =
 		file_driver_state_ptr->get_payload_status() ==
 		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE;

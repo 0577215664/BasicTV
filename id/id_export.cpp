@@ -12,15 +12,15 @@ static void id_export_raw(std::vector<uint8_t> tmp, std::vector<uint8_t> *vector
 }
 
 
-// pretty sure I had that backwards for a while...
-static bool should_export(std::pair<uint8_t, uint8_t> network_flags,
-			  std::pair<uint8_t, uint8_t> export_flags,
-			  std::pair<uint8_t, uint8_t> peer_flags){
-	bool network_allows = (network_flags.second >= network_flags.first || network_flags.second == ID_DATA_RULE_UNDEF);
-	bool export_allows = (export_flags.second >= export_flags.first || export_flags.second == ID_DATA_RULE_UNDEF);
-	bool peer_allows = (peer_flags.second >= peer_flags.first || peer_flags.second == ID_DATA_RULE_UNDEF);
-	return network_allows && export_allows && peer_allows;
-}
+// // pretty sure I had that backwards for a while...
+// static bool should_export(std::pair<uint8_t, uint8_t> network_flags,
+// 			  std::pair<uint8_t, uint8_t> export_flags,
+// 			  std::pair<uint8_t, uint8_t> peer_flags){
+// 	bool network_allows = (network_flags.second >= network_flags.first || network_flags.second == ID_DATA_RULE_UNDEF);
+// 	bool export_allows = (export_flags.second >= export_flags.first || export_flags.second == ID_DATA_RULE_UNDEF);
+// 	bool peer_allows = (peer_flags.second >= peer_flags.first || peer_flags.second == ID_DATA_RULE_UNDEF);
+// 	return network_allows && export_allows && peer_allows;
+// }
 
 //#define ID_EXPORT(var, list) id_export_raw((uint8_t*)&var, sizeof(var), &list)
 /*
@@ -29,6 +29,20 @@ static bool should_export(std::pair<uint8_t, uint8_t> network_flags,
   The only variable not used for this is the beginning extra byte
  */
 #define ID_EXPORT(var, list) id_export_raw(std::vector<uint8_t>((uint8_t*)&var, (uint8_t*)&var+sizeof(var)), &list)
+
+/*
+  For now, anything that needs restrictions is either public or destroyed on
+  a delete (i.e. not listed with ID subsystem)
+ */
+
+static void assert_sane_export_rules(
+	uint8_t network_rules,
+	uint8_t export_rules,
+	uint8_t peer_rules){
+	ASSERT(network_rules <= 4, P_ERR);
+	ASSERT(export_rules <= 4, P_ERR);
+	ASSERT(peer_rules <= 4, P_ERR);
+}
 
 std::vector<uint8_t> data_id_t::export_data(
 	uint8_t flags_,
@@ -39,6 +53,10 @@ std::vector<uint8_t> data_id_t::export_data(
 	if(flags_ != 0){
 		print("we have no current use for a generic flag", P_WARN);
 	}
+	assert_sane_export_rules(
+		network_rules,
+		export_rules,
+		peer_rules);
 	std::vector<uint8_t> retval;
 	if(encrypt_blacklist_type(
 		   get_id_type(id))){
@@ -54,12 +72,6 @@ std::vector<uint8_t> data_id_t::export_data(
 	ID_EXPORT(id, retval);
 	ID_EXPORT(modification_incrementor, retval);
 	for(uint64_t i = 0;i < data_vector.size();i++){
-		if(should_export(std::make_pair(data_vector[i].get_network_rules(), network_rules),
-				 std::make_pair(data_vector[i].get_export_rules(), export_rules),
-				 std::make_pair(data_vector[i].get_peer_rules(), peer_rules)) == false){
-			print("skipping based on export rules", P_SPAM);
-			continue;
-		}
 		std::vector<uint8_t> data_to_export;
 		if(data_vector[i].get_flags() & ID_DATA_BYTE_VECTOR){
 			//print("reading in a byte vector", P_SPAM);

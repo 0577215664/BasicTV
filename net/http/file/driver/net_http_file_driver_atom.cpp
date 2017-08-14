@@ -19,18 +19,6 @@
   but can be generated on the fly
 */
 
-static std::string atom_get_prefix(){
-	return "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
-}
-
-static std::string atom_wrap_to_feed(std::string data){
-	return "<feed xmlns=\"http://www.w3.org/2005/Atom\">" + data + "</feed>";
-}
-
-static std::string atom_wrap_title(std::string data){
-	return "<title>" + data + "</title>";
-}
-
 static std::string atom_tv_channel_to_prefix(
 	id_t_ channel_id){
 	tv_channel_t *channel_ptr =
@@ -56,8 +44,7 @@ static std::string atom_tv_channel_to_prefix(
 	return retval;
 }
 
-static std::string atom_tv_channel_to_suffix(
-	id_t_ channel_id){
+static std::string atom_tv_channel_to_suffix(){
 	std::string retval =
 		"</feed>";
 	return retval;
@@ -165,8 +152,7 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 					item_vector[i]);
 		}
 		retval_str +=
-			atom_tv_channel_to_suffix(
-				file_driver_state_ptr->get_service_id());
+			atom_tv_channel_to_suffix();
 	}catch(...){
 		print("unexpected exception caught", P_ERR);
 	}

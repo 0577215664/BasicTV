@@ -68,6 +68,7 @@ ID_TIER_INIT_STATE(mem){
 
 ID_TIER_DEL_STATE(mem){
 	GET_TIER_STATE();
+	ASSERT(tier_state_ptr != nullptr, P_ERR);
 	// should probably do something with this?
 }
 
@@ -225,6 +226,7 @@ ID_TIER_DEL_ID(mem){
 #undef DELETE_TYPE_2
 
 ID_TIER_GET_ID(mem){
+	ASSERT(state_id != ID_BLANK_ID, P_ERR);
 	if(get_id_hash(id) !=
 	   get_id_hash(production_priv_key_id)){
 		// Technically we CAN, but anything we have in memory should
@@ -243,6 +245,7 @@ ID_TIER_GET_ID(mem){
 }
 
 ID_TIER_UPDATE_CACHE(mem){
+	ASSERT(state_id != ID_BLANK_ID, P_ERR);
 	return;
 }
 
@@ -252,7 +255,7 @@ ID_TIER_UPDATE_CACHE(mem){
   cannot call id_tier (out of fear of an infinite loop)
  */
 
-#pragma warning("disabled all non-memory reading for now, undo the following comment block")
+#pragma message("disabled all non-memory reading for now, undo the following comment block")
 
 static std::vector<id_t_> lookup_vector;
 

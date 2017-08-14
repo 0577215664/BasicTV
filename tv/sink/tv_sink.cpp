@@ -27,6 +27,7 @@ tv_sink_medium_t tv_sink_get_medium(uint8_t medium){
 		}
 	}
 	print("invalid medium", P_ERR);
+	return tv_sink_medium_t(0, 0, nullptr, nullptr, nullptr, nullptr);
 }
 
 tv_sink_state_t::tv_sink_state_t() : id(this, TYPE_TV_SINK_STATE_T){

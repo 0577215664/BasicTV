@@ -283,6 +283,9 @@ TV_SINK_MEDIUM_PULL(tcp_accept){
 		tv_sink_numerical_tcp_accept_state_t,
 		tcp_accept_state_ptr);
 	ASSERT_VALID_DIRECTION(TV_SINK_MEDIUM_FLOW_DIRECTION_IN);
+	if(mapping != 0){
+		print("mapping variable has no effect for TCP (should it have an effect period?)", P_WARN);
+	}
 	net_socket_t *socket_ptr =
 		PTR_DATA(tcp_accept_state_ptr->get_conn_socket_id(),
 			 net_socket_t);
@@ -353,6 +356,9 @@ TV_SINK_MEDIUM_PUSH(tcp_accept){
 		tv_sink_numerical_tcp_accept_state_t,
 		tcp_accept_state_ptr);
 	ASSERT_VALID_DIRECTION(TV_SINK_MEDIUM_FLOW_DIRECTION_OUT);
+	if(window_offset_micro_s != 0){
+		print("multithreaded ID lookups are needed before time-critical TCP sinking is possible, just playing whatever we have in order", P_WARN);
+	}
 	net_socket_t *socket_ptr =
 		PTR_DATA(tcp_accept_state_ptr->get_conn_socket_id(),
 			 net_socket_t);

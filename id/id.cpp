@@ -109,7 +109,7 @@ data_id_t::~data_id_t(){
 	mem_del_id(this);
 }
 
-id_t_ data_id_t::get_id(bool skip){
+id_t_ data_id_t::get_id(){
 	return id;
 }
 

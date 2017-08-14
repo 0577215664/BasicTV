@@ -62,5 +62,6 @@ id_t_ tv::chan::rand_id(uint64_t flags){
 }
 
 id_t_ tv::request::all_ids_of_channel(id_t_ channel_id){
-	
+	ASSERT(channel_id != ID_BLANK_ID, P_ERR);
+	return ID_BLANK_ID;
 }

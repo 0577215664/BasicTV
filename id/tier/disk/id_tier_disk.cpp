@@ -28,12 +28,10 @@ std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > gen_id_buffer(
 		// it'll falsely register everything and read it in.
 		std::string id_component;
 		std::string mod_inc_component;
+		uint64_t underscore_pos = 0;
 		try{
-			uint64_t underscore_pos =
-				all_files[i].substr(
-					all_files[i].find_last_of(SLASH),
-					all_files[i].size()).find_last_of(
-						'_') + all_files[i].find_last_of(SLASH);
+			underscore_pos =
+				all_files[i].find_last_of('_');
 			if(underscore_pos == std::string::npos){
 				continue;
 			}

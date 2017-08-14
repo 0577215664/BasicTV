@@ -29,7 +29,6 @@
 #define ID_TIER_MEDIUM_CACHE 2
 #define ID_TIER_MEDIUM_DISK 3
 
-
 #define ID_TIER_CACHE_GET(type_) (id_tier::lookup::type::from_tier(all_tiers, type_))
 // expose more nitty gritties to the user later on
 #define ID_TIER_DESTROY(id_) (id_tier::operation::del_id_from_state(id_tier::state_tier::optimal_state_vector_of_tier_vector(all_tiers), {id_}))

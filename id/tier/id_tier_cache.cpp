@@ -102,5 +102,6 @@ ID_TIER_GET_ID(cache){
 }
 
 ID_TIER_UPDATE_CACHE(cache){
+	ASSERT(state_id != ID_BLANK_ID, P_ERR);
 	return;
 }

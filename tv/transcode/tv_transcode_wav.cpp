@@ -98,7 +98,9 @@ tv_transcode_decode_state_t *wave_decode_init_state(tv_audio_prop_t *audio_prop)
 	return &decode_state_vector[decode_state_vector.size()-1];
 }
 
-void wave_decode_close_state(tv_transcode_decode_state_t *decode_state){}
+void wave_decode_close_state(tv_transcode_decode_state_t *decode_state){
+	ASSERT(decode_state != nullptr, P_ERR);
+}
 
 
 

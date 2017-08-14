@@ -26,13 +26,15 @@ static int tv_sink_audio_hardware_callback(
 	const PaStreamCallbackTimeInfo *timeInfo,
 	PaStreamCallbackFlags statusFlags,
 	void *userdata){
-
+	
+	ASSERT(input != nullptr, P_ERR); // get rid of unused-variable warns
+	ASSERT(timeInfo != nullptr, P_ERR);
+	ASSERT((statusFlags & paInputUnderflow) == 0 &&
+	       (statusFlags & paInputOverflow) == 0, P_ERR); // no inputs yet
+	ASSERT(userdata == nullptr, P_ERR);
 	const uint8_t channel_count = 1;
 	const uint64_t bytes_to_write =
 		frameCount*channel_count*sizeof(int16_t);
-	int16_t *output_samples =
-		reinterpret_cast<int16_t*>(
-			output);
 	memset(output, 0, frameCount*channel_count*sizeof(int16_t));
 	playback_lock.lock();
 	try{
@@ -70,7 +72,7 @@ static int tv_sink_audio_hardware_callback(
 						data_to_push.end(),
 						std::get<2>(playback_vector[start_playback_iter]).begin(),
 						std::get<2>(playback_vector[start_playback_iter]).begin()+copy_amount);
-					if(playback_vector.size() <= start_playback_iter+1){
+					if(playback_vector.size() <= static_cast<uint64_t>(start_playback_iter+1)){
 						break;
 					}else if(copy_amount == std::get<2>(playback_vector[start_playback_iter]).size()){
 						playback_vector.erase(
@@ -104,6 +106,7 @@ static void tv_sink_audio_hardware_resort_playback_vector(){
 }
 
 TV_SINK_MEDIUM_INIT(audio_hardware){
+	ASSERT(flow_direction == TV_SINK_MEDIUM_FLOW_DIRECTION_OUT, P_ERR); // no inputs yet
 	tv_sink_state_t *state_ptr =
 		new tv_sink_state_t;
 	tv_sink_audio_hardware_state_t *audio_hardware_state_ptr =
@@ -173,6 +176,8 @@ TV_SINK_MEDIUM_CLOSE(audio_hardware){
 }
 
 TV_SINK_MEDIUM_PULL(audio_hardware){
+	ASSERT(state_ptr != nullptr, P_ERR);
+	ASSERT(mapping == 0, P_ERR);
 	print("worry about pulling audio (marginallly) later on", P_ERR);
 	return std::vector<id_t_>({});
 }

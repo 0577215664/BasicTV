@@ -6,10 +6,10 @@
 const static std::vector<uint8_t> http_header_divider = {'\r', '\n', '\r', '\n'};
 
 std::string http::header::make_header(
-	uint8_t medium,
 	std::string mime_type,
 	uint8_t payload_status, // full or incomplete,
 	uint64_t payload_size){ // size of current payload (only used if payload_status == PAYLOAD_COMPLETE)
+
 	std::string retval =
 		"HTTP/1.1 200 OK\r\n"
 		"Date: " + convert::time::to_http_time(get_time_microseconds()) + "\r\n"
@@ -88,6 +88,7 @@ std::string http::header::pull_value(
 	}
 	// std::raise(SIGINT);
 	print("can't find " + data + " in header", P_UNABLE);
+	return "";
 }
 
 // TODO: step through this and make sure it works, probably doesn't
