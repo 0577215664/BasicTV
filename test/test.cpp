@@ -69,6 +69,7 @@ id_t_ test_create_generic_id(){
 void test_id_subsystem(){
 	RUN_TEST(test::id_system::linked_list);
 	RUN_TEST(test::id_system::id_set::proper);
+	RUN_TEST(test::id_system::transport::core_functions);
 	RUN_TEST(test::id_system::transport::proper);
 	// RUN_TEST(test::id_system::transport::import::random);
 }

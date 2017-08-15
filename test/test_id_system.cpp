@@ -1,5 +1,6 @@
 #include "test.h"
 #include "../id/id_api.h"
+#include "../id/id_transport.h"
 // type of choice
 #include "../net/proto/net_proto_request.h"
 #include "../tv/tv_item.h"
@@ -21,8 +22,21 @@ static void unload_nuke_reload(T ptr){
 	}
 }
 
+void test::id_system::transport::core_functions(){
+	std::vector<uint8_t> test =
+		{'A','B','C','D','E','F','G'};
+	std::vector<uint8_t> tmp;
+	export_8bit_size_payload(
+		&tmp,
+		test);
+	const std::vector<uint8_t> new_tmp =
+		import_8bit_size_payload(
+			&tmp);	
+	ASSERT(new_tmp == test, P_ERR);
+}
+
 void test::id_system::transport::proper(){
-	std::raise(SIGINT);
+	
 	const std::vector<id_t_> old =
 		{production_priv_key_id,
 		 production_priv_key_id,
@@ -35,7 +49,6 @@ void test::id_system::transport::proper(){
 	id_api::print_id_vector(
 		item_ptr->get_frame_id_vector().at(0),
 		P_DEBUG);
-	std::raise(SIGINT);
 	unload_nuke_reload(&item_ptr);
 	id_api::print_id_vector(
 		item_ptr->get_frame_id_vector().at(0),

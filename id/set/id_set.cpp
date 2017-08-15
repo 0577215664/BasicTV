@@ -60,27 +60,27 @@ std::vector<uint8_t> compact_id_set(
 	}
 	uint8_t scheme =
 		ID_SET_SCHEME_COPY;
-	if(order){
-		const hash_t_ hash =
-			get_id_hash(id_set[0]);
-		bool single_hash = true;
-		for(uint64_t i = 1;i < id_set.size();i++){
-			if(hash != get_id_hash(id_set[i])){
-				single_hash = false;
-				break;
-			}
-		}
-		if(single_hash){
-			scheme =
-				ID_SET_SCHEME_UUID_LIST;
-		}else{
-			scheme =
-				ID_SET_SCHEME_COPY;
-		}
-	}else{
-		scheme =
-			ID_SET_SCHEME_UUID_LIST;
-	}
+	// if(order){
+	// 	const hash_t_ hash =
+	// 		get_id_hash(id_set[0]);
+	// 	bool single_hash = true;
+	// 	for(uint64_t i = 1;i < id_set.size();i++){
+	// 		if(hash != get_id_hash(id_set[i])){
+	// 			single_hash = false;
+	// 			break;
+	// 		}
+	// 	}
+	// 	if(single_hash){
+	// 		scheme =
+	// 			ID_SET_SCHEME_UUID_LIST;
+	// 	}else{
+	// 		scheme =
+	// 			ID_SET_SCHEME_COPY;
+	// 	}
+	// }else{
+	// 	scheme =
+	// 		ID_SET_SCHEME_UUID_LIST;
+	// }
 	std::vector<uint8_t> retval;
 	switch(scheme){
 	case ID_SET_SCHEME_UUID_LIST:

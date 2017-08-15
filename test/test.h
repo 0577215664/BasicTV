@@ -26,6 +26,7 @@ namespace test{
 		  "random" = failsafe implementation
 		 */
 		namespace transport{
+			void core_functions();
 			void proper();
 			namespace import{
 				void random();
