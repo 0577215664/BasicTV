@@ -95,10 +95,10 @@ const hash_t_ blank_hash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 #define ID_BLANK_TYPE (0)
 #define ID_BLANK_HASH (blank_hash)
 
-#define ID_DATA_ID (1 << 0)
-#define ID_DATA_BYTE_VECTOR (1 << 1)
-#define ID_DATA_EIGHT_BYTE_VECTOR (1 << 2)
-#define ID_DATA_BYTE_VECTOR_VECTOR (1 << 3)
+#define ID_DATA_ID 1
+#define ID_DATA_BYTE_VECTOR 2
+#define ID_DATA_EIGHT_BYTE_VECTOR 3
+#define ID_DATA_BYTE_VECTOR_VECTOR 4
  
 // might want to be larger (?)
 #define ID_MAX_LINKED_LIST_SIZE 64

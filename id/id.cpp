@@ -290,9 +290,9 @@ void data_id_t::set_most_liberal_rules(
 
 void data_id_t::set_most_liberal_rules(
 	data_id_transport_rules_t rules){
-	ASSERT(rules.tier.size() == 1, P_ERR);
-	ASSERT(rules.intermediary.size() == 1, P_ERR);
+	// These should be linked to all_* in id_tier, so we can
+	// (somewhat) safely assume the last one is the most liberal
 	set_most_liberal_rules(
-		rules.tier[0],
-		rules.intermediary[0]);
+		rules.tier[rules.tier.size()-1],
+		rules.intermediary[rules.intermediary.size()-1]);
 }
