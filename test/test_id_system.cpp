@@ -22,17 +22,35 @@ static void unload_nuke_reload(T ptr){
 	}
 }
 
+#define SIMPLE_TRANSPORT_TEST(import_func, export_func, subvector_size)	\
+	if(true){							\
+		const std::vector<uint8_t> tmp_correct = std::vector<uint8_t>(rand_data.begin(), rand_data.begin()+subvector_size); \
+		export_func(&tmp, tmp_correct);				\
+		const std::vector<uint8_t> tmp_output = import_func(&tmp); \
+		ASSERT(tmp_output == tmp_correct, P_ERR);	\
+		ASSERT(tmp.size() == 0, P_ERR);				\
+		tmp.clear();						\
+	}
+
 void test::id_system::transport::core_functions(){
-	std::vector<uint8_t> test =
-		{'A','B','C','D','E','F','G'};
+	std::vector<uint8_t> rand_data =
+		true_rand_byte_vector(
+			65536*2); // three byte size
 	std::vector<uint8_t> tmp;
-	export_8bit_size_payload(
-		&tmp,
-		test);
-	const std::vector<uint8_t> new_tmp =
-		import_8bit_size_payload(
-			&tmp);	
-	ASSERT(new_tmp == test, P_ERR);
+	for(uint64_t i = 0;i < 255;i++){
+		print("testing 8bit sizing with " + std::to_string(i) + " bytes", P_NOTE);
+		SIMPLE_TRANSPORT_TEST(
+			import_8bit_size_payload,
+			export_8bit_size_payload,
+			i);
+	}
+	for(uint64_t i = 0;i < 65536*2;i++){
+		print("testing dynamic sizing with " + std::to_string(i) + " bytes", P_NOTE);
+		SIMPLE_TRANSPORT_TEST(
+			import_dynamic_size_payload,
+			export_dynamic_size_payload,
+			i);
+	}
 }
 
 void test::id_system::transport::proper(){

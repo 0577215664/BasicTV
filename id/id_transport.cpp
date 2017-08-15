@@ -51,6 +51,7 @@ std::vector<uint8_t> import_8bit_size_payload(
 	std::vector<uint8_t> *puller){
 	const uint8_t size =
 		puller->at(0);
+	puller->erase(puller->begin());
 	const std::vector<uint8_t> retval =
 		convert::nbo::from(
 			std::vector<uint8_t>(
@@ -63,25 +64,26 @@ std::vector<uint8_t> import_8bit_size_payload(
 }
 
 // NBO
-#define DYNAMIC_SIZE_LOGIC(upper_limit, byte_count)	\
-	if(size <= upper_limit){			\
-		retval.push_back(			\
-			byte_count);			\
-		uint64_t payload_size =			\
-			static_cast<uint64_t>(		\
-				size);			\
-		convert::nbo::to(			\
+#define DYNAMIC_SIZE_LOGIC(upper_limit, byte_count)			\
+	if(size <= upper_limit){					\
+		uint64_t payload_size =					\
+			static_cast<uint64_t>(				\
+				size);					\
+		retval.push_back(					\
+			byte_count);					\
+		convert::nbo::to(					\
 			reinterpret_cast<uint8_t*>(&payload_size),	\
-			byte_count);			\
-		retval.insert(				\
-			retval.end(),			\
-			&payload_size,			\
-			&payload_size+byte_count);	\
-		return retval;				\
-	}						\
+			byte_count);					\
+		retval.insert(						\
+			retval.end(),					\
+			reinterpret_cast<uint8_t*>(&payload_size),	\
+			reinterpret_cast<uint8_t*>(&payload_size)+byte_count); \
+		return retval;						\
+	}								\
+	
 
+#define DYNAMIC_SIZE_WRAPPER(x) DYNAMIC_SIZE_LOGIC((static_cast<uint64_t>(1) << x*8)-1, x)
 
-#define DYNAMIC_SIZE_WRAPPER(x) DYNAMIC_SIZE_LOGIC((static_cast<uint64_t>(1) << x), x/8)
 static std::vector<uint8_t> export_gen_dynamic_size(
 	uint64_t size){
 	std::vector<uint8_t> retval;
@@ -93,7 +95,7 @@ static std::vector<uint8_t> export_gen_dynamic_size(
 	DYNAMIC_SIZE_WRAPPER(5);
 	DYNAMIC_SIZE_WRAPPER(6);
 	DYNAMIC_SIZE_WRAPPER(7);
-	DYNAMIC_SIZE_WRAPPER(8);
+	// DYNAMIC_SIZE_WRAPPER(8);
 	print("...", P_ERR);
 	return retval;
 }
@@ -119,12 +121,13 @@ void export_dynamic_size_payload(
 
 static uint64_t import_gen_dynamic_size(
 	std::vector<uint8_t> *puller){
-	uint8_t size_size =
+	const uint8_t size_size =
 		puller->at(0);
 	puller->erase(
 		puller->begin());
 	uint64_t retval = 0;
 	ASSERT(puller->size() >= size_size, P_ERR);
+	ASSERT(size_size <= 8, P_ERR);
 	std::memcpy(
 		reinterpret_cast<uint8_t*>(&retval),
 		puller->data(),
@@ -132,6 +135,11 @@ static uint64_t import_gen_dynamic_size(
 	puller->erase(
 		puller->begin(),
 		puller->begin()+size_size);
+	convert::nbo::from(
+		reinterpret_cast<uint8_t*>(&retval),
+		size_size);
+	P_V(size_size, P_DEBUG);
+	P_V(retval, P_DEBUG);
 	return retval;
 }
 
@@ -141,9 +149,12 @@ std::vector<uint8_t> import_dynamic_size_payload(
 		import_gen_dynamic_size(
 			puller);
 	ASSERT(puller->size() >= size, P_ERR);
-	const std::vector<uint8_t> retval(
+	std::vector<uint8_t> retval(
 		puller->begin(),
 		puller->begin()+size);
+	convert::nbo::to(
+		retval.data(),
+		retval.size());
 	puller->erase(
 		puller->begin(),
 		puller->begin()+size);
@@ -178,7 +189,6 @@ void stringify_rules(
 		pusher,
 		stringify_rules_intermediary(
 			rules.intermediary));
-	
 }
 
 static std::vector<std::pair<uint8_t, uint8_t> > unstringify_rules_tier(
