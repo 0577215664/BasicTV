@@ -11,17 +11,6 @@ static void id_export_raw(std::vector<uint8_t> tmp, std::vector<uint8_t> *vector
 	vector->insert(vector->end(), tmp.begin(), tmp.end());
 }
 
-
-// // pretty sure I had that backwards for a while...
-// static bool should_export(std::pair<uint8_t, uint8_t> network_flags,
-// 			  std::pair<uint8_t, uint8_t> export_flags,
-// 			  std::pair<uint8_t, uint8_t> peer_flags){
-// 	bool network_allows = (network_flags.second >= network_flags.first || network_flags.second == ID_DATA_RULE_UNDEF);
-// 	bool export_allows = (export_flags.second >= export_flags.first || export_flags.second == ID_DATA_RULE_UNDEF);
-// 	bool peer_allows = (peer_flags.second >= peer_flags.first || peer_flags.second == ID_DATA_RULE_UNDEF);
-// 	return network_allows && export_allows && peer_allows;
-// }
-
 //#define ID_EXPORT(var, list) id_export_raw((uint8_t*)&var, sizeof(var), &list)
 /*
   ID_EXPORT exports the size of the payload, and the payload itself in NBO
@@ -35,28 +24,8 @@ static void id_export_raw(std::vector<uint8_t> tmp, std::vector<uint8_t> *vector
   a delete (i.e. not listed with ID subsystem)
  */
 
-static void assert_sane_export_rules(
-	uint8_t network_rules,
-	uint8_t export_rules,
-	uint8_t peer_rules){
-	ASSERT(network_rules <= 4, P_ERR);
-	ASSERT(export_rules <= 4, P_ERR);
-	ASSERT(peer_rules <= 4, P_ERR);
-}
-
 std::vector<uint8_t> data_id_t::export_data(
-	uint8_t flags_,
-	uint8_t extra,
-	uint8_t network_rules,
-	uint8_t export_rules,
-	uint8_t peer_rules){
-	if(flags_ != 0){
-		print("we have no current use for a generic flag", P_WARN);
-	}
-	assert_sane_export_rules(
-		network_rules,
-		export_rules,
-		peer_rules);
+	uint8_t extra){
 	std::vector<uint8_t> retval;
 	if(encrypt_blacklist_type(
 		   get_id_type(id))){
@@ -152,22 +121,9 @@ std::vector<uint8_t> data_id_t::export_data(
 		}
 		transport_i_t trans_i = i; // size fixing
 		transport_size_t trans_size = data_to_export.size();
-		uint8_t network_rules_tmp =
-			data_vector[i].get_network_rules();
-		uint8_t export_rules_tmp =
-			data_vector[i].get_export_rules();
-		uint8_t peer_rules_tmp =
-			data_vector[i].get_peer_rules();
 		ID_EXPORT(trans_i, retval);
-		// splitting this up into three simplifes NBO too
-		ID_EXPORT(network_rules_tmp, retval);
-		ID_EXPORT(export_rules_tmp, retval);
-		ID_EXPORT(peer_rules_tmp, retval);
 		ID_EXPORT(trans_size, retval);
 		id_export_raw(data_to_export, &retval);
-		// print("trans_i:" + std::to_string(trans_i) + " " +
-		//       "trans_size: " + std::to_string(trans_size) + " " +
-		//       "data_vector[trans_i].get_flags(): " + std::to_string(data_vector[trans_i].get_flags()), P_DEBUG);
 	}
 	ASSERT((0b11111100 & extra) == 0, P_ERR);
 	// P_V(extra, P_SPAM);

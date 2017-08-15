@@ -5,15 +5,16 @@
 #include "net_proto_peer.h"
 #include "net_proto_con_req.h"
 
+#include "../interface/net_interface_intermediary.h"
+
 net_proto_con_req_t::net_proto_con_req_t() : id(this, TYPE_NET_PROTO_CON_REQ_T){
-	ADD_DATA(first_peer_id);
-	ADD_DATA(second_peer_id);
-	ADD_DATA(third_peer_id);
-	ADD_DATA(timestamp);
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_PUBLIC,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
+	const data_id_transport_rules_t con_req_rules(
+		all_mem_cache,
+		all_intermediary);
+	ADD_DATA(first_peer_id, con_req_rules);
+	ADD_DATA(second_peer_id, con_req_rules);
+	ADD_DATA(third_peer_id, con_req_rules);
+	ADD_DATA(timestamp, con_req_rules);
 }
 
 net_proto_con_req_t::~net_proto_con_req_t(){

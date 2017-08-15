@@ -14,11 +14,11 @@
 #include "../../id/id_api.h"
 
 net_interface_software_dev_t::net_interface_software_dev_t() : id(this, TYPE_NET_INTERFACE_SOFTWARE_DEV_T){
-	id.add_data_one_byte_vector_vector(&inbound_data, ~0, ~0);
-	id.add_data_one_byte_vector_vector(&outbound_data, ~0, ~0);
-	id.add_data_id(&hardware_dev_id, 1);
-	id.add_data_id(&reliability_number_set_id, 1);
-	id.add_data_id(&address_id, 1);
+	id.add_data_one_byte_vector_vector(&inbound_data, ~0, ~0, mem_ruleset);
+	id.add_data_one_byte_vector_vector(&outbound_data, ~0, ~0, mem_ruleset);
+	id.add_data_id(&hardware_dev_id, 1, mem_ruleset);
+	id.add_data_id(&reliability_number_set_id, 1, mem_ruleset);
+	id.add_data_id(&address_id, 1, mem_ruleset);
 }
 
 net_interface_software_dev_t::~net_interface_software_dev_t(){

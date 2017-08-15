@@ -3,7 +3,7 @@
 
 tv_frame_numerical_t::tv_frame_numerical_t() : id(this, TYPE_TV_FRAME_NUMERICAL_T){
 	list_virtual_data(&id);
-	id.add_data_one_byte_vector(&escaped_one_dimension_data, ~0);
+	id.add_data_one_byte_vector(&escaped_one_dimension_data, ~0, public_ruleset);
 }
 
 tv_frame_numerical_t::~tv_frame_numerical_t(){

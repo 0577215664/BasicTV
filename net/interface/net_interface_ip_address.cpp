@@ -2,14 +2,10 @@
 
 net_interface_ip_address_t::net_interface_ip_address_t() : id(this, TYPE_NET_INTERFACE_IP_ADDRESS_T){
 	list_virtual_data(&id);
-	id.add_data_one_byte_vector(&address, 1024); // beyond sane
-	ADD_DATA(address_type);
-	ADD_DATA(nat_type);
-	ADD_DATA(port);
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_PUBLIC,
-		ID_DATA_EXPORT_RULE_ALWAYS,
-		ID_DATA_PEER_RULE_ALWAYS);
+	id.add_data_one_byte_vector(&address, 1024, public_ruleset); // beyond sane
+	ADD_DATA(address_type, public_ruleset);
+	ADD_DATA(nat_type, public_ruleset);
+	ADD_DATA(port, public_ruleset);
 }
 
 net_interface_ip_address_t::~net_interface_ip_address_t(){

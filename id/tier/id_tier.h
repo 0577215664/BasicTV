@@ -202,7 +202,20 @@ extern void id_tier_close();
 extern std::vector<id_tier_medium_t> id_tier_mediums;
 extern std::vector<type_t_> memory_locked;
 
-extern std::vector<std::pair<uint8_t, uint8_t> > all_tiers;
+const std::vector<std::pair<uint8_t, uint8_t> > all_tiers = {
+	{ID_TIER_MAJOR_MEM, 0},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED},
+	{ID_TIER_MAJOR_DISK, 0}
+};
+
+const std::vector<std::pair<uint8_t, uint8_t> > all_mem_cache = {
+	{ID_TIER_MAJOR_MEM, 0},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED},
+	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED}
+};
 
 #include "memory/id_tier_memory.h"
 #endif

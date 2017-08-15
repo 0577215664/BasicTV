@@ -9,12 +9,8 @@
 #include "tv_item.h"
 
 tv_window_t::tv_window_t() : id(this, TYPE_TV_WINDOW_T){
-	id.add_data_id(&item_id, 1);
-	ADD_DATA(timestamp_offset_micro_s);
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
+	id.add_data_id(&item_id, 1, mem_ruleset);
+	ADD_DATA(timestamp_offset_micro_s, mem_ruleset);
 }
 
 tv_window_t::~tv_window_t(){

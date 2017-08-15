@@ -54,10 +54,8 @@ void net_proto_socket_t::init_create_id_sets(){
 	if(PTR_ID(inbound_id_set_id, ) == nullptr){
 		math_number_set_t *inbound_id_set_ptr =
 			new math_number_set_t;
-		inbound_id_set_ptr->id.set_lowest_global_flag_level(
-			ID_DATA_RULE_UNDEF,
-			ID_DATA_EXPORT_RULE_NEVER,
-			ID_DATA_RULE_UNDEF);
+		inbound_id_set_ptr->id.set_most_liberal_rules(
+			mem_ruleset);
 		inbound_id_set_ptr->set_dim_count(
 			2, {MATH_NUMBER_DIM_CAT,
 			    MATH_NUMBER_DIM_NUM});
@@ -66,10 +64,8 @@ void net_proto_socket_t::init_create_id_sets(){
 	if(PTR_ID(outbound_id_set_id, ) == nullptr){
 		math_number_set_t *outbound_id_set_ptr =
 			new math_number_set_t;
-		outbound_id_set_ptr->id.set_lowest_global_flag_level(
-			ID_DATA_RULE_UNDEF,
-			ID_DATA_EXPORT_RULE_NEVER,
-			ID_DATA_RULE_UNDEF);
+		outbound_id_set_ptr->id.set_most_liberal_rules(
+			mem_ruleset);
 		outbound_id_set_ptr->set_dim_count(
 			2, {MATH_NUMBER_DIM_CAT,
 			    MATH_NUMBER_DIM_NUM});
@@ -78,13 +74,14 @@ void net_proto_socket_t::init_create_id_sets(){
 }
 
 net_proto_socket_t::net_proto_socket_t() : id(this, TYPE_NET_PROTO_SOCKET_T){
-	id.add_data_id(&socket_id, 1);
-	id.add_data_id(&peer_id, 1);
-	id.add_data_raw(&flags, sizeof(flags));
-	id.add_data_raw(&last_recv_micro_s, sizeof(last_recv_micro_s));
-	id.add_data_one_byte_vector(&working_buffer, ~0);
-	id.add_data_id(&inbound_id_set_id, 1);
-	id.add_data_id(&outbound_id_set_id, 1);
+	id.add_data_id(&socket_id, 1, mem_ruleset);
+	id.add_data_id(&peer_id, 1, mem_ruleset);
+	id.add_data_raw(&flags, sizeof(flags), mem_ruleset);
+	id.add_data_raw(&last_recv_micro_s, sizeof(last_recv_micro_s), mem_ruleset);
+	id.add_data_one_byte_vector(&working_buffer, ~0, mem_ruleset);
+	id.add_data_id(&inbound_id_set_id, 1, mem_ruleset);
+	id.add_data_id(&outbound_id_set_id, 1, mem_ruleset);
+
 	init_create_id_sets();
 	net_proto_standard_data_t std_data_;
 	std_data_.ver_major = VERSION_MAJOR;
@@ -97,10 +94,6 @@ net_proto_socket_t::net_proto_socket_t() : id(this, TYPE_NET_PROTO_SOCKET_T){
 		net_proto_write_packet_metadata(
 			std_data_);
 	ID_MAKE_TMP(id.get_id());
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
 }
 
 net_proto_socket_t::~net_proto_socket_t(){

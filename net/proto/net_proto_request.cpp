@@ -11,6 +11,10 @@
   Broadcasting of them is handled inside of outbound/net_proto_outbound_data.cpp
  */
 
+const data_id_transport_rules_t request_ruleset(
+	all_mem_cache,
+	all_intermediaries);
+
 std::vector<uint8_t> net_proto_request_blacklist =
 {
 	TYPE_NET_PROTO_ID_REQUEST_T,
@@ -43,11 +47,10 @@ net_proto_request_bare_t::net_proto_request_bare_t(){}
 net_proto_request_bare_t::~net_proto_request_bare_t(){}
 
 void net_proto_request_bare_t::list_bare_virtual_data(data_id_t *id_){
-	id_->add_data_id(&origin_peer_id, 1);
-	id_->add_data_id(&destination_peer_id, 1);
-	id_->add_data_raw((uint8_t*)&request_time, sizeof(request_time));
-	id_->add_data_raw((uint8_t*)&ttl_micro_s, sizeof(ttl_micro_s));
-
+	id_->add_data_id(&origin_peer_id, 1, request_ruleset);
+	id_->add_data_id(&destination_peer_id, 1, request_ruleset);
+	id_->add_data_raw((uint8_t*)&request_time, sizeof(request_time), request_ruleset);
+	id_->add_data_raw((uint8_t*)&ttl_micro_s, sizeof(ttl_micro_s), request_ruleset);
 	id = id_;
 }
 
@@ -82,8 +85,8 @@ net_proto_request_set_t::~net_proto_request_set_t(){}
 
 void net_proto_request_set_t::list_set_virtual_data(data_id_t *id_){
 	// id->add_data_one_byte_vector(&ids, ~0);
-	id_->add_data_one_byte_vector(&ids, ~0);
-	id_->add_data_eight_byte_vector(&mod_inc, 65536);
+	id_->add_data_one_byte_vector(&ids, ~0, request_ruleset);
+	id_->add_data_eight_byte_vector(&mod_inc, 65536, request_ruleset);
 }
 
 void net_proto_request_set_t::set_ids(std::vector<id_t_> ids_){
@@ -122,10 +125,6 @@ std::vector<uint64_t> net_proto_request_set_t::get_mod_inc(){
 net_proto_id_request_t::net_proto_id_request_t() : id(this, TYPE_NET_PROTO_ID_REQUEST_T){
 	list_set_virtual_data(&id);
 	list_bare_virtual_data(&id);
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_PUBLIC,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
 }
 
 net_proto_id_request_t::~net_proto_id_request_t(){}
@@ -135,12 +134,14 @@ net_proto_id_request_t::~net_proto_id_request_t(){}
 net_proto_type_request_t::net_proto_type_request_t() : id(this, TYPE_NET_PROTO_TYPE_REQUEST_T){
 	list_set_virtual_data(&id);
 	list_bare_virtual_data(&id);
-	id.add_data_one_byte_vector(&type, ~0);
-	id.add_data_raw(&(hash[0]), sizeof(hash));
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_PUBLIC,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
+	id.add_data_one_byte_vector(
+		&type,
+		~0,
+		cache_ruleset);
+	id.add_data_raw(
+		&(hash[0]),
+		sizeof(hash),
+		cache_ruleset);
 }	
 
 net_proto_type_request_t::~net_proto_type_request_t(){}
@@ -149,10 +150,10 @@ net_proto_type_request_t::~net_proto_type_request_t(){}
 
 net_proto_linked_list_request_t::net_proto_linked_list_request_t() : id(this, TYPE_NET_PROTO_LINKED_LIST_REQUEST_T){
 	list_bare_virtual_data(&id);
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_PUBLIC,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
+	ADD_DATA(start_id, cache_ruleset);
+	ADD_DATA(start_length, cache_ruleset);
+	ADD_DATA(curr_id, mem_ruleset);
+	ADD_DATA(curr_length, mem_ruleset);
 }
 
 net_proto_linked_list_request_t::~net_proto_linked_list_request_t(){
@@ -452,7 +453,6 @@ static void net_proto_create_id_request_loop(){
 #pragma message("net_proto_create_linked_list_request_loop is not implemented")
 
 static void net_proto_create_linked_list_request_loop(){
-	print("implement me", P_CRIT);
 }
 
 /*

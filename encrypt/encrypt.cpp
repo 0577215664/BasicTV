@@ -2,6 +2,8 @@
 #include "encrypt_rsa.h"
 #include "encrypt_aes.h"
 
+#include "../net/interface/net_interface_intermediary.h"
+
 encrypt_key_t::encrypt_key_t(){}
 
 encrypt_key_t::~encrypt_key_t(){}
@@ -27,10 +29,10 @@ std::pair<uint8_t, std::vector<uint8_t> > encrypt_key_t::get_encrypt_key(){
 
 encrypt_pub_key_t::encrypt_pub_key_t() : id(this, TYPE_ENCRYPT_PUB_KEY_T){
 	list_virtual_data(&id);
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_PUBLIC,
-		ID_DATA_EXPORT_RULE_ALWAYS,
-		ID_DATA_PEER_RULE_ALWAYS);
+	id.set_most_liberal_rules(
+		data_id_transport_rules_t(
+			all_tiers,
+			all_intermediaries));
 }
 
 encrypt_pub_key_t::~encrypt_pub_key_t(){}
@@ -38,10 +40,10 @@ encrypt_pub_key_t::~encrypt_pub_key_t(){}
 encrypt_priv_key_t::encrypt_priv_key_t() : id(this, TYPE_ENCRYPT_PRIV_KEY_T){
 	list_virtual_data(&id);
 	id.add_data_id(&pub_key_id, 1);
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_ALWAYS,
-		ID_DATA_PEER_RULE_NEVER);
+	id.set_most_liberal_rules(
+		data_id_transport_rules_t(
+			all_tiers,
+			{NET_INTERFACE_INTERMEDIARY_UNDEFINED}));
 }
 
 encrypt_priv_key_t::~encrypt_priv_key_t(){}

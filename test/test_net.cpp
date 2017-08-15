@@ -6,6 +6,8 @@
 #include "../net/proto/net_proto_socket.h"
 #include "../net/proto/net_proto_api.h"
 
+#include "../net/interface/net_interface_intermediary.h"
+
 // wallet is used for exporting stuff
 #include "../cryptocurrency.h"
 
@@ -34,14 +36,10 @@ void test::net::proto_socket::send_recv(){
 		 socket_vector[1].second->id.get_id(),
 		 intermediate_socket->id.get_id()};
 		 
-	socket_vector[0].first->id.set_lowest_global_flag_level(
-		ID_DATA_RULE_UNDEF,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
-	socket_vector[1].first->id.set_lowest_global_flag_level(
-		ID_DATA_RULE_UNDEF,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
+	socket_vector[0].first->id.set_most_liberal_rules(
+		mem_ruleset);
+	socket_vector[1].first->id.set_most_liberal_rules(
+		mem_ruleset);
 	// as of right now, there shouldn't be any problems with recycling my
 	// peer, so long as we are just testing this. This wouldn't normally
 	// fly in software since it (should) never try and send something

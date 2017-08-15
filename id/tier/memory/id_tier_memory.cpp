@@ -238,7 +238,7 @@ ID_TIER_GET_ID(mem){
 	for(uint64_t i = 0;i < id_vector[get_id_type(id)].size();i++){
 		if(id_vector[get_id_type(id)][i]->get_id() == id){
 			return id_vector[get_id_type(id)][i]->export_data(
-				0, 0, 0, 0, 0);
+				0);
 		}
 	}
 	return std::vector<uint8_t>({});

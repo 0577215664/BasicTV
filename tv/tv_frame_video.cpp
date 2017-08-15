@@ -47,13 +47,13 @@ static void tv_frame_color_sanity_check(std::tuple<uint64_t, uint64_t, uint64_t,
 
 tv_frame_video_t::tv_frame_video_t() : id(this, TYPE_TV_FRAME_VIDEO_T){
 	list_virtual_data(&id);
-	ADD_DATA(x_res);
-	ADD_DATA(y_res);
-	ADD_DATA(bpc);
-	ADD_DATA(red_mask);
-	ADD_DATA(green_mask);
-	ADD_DATA(blue_mask);
-	ADD_DATA(alpha_mask);
+	ADD_DATA(x_res, public_ruleset);
+	ADD_DATA(y_res, public_ruleset);
+	ADD_DATA(bpc, public_ruleset);
+	ADD_DATA(red_mask, public_ruleset);
+	ADD_DATA(green_mask, public_ruleset);
+	ADD_DATA(blue_mask, public_ruleset);
+	ADD_DATA(alpha_mask, public_ruleset);
 }
 
 tv_frame_video_t::~tv_frame_video_t(){

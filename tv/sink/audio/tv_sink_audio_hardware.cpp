@@ -27,7 +27,7 @@ static int tv_sink_audio_hardware_callback(
 	PaStreamCallbackFlags statusFlags,
 	void *userdata){
 	
-	ASSERT(input != nullptr, P_ERR); // get rid of unused-variable warns
+	ASSERT(input == nullptr, P_ERR); // get rid of unused-variable warns
 	ASSERT(timeInfo != nullptr, P_ERR);
 	ASSERT((statusFlags & paInputUnderflow) == 0 &&
 	       (statusFlags & paInputOverflow) == 0, P_ERR); // no inputs yet

@@ -11,13 +11,10 @@
 
 static uint64_t loop_number = 1;
 
+// types are created with their default exporting rules
 id_t_ test_create_generic_id(){
 	wallet_set_t *wallet_set_ptr =
 		new wallet_set_t;
-	wallet_set_ptr->id.set_lowest_global_flag_level(
-		ID_DATA_RULE_UNDEF,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
 	std::string totally_legit_bitcoin_wallet_please_give_me_money =
 		"13dfmkk84rXyHoiZQmuYfTxGYykug1mDEZ";
 	wallet_set_ptr->add_wallet(

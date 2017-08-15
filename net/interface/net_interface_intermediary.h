@@ -1,12 +1,19 @@
 #ifndef NET_INTERFACE_INTERMEDIARY_H
 #define NET_INTERFACE_INTERMEDIARY_H
 
-
 #define NET_INTERFACE_INTERMEDIARY_UNDEFINED 0
 #define NET_INTERFACE_INTERMEDIARY_NONE 1
 #define NET_INTERFACE_INTERMEDIARY_TOR 2
 #define NET_INTERFACE_INTERMEDIARY_I2P 3
 
+const std::vector<uint8_t> all_intermediary = {
+	NET_INTERFACE_INTERMEDIARY_NONE,
+	NET_INTERFACE_INTERMEDIARY_TOR,
+	NET_INTERFACE_INTERMEDIARY_I2P
+};
+
+const std::vector<uint8_t> all_intermediaries =
+	all_intermediary;
 
 struct net_interface_intermediary_t{
 private:

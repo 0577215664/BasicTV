@@ -76,8 +76,8 @@
 #define ADD_DEL_VECTOR_S(a, b) FULL_VECTOR_CONTROL_S(a, b)
 
 
-#define ADD_DATA(x) id.add_data_raw((uint8_t*)&x, sizeof(x))
-#define ADD_DATA_PTR(x) id->add_data_raw((uint8_t*)&x, sizeof(x))
+#define ADD_DATA(x, y) id.add_data_raw((uint8_t*)&x, sizeof(x), y)
+#define ADD_DATA_PTR(x, y) id->add_data_raw((uint8_t*)&x, sizeof(x), y)
 
 #define CONTINUE_IF_DIFF_OWNER(id_one, id_two) if(likely(get_id_hash(id_one) != get_id_hash(id_two))){continue;}
 
@@ -120,48 +120,82 @@ const hash_t_ blank_hash = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   values, and the called again to change it back
  */
 
-#define ID_DATA_NETWORK_RULE_NEVER 1
-#define ID_DATA_NETWORK_RULE_TOR_ONION 2
-#define ID_DATA_NETWORK_RULE_TOR_ONLY 3
-#define ID_DATA_NETWORK_RULE_ENCRYPTED_ONLY 4
-#define ID_DATA_NETWORK_RULE_PUBLIC 5
+/*
+  Transport rules for IDs, on a whitelist basis
 
-#define ID_DATA_EXPORT_RULE_NEVER 1
-#define ID_DATA_EXPORT_RULE_ALWAYS 2
+  Wildcards can only be in the minor component, and are 255 (unsigned total
+  bit flip on an unsigned 8-bit)
+  Intermediary is any combination of:
+  NET_INTERFACE_INTERMEDIARY_UNDEFINED (not transporting over network)
+  NET_INTERFACE_INTERMEDIARY_NONE (clearnet)
+  NET_INTERFACE_INTERMEDIARY_TOR
+  NET_INTERFACE_INTERMEDIARY_I2P
+ */
 
-#define ID_DATA_PEER_RULE_NEVER 1
-#define ID_DATA_PEER_RULE_SAME_HASH 2
-#define ID_DATA_PEER_RULE_ON_ESCROW 3
-#define ID_DATA_PEER_RULE_ALWAYS 4
+typedef std::pair<uint8_t, uint8_t> data_id_transport_rules_tier_t;
+
+struct data_id_transport_rules_t{
+public:
+	std::vector<std::pair<uint8_t, uint8_t> > tier;
+	std::vector<uint8_t> intermediary;
+
+	data_id_transport_rules_t(
+		std::vector<std::pair<uint8_t, uint8_t> > tier_,
+		std::vector<uint8_t> intermediary_){
+		tier = tier_;
+		intermediary = intermediary_;
+	}
+	bool operator==(const data_id_transport_rules_t &rhs){
+		return tier == rhs.tier &&
+		intermediary == rhs.intermediary;
+	}
+	bool operator!=(const data_id_transport_rules_t &rhs){
+		return !(*this == rhs);
+	}
+	data_id_transport_rules_t operator=(const data_id_transport_rules_t &other){
+		if(this != &other){
+			this->tier = other.tier;
+			this->intermediary = other.intermediary;
+		}
+		return *this;
+	}
+};
+
+
+// everywhere and everything
+extern const data_id_transport_rules_t public_ruleset;
+// can't network
+extern const data_id_transport_rules_t private_ruleset;
+// networkable, but can't save to disk
+extern const data_id_transport_rules_t cache_ruleset;
+// only exists in memory (exporting would probably make the type useless)
+extern const data_id_transport_rules_t mem_ruleset;
+
 
 // pointer added through add_data
+
 struct data_id_ptr_t{
 private:
 	void *ptr = nullptr;
 	std::vector<uint32_t> length;
 	uint8_t flags = 0;
-
-	// two variables
-	// exporting rules
-	// peer-sending rules
-	uint8_t network_rules = 0;
-	uint8_t export_rules = 0;
-	uint8_t peer_rules = 0;
 public:
+	data_id_transport_rules_t transport_rules;
 	data_id_ptr_t(void *ptr_,
 		      std::vector<uint32_t> length_,
 		      uint8_t flags_,
-		      uint8_t network_rules_,
-		      uint8_t export_rules_,
-		      uint8_t peer_rules_);
-	~data_id_ptr_t();
+		      data_id_transport_rules_t transport_rules_) : transport_rules({}, {}){
+		ptr = ptr_;
+		length = length_;
+		flags = flags_;
+		transport_rules = transport_rules_;
+	}
+	~data_id_ptr_t(){}
 	void *get_ptr();
 	uint32_t get_length();
 	std::vector<uint32_t> get_length_vector();
 	GET_SET_S(flags, uint8_t);
-	GET_SET_S(network_rules, uint8_t);
-	GET_SET_S(export_rules, uint8_t);
-	GET_SET_S(peer_rules, uint8_t);
+	GET_SET_S(transport_rules, data_id_transport_rules_t);
 };
 
 /*
@@ -171,8 +205,8 @@ public:
 
 type_t_ get_id_type(id_t_ id); // tacky
 
-#define ADD_DATA_1D_DEF(datatype, str, fl_ag) void add_data_##str(datatype *ptr_, uint32_t max_size_elem_, uint8_t flags_ = 0, uint8_t network_rules_ = ID_DATA_NETWORK_RULE_PUBLIC, uint8_t export_rules_ = ID_DATA_EXPORT_RULE_ALWAYS, uint8_t peer_rules_ = ID_DATA_PEER_RULE_ALWAYS){add_data(ptr_, {max_size_elem_}, flags_ | fl_ag, network_rules_, export_rules_, peer_rules_);}
-#define ADD_DATA_2D_DEF(datatype, str, fl_ag) void add_data_##str(datatype *ptr_, uint32_t max_size_elem_, uint32_t max_size_elem__, uint8_t flags_ = 0, uint8_t network_rules_ = ID_DATA_NETWORK_RULE_PUBLIC, uint8_t export_rules_ = ID_DATA_EXPORT_RULE_ALWAYS, uint8_t peer_rules_ = ID_DATA_PEER_RULE_ALWAYS){add_data(ptr_, {max_size_elem_, max_size_elem__}, flags_ | fl_ag, network_rules_, export_rules_, peer_rules_);}
+#define ADD_DATA_1D_DEF(datatype, str, fl_ag) void add_data_##str(datatype *ptr_, uint32_t max_size_elem_, data_id_transport_rules_t transport_rules_ = public_ruleset){add_data(ptr_, {max_size_elem_}, fl_ag, transport_rules_);}
+#define ADD_DATA_2D_DEF(datatype, str, fl_ag) void add_data_##str(datatype *ptr_, uint32_t max_size_elem_, uint32_t max_size_elem__, data_id_transport_rules_t transport_rules_ = public_ruleset){add_data(ptr_, {max_size_elem_, max_size_elem__}, fl_ag, transport_rules_);}
 
 typedef std::pair<std::vector<id_t_>, std::vector<id_t_> > linked_list_data_t;
 
@@ -213,7 +247,8 @@ private:
 	void init_list_all_data();
 	void init_gen_id(type_t_);
 	void init_type_cache();
-	void add_data(void *ptr_, std::vector<uint32_t> size_, uint8_t flags_, uint8_t network_rules, uint8_t export_rules, uint8_t peer_rules);
+	void add_data(void *ptr_, std::vector<uint32_t> size_, uint8_t flags_, data_id_transport_rules_t transport_rules_);
+
 public:
 	data_id_t(void *ptr_, uint8_t type);
 	~data_id_t();
@@ -243,16 +278,16 @@ public:
 	// default on export is unencrypted and uncompressed, but is compressed
 	// and encrypted when it is loaded into the cache (so always, currently,
 	// but just not handled in this function)
-	std::vector<uint8_t> export_data(uint8_t flags_, uint8_t extra, uint8_t network_flags, uint8_t export_flags, uint8_t peer_flags);
+	std::vector<uint8_t> export_data(uint8_t extra);
 	void import_data(std::vector<uint8_t> data);
 	uint64_t get_last_access_timestamp_micro_s(){return last_access_timestamp_micro_s;}
-	void set_lowest_global_flag_level(uint8_t network_rules,
-					  uint8_t export_rules,
-					  uint8_t peer_rules);
 
-	void get_highest_global_flag_level(uint8_t *network_rules,
-					  uint8_t *export_rules,
-					  uint8_t *peer_rules);
+	// Transporting rules
+	void set_most_liberal_rules(
+		std::pair<uint8_t, uint8_t> tier_rule,
+		uint8_t intermediary_rule);
+	void set_most_liberal_rules(
+		data_id_transport_rules_t rules);
 };
 
 typedef uint16_t transport_i_t;
@@ -322,26 +357,25 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 
 #define TYPE_COUNT 37
 
-#define ID_MAKE_TMP(x)						\
-	if(true){						\
-		data_id_t *tmp = PTR_ID(x, );			\
-		if(tmp != nullptr){				\
-			tmp->set_lowest_global_flag_level(	\
-				ID_DATA_NETWORK_RULE_NEVER,	\
-				ID_DATA_EXPORT_RULE_NEVER,	\
-				ID_DATA_PEER_RULE_NEVER);	\
-		}						\
+#define ID_MAKE_TMP(x)					\
+	if(true){					\
+		data_id_t *tmp = PTR_ID(x, );		\
+		if(tmp != nullptr){			\
+			tmp->set_most_liberal_rules(	\
+				private_ruleset);	\
+		}					\
 	}
 
 #define ID_DATA_MAKE_TMP(tmp)			\
-	tmp.set_lowest_global_flag_level(	\
-		ID_DATA_NETWORK_RULE_NEVER,	\
-		ID_DATA_EXPORT_RULE_NEVER,	\
-		ID_DATA_PEER_RULE_NEVER);	\
+	tmp.set_most_liberal_rules(		\
+		private_ruleset);		\
 			
 std::string id_breakdown(id_t_ id_);
 
 #define IS_OWNER(id) (id == get_id_hash(production_priv_key_id)
 #include "tier/id_tier.h"
 #include "set/id_set.h"
+// exporting rules
+#include "../net/interface/net_interface_intermediary.h"
+
 #endif

@@ -21,6 +21,22 @@
 #include "../encrypt/encrypt.h"
 #include "../compress/compress.h"
 
+const data_id_transport_rules_t public_ruleset(
+	all_tiers,
+	all_intermediaries);
+
+const data_id_transport_rules_t private_ruleset(
+	all_tiers,
+	{0});
+
+const data_id_transport_rules_t cache_ruleset(
+	all_mem_cache,
+	{0});
+
+const data_id_transport_rules_t mem_ruleset(
+	std::vector<std::pair<uint8_t, uint8_t> >({{0, 0}}),
+	{0});
+
 std::array<uint8_t, 32> get_id_hash(id_t_ id){
 	std::array<uint8_t, 32> retval;
 	memcpy(&(retval[0]), &(id[8]), 32);
@@ -146,9 +162,7 @@ void *data_id_t::get_ptr(){
 void data_id_t::add_data(void *ptr_,
 			 std::vector<uint32_t> size_,
 			 uint8_t flags_,
-			 uint8_t network_rules_,
-			 uint8_t export_rules_,
-			 uint8_t peer_rules_){
+			 data_id_transport_rules_t transport_rules){
 	if(ptr_ == nullptr){
 		print("ptr_ is a nullptr", P_ERR);
 	}
@@ -157,26 +171,7 @@ void data_id_t::add_data(void *ptr_,
 			ptr_,
 			size_,
 			flags_,
-			network_rules_,
-			export_rules_,
-			peer_rules_));
-}
-
-data_id_ptr_t::data_id_ptr_t(void *ptr_,
-			     std::vector<uint32_t> length_,
-			     uint8_t flags_,
-			     uint8_t network_rules_,
-			     uint8_t export_rules_,
-			     uint8_t peer_rules_){
-	ptr = ptr_;
-	length = length_;
-	flags = flags_;
-	network_rules = network_rules_;
-	export_rules = export_rules_;
-	peer_rules = peer_rules_;
-}
-
-data_id_ptr_t::~data_id_ptr_t(){
+			transport_rules));
 }
 
 void *data_id_ptr_t::get_ptr(){
@@ -194,57 +189,6 @@ uint32_t data_id_ptr_t::get_length(){
 
 std::vector<uint32_t> data_id_ptr_t::get_length_vector(){
 	return length;
-}
-
-void data_id_t::set_lowest_global_flag_level(uint8_t network_rules,
-					     uint8_t export_rules,
-					     uint8_t peer_rules){
-	for(uint64_t i = 0;i < data_vector.size();i++){
-		if(data_vector[i].get_network_rules() > network_rules){
-			data_vector[i].set_network_rules(
-				network_rules);
-		}
-		if(data_vector[i].get_export_rules() > export_rules){
-			data_vector[i].set_export_rules(
-				export_rules);
-		}
-		if(data_vector[i].get_peer_rules() > peer_rules){
-			data_vector[i].set_peer_rules(
-				peer_rules);
-		}
-	}
-}
-
-/*
-  Sanity check to see if it makes sense to export a piece of data
- */
-
-void data_id_t::get_highest_global_flag_level(uint8_t *network_rules,
-					      uint8_t *export_rules,
-					      uint8_t *peer_rules){
-	uint8_t network_rules_tmp = 0;
-	uint8_t export_rules_tmp = 0;
-	uint8_t peer_rules_tmp = 0;
-	for(uint64_t i = 0;i < data_vector.size();i++){
-		if(data_vector[i].get_network_rules() > network_rules_tmp){
-			network_rules_tmp = data_vector[i].get_network_rules();
-		}
-		if(data_vector[i].get_export_rules() > export_rules_tmp){
-			export_rules_tmp = data_vector[i].get_export_rules();
-		}
-		if(data_vector[i].get_peer_rules() > peer_rules_tmp){
-			peer_rules_tmp = data_vector[i].get_peer_rules();
-		}
-	}
-	if(network_rules != nullptr){
-		*network_rules = network_rules_tmp;
-	}
-	if(export_rules != nullptr){
-		*export_rules = export_rules_tmp;
-	}
-	if(peer_rules != nullptr){
-		*peer_rules = peer_rules_tmp;
-	}
 }
 
 std::string id_breakdown(id_t_ id_){
@@ -291,4 +235,64 @@ void data_id_t::set_linked_list(std::pair<std::vector<id_t_>, std::vector<id_t_>
 		compact_id_set(
 			tmp.second,
 			true);
+}
+
+// Works by assuming tiers get more liberal the higher
+// they go. Still painting with a broad brush, but cache
+// and things not covered with this approach are few and
+// far between
+
+// TODO: get full-aesthetics and abstract this out to a
+// milti-length base system
+
+static void most_liberal_tier(
+	std::vector<std::pair<uint8_t, uint8_t> > *tiers,
+	std::pair<uint8_t, uint8_t> most){
+
+	for(uint64_t c = 0;c < tiers->size();c++){
+		if((*tiers)[c].first > most.first ||
+		   ((*tiers)[c].first == most.first &&
+		    (*tiers)[c].second > most.second)){
+			tiers->erase(
+				tiers->begin()+c);
+			c--;
+		}
+	}
+}
+
+static void most_liberal_intermediary(
+	std::vector<uint8_t> *intermediary,
+	uint8_t most){
+
+	for(uint64_t i = 0;i < intermediary->size();i++){
+		if((*intermediary)[i] > most){
+			intermediary->erase(
+				intermediary->begin()+i);
+			i--;
+		}
+	}
+}
+
+void data_id_t::set_most_liberal_rules(
+	std::pair<uint8_t, uint8_t> tier_rule,
+	uint8_t intermediary_rule){
+	for(uint64_t i = 0;i < data_vector.size();i++){
+		const data_id_transport_rules_t tmp_rules =
+			data_vector[i].get_transport_rules();
+		most_liberal_tier(
+			&(data_vector[i].transport_rules.tier),
+			tier_rule);
+		most_liberal_intermediary(
+			&(data_vector[i].transport_rules.intermediary),
+			intermediary_rule);
+	}
+}
+
+void data_id_t::set_most_liberal_rules(
+	data_id_transport_rules_t rules){
+	ASSERT(rules.tier.size() == 1, P_ERR);
+	ASSERT(rules.intermediary.size() == 1, P_ERR);
+	set_most_liberal_rules(
+		rules.tier[0],
+		rules.intermediary[0]);
 }

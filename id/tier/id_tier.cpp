@@ -17,14 +17,6 @@ std::vector<type_t_> memory_locked = {
 	TYPE_ID_TIER_STATE_T
 };
 
-std::vector<std::pair<uint8_t, uint8_t> > all_tiers = {
-	{ID_TIER_MAJOR_MEM, 0},
-	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_UNCOMPRESSED},
-	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_UNENCRYPTED_COMPRESSED},
-	{ID_TIER_MAJOR_CACHE, ID_TIER_MINOR_CACHE_ENCRYPTED_COMPRESSED},
-	{ID_TIER_MAJOR_DISK, 0}
-};
-
 std::vector<id_tier_medium_t> id_tier_medium = {
 	id_tier_medium_t(
 		id_tier_mem_init_state,
@@ -225,13 +217,14 @@ void id_tier::operation::shift_data_to_state(
 				if(get_id_hash((*id_vector)[i]) ==
 				   get_id_hash(production_priv_key_id)){
 					// can't re-encrypt data we don't have
-					shift_payload =
-						id_api::raw::strip_to_only_rules(
-							shift_payload,
-							std::vector<uint8_t>({}),
-							std::vector<uint8_t>({
-								ID_DATA_EXPORT_RULE_ALWAYS}),
-							std::vector<uint8_t>({}));
+					print("convert this over to new system", P_CRIT);
+					// shift_payload =
+					// 	id_api::raw::strip_to_only_rules(
+					// 		shift_payload,
+					// 		std::vector<uint8_t>({}),
+					// 		std::vector<uint8_t>({
+					// 			ID_DATA_EXPORT_RULE_ALWAYS}),
+					// 		std::vector<uint8_t>({}));
 				} // don't care, can't reconstruct
 				// TODO: can probably decrypt and check, blacklist against DDoS?
 				if(shift_payload.size() == 0){

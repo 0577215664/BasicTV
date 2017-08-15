@@ -100,10 +100,6 @@ static void send_from_buffer(
 }
 
 net_socket_t::net_socket_t() : id(this, TYPE_NET_SOCKET_T){
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_PEER_RULE_NEVER);
 }
 
 net_socket_t::~net_socket_t(){

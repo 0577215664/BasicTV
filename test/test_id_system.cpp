@@ -13,11 +13,7 @@ static void unload_nuke_reload(T ptr){
 	if(true){
 		std::vector<uint8_t> data = 
 			(*ptr)->id.export_data(
-				0,
-				0,
-				ID_DATA_NETWORK_RULE_NEVER,
-				ID_DATA_EXPORT_RULE_NEVER,
-				ID_DATA_PEER_RULE_NEVER);
+				0);
 		delete (*ptr);
 		*ptr = new tv_item_t; // change this as test_id_transport chanages
 		(*ptr)->id.import_data(
