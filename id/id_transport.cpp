@@ -13,7 +13,7 @@ void export_static_size_payload(
 		data,
 		data+size);
 	convert::nbo::to(
-		&((*pusher)[pusher->size()-size]),
+		pusher->data()+pusher->size()-size,
 		size);
 }
 
@@ -25,6 +25,9 @@ void import_static_size_payload(
 	std::memcpy(
 		data,
 		puller->data(),
+		size);
+	convert::nbo::from(
+		data,
 		size);
 	puller->erase(
 		puller->begin(),
@@ -123,6 +126,9 @@ static uint64_t import_gen_dynamic_size(
 	std::vector<uint8_t> *puller){
 	const uint8_t size_size =
 		puller->at(0);
+	if(size_size == 2){
+		std::raise(SIGINT);
+	}
 	puller->erase(
 		puller->begin());
 	uint64_t retval = 0;
@@ -211,13 +217,17 @@ static std::vector<uint8_t> unstringify_rules_intermediary(
 
 data_id_transport_rules_t unstringify_rules(
 	std::vector<uint8_t> *puller){
-	return data_id_transport_rules_t(
+	const std::vector<std::pair<uint8_t, uint8_t >> rules =
 		unstringify_rules_tier(
 			import_8bit_size_payload(
-				puller)),
+				puller));
+	const std::vector<uint8_t> intermediary =
 		unstringify_rules_intermediary(
 			import_8bit_size_payload(
-				puller)));
+				puller));
+	return data_id_transport_rules_t(
+		rules,
+		intermediary);
 }
 
 void export_ptr_from_data_id_ptr(

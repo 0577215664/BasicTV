@@ -29,7 +29,6 @@ static void unload_nuke_reload(T ptr){
 		const std::vector<uint8_t> tmp_output = import_func(&tmp); \
 		ASSERT(tmp_output == tmp_correct, P_ERR);	\
 		ASSERT(tmp.size() == 0, P_ERR);				\
-		tmp.clear();						\
 	}
 
 void test::id_system::transport::core_functions(){
@@ -37,24 +36,42 @@ void test::id_system::transport::core_functions(){
 		true_rand_byte_vector(
 			65536*2); // three byte size
 	std::vector<uint8_t> tmp;
-	for(uint64_t i = 0;i < 255;i++){
-		print("testing 8bit sizing with " + std::to_string(i) + " bytes", P_NOTE);
-		SIMPLE_TRANSPORT_TEST(
-			import_8bit_size_payload,
-			export_8bit_size_payload,
-			i);
-	}
-	for(uint64_t i = 0;i < 65536*2;i++){
-		print("testing dynamic sizing with " + std::to_string(i) + " bytes", P_NOTE);
-		SIMPLE_TRANSPORT_TEST(
-			import_dynamic_size_payload,
-			export_dynamic_size_payload,
-			i);
-	}
-}
-
-void test::id_system::transport::proper(){
+	SIMPLE_TRANSPORT_TEST(
+		import_8bit_size_payload,
+		export_8bit_size_payload,
+		255);
+	SIMPLE_TRANSPORT_TEST(
+		import_dynamic_size_payload,
+		export_dynamic_size_payload,
+		65536);
 	
+	uint64_t static_export = true_rand(0, ~static_cast<uint64_t>(0));
+	uint64_t static_import = 0;
+	export_static_size_payload(
+		&tmp,
+		reinterpret_cast<uint8_t*>(&static_export),
+		sizeof(static_export));
+	import_static_size_payload(
+		&tmp,
+		reinterpret_cast<uint8_t*>(&static_import),
+		sizeof(static_import));
+	ASSERT(static_import == static_export, P_ERR);
+	ASSERT(tmp.size() == 0, P_ERR);
+	
+	
+	const data_id_transport_rules_t tmp_rules(
+		all_tiers,
+		all_intermediaries);
+	stringify_rules(
+		&tmp,
+		tmp_rules);
+	ASSERT(unstringify_rules(
+		       &tmp) == tmp_rules, P_ERR);
+	
+	ASSERT(tmp.size() == 0, P_ERR);
+}
+	
+void test::id_system::transport::proper(){
 	const std::vector<id_t_> old =
 		{production_priv_key_id,
 		 production_priv_key_id,
