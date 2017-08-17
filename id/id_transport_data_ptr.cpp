@@ -1,27 +1,29 @@
 #include "id_transport.h"
 
-std::pair<uint8_t*, uint64_t> export_standardize_data_ptr(
+std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > export_standardize_data_ptr(
 	data_id_ptr_t *data_id_ptr){
 	ASSERT(data_id_ptr != nullptr, P_ERR);
 	ASSERT(data_id_ptr->get_ptr() != nullptr, P_ERR);
 	switch(data_id_ptr->get_flags()){
 	case 0:
-		return std::make_pair(
-			static_cast<uint8_t*>(data_id_ptr->get_ptr()),
-			static_cast<uint64_t>(data_id_ptr->get_length()));
+		return std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> >(
+			{std::make_pair(
+					static_cast<uint8_t*>(data_id_ptr->get_ptr()),
+					static_cast<uint64_t>(data_id_ptr->get_length()))});
 	case ID_DATA_ID:
-		// ID is just a hint, not actually any different
-		return std::make_pair(
-			static_cast<uint8_t*>(data_id_ptr->get_ptr()),
-			static_cast<uint64_t>(data_id_ptr->get_length()));
+		return std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> >(
+			{std::make_pair(
+					static_cast<uint8_t*>(data_id_ptr->get_ptr()),
+					static_cast<uint64_t>(data_id_ptr->get_length()))});
 	case ID_DATA_BYTE_VECTOR:
 		if(true){
 			std::vector<uint8_t> *byte_vector =
 				reinterpret_cast<std::vector<uint8_t>* >(
 					data_id_ptr->get_ptr());
-			return std::make_pair(
-				byte_vector->data(),
-				byte_vector->size());
+			return std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> >(
+				{std::make_pair(
+						byte_vector->data(),
+						byte_vector->size())});
 		}
 		break;
 	case ID_DATA_EIGHT_BYTE_VECTOR:
@@ -29,33 +31,58 @@ std::pair<uint8_t*, uint64_t> export_standardize_data_ptr(
 			std::vector<uint64_t> *byte_vector =
 				reinterpret_cast<std::vector<uint64_t> *>(
 					data_id_ptr->get_ptr());
-			return std::make_pair(
-				reinterpret_cast<uint8_t*>(byte_vector->data()),
-				byte_vector->size()*8);
+			return std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> >(
+				{std::make_pair(
+						reinterpret_cast<uint8_t*>(byte_vector->data()),
+						byte_vector->size()*8)});
 		}
 		break;
 	case ID_DATA_BYTE_VECTOR_VECTOR:
-		print("flag is obsolete, PLEASE use another system", P_CRIT);
+		if(true){
+			std::vector<std::vector<uint8_t> > *byte_vector_vector =
+				reinterpret_cast<std::vector<std::vector<uint8_t> > *>(
+					data_id_ptr->get_ptr());
+			std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > retval;
+			for(transport_i_t i = 0;i < byte_vector_vector->size();i++){
+				if((*byte_vector_vector)[i].size() == 0){
+					continue;
+				}
+				retval.push_back(
+					std::make_tuple(
+						reinterpret_cast<uint8_t*>(
+							(*byte_vector_vector)[i].data()),
+						i,
+						(*byte_vector_vector)[i].size()));
+			}
+			return retval;
+		}
 	default:
 		print("invalid flags for data export", P_ERR);
 	}
 	return std::make_pair(nullptr, 0);
 }
 
-uint8_t *import_standardize_data_ptr(
+// import returns all pointers in a vector, so the transport_i_t can directly
+// map to the vector position
+std::vector<uint8_t*> import_standardize_data_ptr(
 	data_id_ptr_t *data_id_ptr,
-	uint64_t target_size){
+	std::vector<uint64_t> target_size){
 	ASSERT(data_id_ptr != nullptr, P_ERR);
 	ASSERT(data_id_ptr->get_ptr() != nullptr, P_ERR);
 	switch(data_id_ptr->get_flags()){
 	case 0:
+		ASSERT(target_size.size() == 1, P_ERR);
 		ASSERT(data_id_ptr->get_length() == target_size, P_ERR);
-		return reinterpret_cast<uint8_t*>(data_id_ptr->get_ptr());
+		return std::vector<uint8_t*>({
+				reinterpret_cast<uint8_t*>(data_id_ptr->get_ptr())});
 	case ID_DATA_ID:
+		ASSERT(target_size.size() == 1, P_ERR);
 		ASSERT(data_id_ptr->get_length() == target_size, P_ERR);
-		return reinterpret_cast<uint8_t*>(data_id_ptr->get_ptr());
+		return std::vector<uint8_t*>({
+				reinterpret_cast<uint8_t*>(data_id_ptr->get_ptr())});
 	case ID_DATA_BYTE_VECTOR:
 		if(true){
+			ASSERT(target_size.size() == 1, P_ERR);
 			std::vector<uint8_t> *byte_vector =
 				reinterpret_cast<std::vector<uint8_t>* >(
 					data_id_ptr->get_ptr());
@@ -63,11 +90,13 @@ uint8_t *import_standardize_data_ptr(
 			(*byte_vector) =
 				std::vector<uint8_t>(
 					target_size, 0);
-			return reinterpret_cast<uint8_t*>(byte_vector->data());
+			return std::vector<uint8_t*>({
+					reinterpret_cast<uint8_t*>(byte_vector->data())});
 		}
 		break;
 	case ID_DATA_EIGHT_BYTE_VECTOR:
 		if(true){
+			ASSERT(target_size.size() == 1, P_ERR);
 			std::vector<uint64_t> *byte_vector =
 				reinterpret_cast<std::vector<uint64_t> *>(
 					data_id_ptr->get_ptr());
@@ -75,11 +104,29 @@ uint8_t *import_standardize_data_ptr(
 			(*byte_vector) =
 				std::vector<uint64_t>(
 					target_size/8, 0);
-			return reinterpret_cast<uint8_t*>(byte_vector->data());
+			return std::vector<uint8_t*>({
+					reinterpret_cast<uint8_t*>(byte_vector->data())});
 		}
 		break;
 	case ID_DATA_BYTE_VECTOR_VECTOR:
-		print("flag is obsolete, PLEASE use another system", P_CRIT);
+		ASSERT(target_size.size() == 2, P_ERR);
+		if(true){
+			std::vector<uint8_t*> retval;
+			std::vector<std::vector<uint8_t> > *byte_vector_vector =
+				reinterpret_cast<std::vector<std::vector<uint8_t> >*>(
+					data_id_ptr->get_ptr());
+			byte_vector_vector->clear();
+			for(uint64_t i = 0;i < target_size.size();i++){
+				byte_vector_vector.push_back(
+					std::vector<uint8_t>(
+						target_size[i],
+						0));
+				retval.push_back(
+					reinterpret_cast<uint8_t*>(
+						byte_vector_vector[byte_vector_vector.size()-1].data()));
+			}
+			return retval;
+		}
 	default:
 		print("invalid flags for data export", P_ERR);
 	}

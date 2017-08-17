@@ -11,7 +11,7 @@
 #include "../util.h"
 
 #define EXPORT_STATIC(x_, y_) export_static_size_payload(&x_, reinterpret_cast<uint8_t*>(&y_), sizeof(y_))
-#define IMPORT_STATIC(x_, y_) export_static_size_payload(&x_, reinterpret_cast<uint8_t*>(&y_), sizeof(y_))
+#define IMPORT_STATIC(x_, y_) import_static_size_payload(&x_, reinterpret_cast<uint8_t*>(&y_), sizeof(y_))
 
 // Size of the payload is static (directly from a variable), no size
 // information is exported
@@ -31,6 +31,15 @@ extern void export_8bit_size_payload(
 	std::vector<uint8_t> payload);
 
 extern std::vector<uint8_t> import_8bit_size_payload(
+	std::vector<uint8_t> *puller);
+
+// These are primarially used for transporting dynamic sized vectors,
+// but are also used for positions in nested vectors
+
+extern std::vector<uint8_t> export_gen_dynamic_size(
+	uint64_t size);
+	
+extern uint64_t import_gen_dynamic_size(
 	std::vector<uint8_t> *puller);
 
 // The first variable is the length of the size in bytes, and the second

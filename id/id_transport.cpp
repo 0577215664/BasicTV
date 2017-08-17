@@ -87,7 +87,7 @@ std::vector<uint8_t> import_8bit_size_payload(
 
 #define DYNAMIC_SIZE_WRAPPER(x) DYNAMIC_SIZE_LOGIC((static_cast<uint64_t>(1) << x*8)-1, x)
 
-static std::vector<uint8_t> export_gen_dynamic_size(
+std::vector<uint8_t> export_gen_dynamic_size(
 	uint64_t size){
 	std::vector<uint8_t> retval;
 	DYNAMIC_SIZE_WRAPPER(1);
@@ -122,7 +122,7 @@ void export_dynamic_size_payload(
 		payload.end());
 }
 
-static uint64_t import_gen_dynamic_size(
+uint64_t import_gen_dynamic_size(
 	std::vector<uint8_t> *puller){
 	const uint8_t size_size =
 		puller->at(0);
@@ -234,7 +234,7 @@ void export_ptr_from_data_id_ptr(
 	std::vector<uint8_t> *pusher,
 	data_id_ptr_t *data_id_ptr,
 	transport_i_t trans_i){
-	const std::pair<uint8_t*, uint64_t> standardized =
+	const std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > standardized =
 		export_standardize_data_ptr(
 			data_id_ptr);
 	if(standardized.first != nullptr){
@@ -244,28 +244,62 @@ void export_ptr_from_data_id_ptr(
 		stringify_rules(
 			pusher,
 			data_id_ptr->transport_rules);
-		export_dynamic_size_payload(
-			pusher,
-			std::vector<uint8_t>(
-				standardized.first,
-				standardized.first+standardized.second));
+		const std::vector<uint8_t> vector_length =
+			export_gen_dynamic_size(
+				standardized.size());
+		pusher->insert(
+			pusher->end(),
+			vector_length.begin(),
+			vector_length.end());
+		for(uint64_t i = 0;i < standardized.size();i++){
+			if(standardized.second == 0){
+				continue;
+			}
+			const std::vector<uint8_t> vector_iter =
+				export_gen_dynamic_size(
+					i);
+			pusher->insert(
+				pusher->end(),
+				vector_iter->begin(),
+				vector_iter->end());
+			export_dynamic_size_payload(
+				pusher,
+				std::vector<uint8_t>(
+					standardized.first,
+					standardized.first+standardized.second));
+		}
 	} // fails when we try to export an empty vector
 }
 
-std::tuple<std::vector<uint8_t>, data_id_transport_rules_t, transport_i_t> import_ptr_to_data_id_ptr(
-	std::vector<uint8_t> *puller){
-	std::tuple<std::vector<uint8_t>, data_id_transport_rules_t, transport_i_t> retval =
-		{{}, data_id_transport_rules_t({}, {}), 0};
-	IMPORT_STATIC(
-		*puller,
-		std::get<2>(retval));
-	std::get<1>(retval) =
-		unstringify_rules(
-			puller);
-	std::get<0>(retval) =
-		import_dynamic_size_payload(
-			puller);
-	return retval;
+static void nether_add_at_pos(
+	std::vector<std::vector<uint8_t> > *nether,
+	std::vector<uint8_t> data,
+	uint64_t pos){
+	while(nether->size() < pos+1){
+		nether->push_back(
+			std::vector<uint8_t>({}));
+	}
+	nether->at(pos) = data;
 }
 
-
+// Entire vector needs to be passed for missing or skipped datum
+void import_ptr_to_data_id_ptr(
+	std::vector<uint8_t> *puller,
+	std::vector<data_id_ptr_t> *data_id_ptr){
+	transport_id_t trans_i = 0;
+	data_id_transport_rules_t transport_rules(
+		{}, {});
+	IMPORT_STATIC(
+		*puller,
+		trans_i);
+	unstringify_rules(
+		puller,
+		transport_rules);
+	uint64_t vector_length =
+		import_gen_dynamic_size(
+			puller);
+	std::vector<std::vector<uint8_t> > nether;
+	for(uint64_t i = 0;i < vector_length;i++){
+		
+	}
+}

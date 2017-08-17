@@ -3,11 +3,11 @@
 
 #include "id.h"
 
-std::pair<uint8_t*, uint64_t> export_standardize_data_ptr(
+std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > export_standardize_data_ptr(
 	data_id_ptr_t *data_id_ptr);
 
-uint8_t* import_standardize_data_ptr(
+std::vector<uint8_t*> import_standardize_data_ptr(
 	data_id_ptr_t *data_id_ptr,
-	uint64_t target_size);
+	std::vector<uint64_t> target_size);
 
 #endif

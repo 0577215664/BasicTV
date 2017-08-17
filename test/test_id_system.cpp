@@ -31,6 +31,35 @@ static void unload_nuke_reload(T ptr){
 		ASSERT(tmp.size() == 0, P_ERR);				\
 	}
 
+static void static_size_payload_test(){
+	std::vector<uint8_t> tmp;
+	uint64_t static_export = true_rand(0, ~static_cast<uint64_t>(0));
+	uint64_t static_import = 0;
+	export_static_size_payload(
+		&tmp,
+		reinterpret_cast<uint8_t*>(&static_export),
+		sizeof(static_export));
+	import_static_size_payload(
+		&tmp,
+		reinterpret_cast<uint8_t*>(&static_import),
+		sizeof(static_import));
+	ASSERT(static_import == static_export, P_ERR);
+	ASSERT(tmp.size() == 0, P_ERR);
+}
+
+static void stringify_rules_test(){
+	std::vector<uint8_t> tmp;
+	const data_id_transport_rules_t tmp_rules(
+		all_tiers,
+		all_intermediaries);
+	stringify_rules(
+		&tmp,
+		tmp_rules);
+	ASSERT(unstringify_rules(
+		       &tmp) == tmp_rules, P_ERR);
+	ASSERT(tmp.size() == 0, P_ERR);
+}
+
 void test::id_system::transport::core_functions(){
 	std::vector<uint8_t> rand_data =
 		true_rand_byte_vector(
@@ -44,31 +73,9 @@ void test::id_system::transport::core_functions(){
 		import_dynamic_size_payload,
 		export_dynamic_size_payload,
 		65536);
+	static_size_payload_test();
+	stringify_rules_test();
 	
-	uint64_t static_export = true_rand(0, ~static_cast<uint64_t>(0));
-	uint64_t static_import = 0;
-	export_static_size_payload(
-		&tmp,
-		reinterpret_cast<uint8_t*>(&static_export),
-		sizeof(static_export));
-	import_static_size_payload(
-		&tmp,
-		reinterpret_cast<uint8_t*>(&static_import),
-		sizeof(static_import));
-	ASSERT(static_import == static_export, P_ERR);
-	ASSERT(tmp.size() == 0, P_ERR);
-	
-	
-	const data_id_transport_rules_t tmp_rules(
-		all_tiers,
-		all_intermediaries);
-	stringify_rules(
-		&tmp,
-		tmp_rules);
-	ASSERT(unstringify_rules(
-		       &tmp) == tmp_rules, P_ERR);
-	
-	ASSERT(tmp.size() == 0, P_ERR);
 }
 	
 void test::id_system::transport::proper(){
