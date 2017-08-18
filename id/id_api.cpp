@@ -1,5 +1,6 @@
 #include "id.h"
 #include "id_api.h"
+#include "id_transport.h"
 
 #include "../tv/tv_dev_audio.h"
 #include "../tv/tv_dev_video.h"
@@ -8,7 +9,6 @@
 #include "../tv/tv_frame_caption.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_window.h"
-#include "../tv/tv_menu.h"
 #include "../tv/tv_item.h"
 #include "../net/proto/inbound/net_proto_inbound_data.h"
 #include "../net/proto/outbound/net_proto_outbound_data.h"
@@ -500,8 +500,76 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	data_id_transport_rules_t rules){
 	ASSERT(rules.tier.size() <= 1, P_ERR);
 	ASSERT(rules.intermediary.size() <= 1, P_ERR);
-	print("implement me", P_CRIT);
-	return data;
+	force_to_extra(data, 0);
+	extra_t_ extra;
+	id_t_ id;
+	IMPORT_STATIC(
+		data,
+		extra);
+	ASSERT(extra == 0, P_ERR);
+	IMPORT_STATIC(
+		data,
+		id);
+	std::vector<uint8_t> retval;
+	EXPORT_STATIC(
+		retval,
+		extra);
+	EXPORT_STATIC(
+		retval,
+		id);
+	while(data.size() > 0){
+		transport_i_t tmp_i;
+		IMPORT_STATIC(
+			data,
+			tmp_i);
+		data_id_transport_rules_t tmp_rules =
+			unstringify_rules(
+				&data);
+		uint64_t tmp_vector_size =
+			import_gen_dynamic_size(
+				&data);
+		std::vector<uint8_t> tmp_payload =
+			import_dynamic_size_payload(
+				&data);
+
+		bool good_tier = rules.tier.size() == 0;
+		for(uint64_t i = 0;i < tmp_rules.tier.size();i++){
+			good_tier |=
+				std::find(
+					rules.tier.begin(),
+					rules.tier.end(),
+					tmp_rules.tier[i]) != rules.tier.end();
+		}
+		bool good_intermediary = rules.intermediary.size() == 0;
+		for(uint64_t i = 0;i < tmp_rules.intermediary.size();i++){
+			good_intermediary |=
+				std::find(
+					rules.intermediary.begin(),
+					rules.intermediary.end(),
+					tmp_rules.intermediary[i]) != rules.intermediary.end();
+		}
+		if(!(good_tier && good_intermediary)){
+			continue;
+		}
+		EXPORT_STATIC(
+			retval,
+			tmp_i);
+		stringify_rules(
+			&retval,
+			rules);
+		std::vector<uint8_t> dyn_size =
+			export_gen_dynamic_size(
+				tmp_vector_size);
+		retval.insert(
+			retval.end(),
+			dyn_size.begin(),
+			dyn_size.end());
+		export_dynamic_size_payload(
+			&retval,
+			tmp_payload);
+		
+	}
+	return retval;
 }
 
 std::vector<uint8_t> id_api::raw::force_to_extra(

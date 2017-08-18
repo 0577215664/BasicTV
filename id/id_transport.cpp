@@ -1,7 +1,6 @@
 #include "id_transport.h"
 #include "id_transport_data_ptr.h"
 #include "id.h"
-
 #include "../util.h"
 
 void export_static_size_payload(
@@ -126,9 +125,6 @@ uint64_t import_gen_dynamic_size(
 	std::vector<uint8_t> *puller){
 	const uint8_t size_size =
 		puller->at(0);
-	if(size_size == 2){
-		std::raise(SIGINT);
-	}
 	puller->erase(
 		puller->begin());
 	uint64_t retval = 0;
@@ -237,38 +233,37 @@ void export_ptr_from_data_id_ptr(
 	const std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > standardized =
 		export_standardize_data_ptr(
 			data_id_ptr);
-	if(standardized.first != nullptr){
-		EXPORT_STATIC(
-			*pusher,
-			trans_i);
-		stringify_rules(
-			pusher,
-			data_id_ptr->transport_rules);
-		const std::vector<uint8_t> vector_length =
+	EXPORT_STATIC(
+		*pusher,
+		trans_i);
+	stringify_rules(
+		pusher,
+		data_id_ptr->transport_rules);
+	const std::vector<uint8_t> vector_length =
+		export_gen_dynamic_size(
+			standardized.size());
+	pusher->insert(
+		pusher->end(),
+		vector_length.begin(),
+		vector_length.end());
+	for(uint64_t i = 0;i < standardized.size();i++){
+		if(std::get<0>(standardized[i]) == nullptr ||
+		   std::get<2>(standardized[i]) == 0){
+			continue;
+		}
+		const std::vector<uint8_t> vector_iter =
 			export_gen_dynamic_size(
-				standardized.size());
+				std::get<1>(standardized[i]));
 		pusher->insert(
 			pusher->end(),
-			vector_length.begin(),
-			vector_length.end());
-		for(uint64_t i = 0;i < standardized.size();i++){
-			if(standardized.second == 0){
-				continue;
-			}
-			const std::vector<uint8_t> vector_iter =
-				export_gen_dynamic_size(
-					i);
-			pusher->insert(
-				pusher->end(),
-				vector_iter->begin(),
-				vector_iter->end());
-			export_dynamic_size_payload(
-				pusher,
-				std::vector<uint8_t>(
-					standardized.first,
-					standardized.first+standardized.second));
-		}
-	} // fails when we try to export an empty vector
+			vector_iter.begin(),
+			vector_iter.end());
+		export_dynamic_size_payload(
+			pusher,
+			std::vector<uint8_t>(
+				std::get<0>(standardized[i]),
+				std::get<0>(standardized[i])+std::get<2>(standardized[i])));
+	}
 }
 
 static void nether_add_at_pos(
@@ -286,20 +281,46 @@ static void nether_add_at_pos(
 void import_ptr_to_data_id_ptr(
 	std::vector<uint8_t> *puller,
 	std::vector<data_id_ptr_t> *data_id_ptr){
-	transport_id_t trans_i = 0;
-	data_id_transport_rules_t transport_rules(
-		{}, {});
+	transport_i_t trans_i = 0;
 	IMPORT_STATIC(
 		*puller,
 		trans_i);
-	unstringify_rules(
-		puller,
-		transport_rules);
+	data_id_transport_rules_t transport_rules =
+		unstringify_rules(
+			puller);
 	uint64_t vector_length =
 		import_gen_dynamic_size(
 			puller);
+	// nether is a working copy of the 2D vector we are inserting,
+	// only types currently using more than 1D is a byte vector vector
 	std::vector<std::vector<uint8_t> > nether;
 	for(uint64_t i = 0;i < vector_length;i++){
-		
+		uint64_t tmp_i =
+			import_gen_dynamic_size(
+				puller);
+		data_id_transport_rules_t trans_rules =
+			unstringify_rules(
+				puller);
+		nether_add_at_pos(
+			&nether,
+			import_dynamic_size_payload(
+				puller),
+			tmp_i);
+	}
+	std::vector<uint64_t> standardized_nether_size;
+	for(uint64_t i = 0;i < nether.size();i++){
+		standardized_nether_size.push_back(
+			nether[i].size());
+	}
+	std::vector<uint8_t*> standardized_input =
+		import_standardize_data_ptr(
+			&(data_id_ptr->at(trans_i)),
+			standardized_nether_size);
+	ASSERT(standardized_input.size() == standardized_nether_size.size(), P_ERR);
+	for(uint64_t i = 0;i < standardized_input.size();i++){
+		std::memcpy(
+			standardized_input[i],
+			nether[i].data(),
+			nether[i].size());
 	}
 }

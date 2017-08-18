@@ -12,7 +12,6 @@
   [8-BIT ESCAPED PERMISSIONS][DYNAMIC SIZED PAYLOAD]
   
   Format for permissions is defined in id_transport
-
  */
 
 static void sanity_check(

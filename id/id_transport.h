@@ -69,6 +69,7 @@ extern void export_ptr_from_data_id_ptr(
 	data_id_ptr_t *data_id_ptr,
 	transport_i_t);
 
-extern std::tuple<std::vector<uint8_t>, data_id_transport_rules_t, transport_i_t> import_ptr_to_data_id_ptr(
-	std::vector<uint8_t> *puller);
+extern void import_ptr_to_data_id_ptr(
+	std::vector<uint8_t> *puller,
+	std::vector<data_id_ptr_t> *data_id_ptr);
 #endif

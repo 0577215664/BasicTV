@@ -17,16 +17,9 @@ void data_id_t::import_data(
 		id);
 	try{
 		while(data.size() > 0){
-			const std::tuple<std::vector<uint8_t>, data_id_transport_rules_t, transport_i_t> tmp_data =
-				import_ptr_to_data_id_ptr(
-					&data);
-			ASSERT(data_vector.size() > std::get<2>(tmp_data), P_ERR);
-			std::memcpy(							
-				import_standardize_data_ptr(				
-					&data_vector[std::get<2>(tmp_data)],		
-					std::get<0>(tmp_data).size()),			
-				std::get<0>(tmp_data).data(),				
-				std::get<0>(tmp_data).size());				
+			import_ptr_to_data_id_ptr(
+				&data,
+				&data_vector);
 		}
 	}catch(...){}
 }

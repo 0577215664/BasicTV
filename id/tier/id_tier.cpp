@@ -217,14 +217,14 @@ void id_tier::operation::shift_data_to_state(
 				if(get_id_hash((*id_vector)[i]) ==
 				   get_id_hash(production_priv_key_id)){
 					// can't re-encrypt data we don't have
-					print("convert this over to new system", P_CRIT);
-					// shift_payload =
-					// 	id_api::raw::strip_to_only_rules(
-					// 		shift_payload,
-					// 		std::vector<uint8_t>({}),
-					// 		std::vector<uint8_t>({
-					// 			ID_DATA_EXPORT_RULE_ALWAYS}),
-					// 		std::vector<uint8_t>({}));
+					shift_payload =
+						id_api::raw::strip_to_transportable(
+							shift_payload,
+							data_id_transport_rules_t(
+								std::vector<std::pair<uint8_t, uint8_t> >(
+									{std::make_pair(end_state_ptr->get_tier_major(),
+											end_state_ptr->get_tier_minor())}),
+								std::vector<uint8_t>({})));
 				} // don't care, can't reconstruct
 				// TODO: can probably decrypt and check, blacklist against DDoS?
 				if(shift_payload.size() == 0){

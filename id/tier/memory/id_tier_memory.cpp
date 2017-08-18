@@ -14,7 +14,6 @@
 #include "../../../tv/tv_frame_caption.h"
 #include "../../../tv/tv_channel.h"
 #include "../../../tv/tv_window.h"
-#include "../../../tv/tv_menu.h"
 #include "../../../tv/tv_item.h"
 #include "../../../net/proto/inbound/net_proto_inbound_data.h"
 #include "../../../net/proto/outbound/net_proto_outbound_data.h"
@@ -113,8 +112,6 @@ ID_TIER_ADD_DATA(mem){
 	CHECK_TYPE(tv_frame_audio_t);
 	CHECK_TYPE(tv_window_t);
 	CHECK_TYPE(tv_channel_t);
-	CHECK_TYPE(tv_menu_entry_t);
-	CHECK_TYPE(tv_menu_t);
 	CHECK_TYPE(tv_item_t);
 	
 	// net (proto and standard)
@@ -170,8 +167,6 @@ ID_TIER_DEL_ID(mem){
 	DELETE_TYPE_2(tv_frame_caption_t);
 	DELETE_TYPE_2(tv_window_t);
 	DELETE_TYPE_2(tv_channel_t);
-	DELETE_TYPE_2(tv_menu_entry_t);
-	DELETE_TYPE_2(tv_menu_t);
 	DELETE_TYPE_2(tv_item_t);
 	
 	// net (proto and standard)

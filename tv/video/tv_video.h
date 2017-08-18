@@ -1,5 +1,5 @@
-#include "../id/id.h"
-#include "../util.h"
+#include "../../id/id.h"
+#include "../../util.h"
 #ifndef TV_VIDEO_H
 #define TV_VIDEO_H
 // logic behind rendering video to the screen
@@ -20,7 +20,8 @@ public:
 	GET_SET_S(flags, uint8_t);
 };
 
-extern void tv_video_init();
-extern void tv_video_loop();
-extern void tv_video_close();
+/* extern void tv_video_init(); */
+/* extern void tv_video_loop(); */
+/* extern void tv_video_close(); */
+
 #endif

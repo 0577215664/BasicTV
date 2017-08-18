@@ -22,12 +22,12 @@ static void unload_nuke_reload(T ptr){
 	}
 }
 
-#define SIMPLE_TRANSPORT_TEST(import_func, export_func, subvector_size)	\
+#define SIMPLE_TRANSPORT_TEST(import_func, export_func, subvector_size) \
 	if(true){							\
 		const std::vector<uint8_t> tmp_correct = std::vector<uint8_t>(rand_data.begin(), rand_data.begin()+subvector_size); \
 		export_func(&tmp, tmp_correct);				\
 		const std::vector<uint8_t> tmp_output = import_func(&tmp); \
-		ASSERT(tmp_output == tmp_correct, P_ERR);	\
+		ASSERT(tmp_output == tmp_correct, P_ERR);		\
 		ASSERT(tmp.size() == 0, P_ERR);				\
 	}
 
@@ -65,14 +65,18 @@ void test::id_system::transport::core_functions(){
 		true_rand_byte_vector(
 			65536*2); // three byte size
 	std::vector<uint8_t> tmp;
-	SIMPLE_TRANSPORT_TEST(
-		import_8bit_size_payload,
-		export_8bit_size_payload,
-		255);
-	SIMPLE_TRANSPORT_TEST(
-		import_dynamic_size_payload,
-		export_dynamic_size_payload,
-		65536);
+	for(uint64_t b = 0;b < 255;b++){
+		SIMPLE_TRANSPORT_TEST(
+			import_8bit_size_payload,
+			export_8bit_size_payload,
+			b);
+	}
+	for(uint64_t b = 0;b < 1024;b++){
+		SIMPLE_TRANSPORT_TEST(
+			import_dynamic_size_payload,
+			export_dynamic_size_payload,
+			b);
+	}
 	static_size_payload_test();
 	stringify_rules_test();
 	
