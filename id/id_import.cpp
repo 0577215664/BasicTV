@@ -17,6 +17,7 @@ void data_id_t::import_data(
 		id);
 	try{
 		while(data.size() > 0){
+			std::raise(SIGINT);
 			import_ptr_to_data_id_ptr(
 				&data,
 				&data_vector);
