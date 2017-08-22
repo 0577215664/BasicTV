@@ -89,11 +89,17 @@ void test_audio(){
 	RUN_TEST(test::audio::opus);
 }
 
+void test_math(){
+	RUN_TEST(test::math::number::add);
+	RUN_TEST(test::math::number::sub);
+}
+
 void test_suite(){
 	loop_number =
 		settings::get_setting_unsigned_def(
 			"test_loop_count", 1);
 	print("set test loop number to " + std::to_string(loop_number), P_NOTE);
+	test_math();
 	test_escape();
 	test_id_subsystem();
 	test_net();

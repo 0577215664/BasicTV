@@ -250,8 +250,6 @@ ID_TIER_UPDATE_CACHE(mem){
   cannot call id_tier (out of fear of an infinite loop)
  */
 
-#pragma message("disabled all non-memory reading for now, undo the following comment block")
-
 static std::vector<id_t_> lookup_vector;
 
 data_id_t *id_tier::mem::get_id_ptr(

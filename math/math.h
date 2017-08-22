@@ -57,6 +57,9 @@ namespace math{
 				  std::vector<uint8_t> > raw_species(
 					  std::vector<uint8_t> data);
 		}
+		std::vector<uint8_t> create(std::vector<uint8_t> raw_number_data_major,
+					    std::vector<uint8_t> raw_number_data_minor,
+					    uint64_t number);
 		std::vector<uint8_t> create(long double number,
 					    uint64_t unit);
 		std::vector<uint8_t> create(uint64_t number,

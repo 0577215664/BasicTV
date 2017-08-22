@@ -214,6 +214,30 @@ std::vector<uint8_t> math::number::create(int64_t number,
 	return retval;
 }
 
+std::vector<uint8_t> math::number::create(std::vector<uint8_t> raw_number_data_major,
+					  std::vector<uint8_t> raw_number_data_minor,
+					  uint64_t unit){
+	std::vector<uint8_t> retval;
+	convert::nbo::to(
+		raw_number_data_major.data(),
+		raw_number_data_major.size());
+	convert::nbo::to(
+		raw_number_data_minor.data(),
+		raw_number_data_minor.size());
+	ASSERT(raw_number_data_major.size() <= UINT32_MAX, P_ERR);
+	ASSERT(raw_number_data_minor.size() <= UINT32_MAX, P_ERR);
+	uint32_t major_size =
+		NBO_32(static_cast<uint32_t>(raw_number_data_major.size()));
+	uint32_t minor_size =
+		NBO_32(static_cast<uint32_t>(raw_number_data_minor.size()));
+	NUMBER_CREATE_ADD(unit);
+	NUMBER_CREATE_ADD(major_size);
+	retval.insert(retval.end(), raw_number_data_major.begin(), raw_number_data_major.end());
+	NUMBER_CREATE_ADD(minor_size);
+	retval.insert(retval.end(), raw_number_data_minor.begin(), raw_number_data_minor.end());
+}
+					  
+
 // simple helper function
 
 void math::number::add_data_to_set(

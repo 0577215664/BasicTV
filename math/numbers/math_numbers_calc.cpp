@@ -21,39 +21,96 @@ static void math_number_same_units(std::vector<std::vector<uint8_t> > data){
 	print("numbers appear to have sane units", P_DEBUG);
 }
 
-/*
-  Maybe, when the pieces of data get beyond insanely large, we might be able to 
-  have threads running on basic addition and subtraction of 1M+ items?
- */
-
-static std::vector<uint8_t> math_simple_add(
-	std::vector<uint8_t> x,
-	std::vector<uint8_t> y){
-	std::vector<uint8_t> retval;
-	long double x_ =
-		math::number::get::number(x);
-	long double y_ =
-		math::number::get::number(y);
-	uint64_t x_unit =
-		math::number::get::unit(x);
-	uint64_t y_unit =
-		math::number::get::unit(y);
-	uint64_t real_unit = 0;
+static uint64_t math_unit_logic(
+	uint64_t x_unit,
+	uint64_t y_unit){
 	if(x_unit == 0 && y_unit != 0){
-		real_unit = y_unit;
+		return y_unit;
 	}else if(x_unit != 0 && y_unit == 0){
-		real_unit = x_unit;
+		return x_unit;
 	}else if(x_unit != 0 && y_unit != 0){
 		if(x_unit == y_unit){
-			real_unit = x_unit; // or y_unit
+			return x_unit;
 		}else{
+			/*
+			  Units are dropped here, more complicated unit logic
+			  is taken care of in the caller
+			 */
 			print("unit mismatch", P_WARN);
+			return 0;
 		}
 	}
-	print("again, I really need to go over this code", P_WARN);
+	return 0;
+}
+
+// TODO: can optimize this a lot with 128-bit operations
+/*
+  This can subtract as well, so base all other functions off of this and
+  comparison functions
+ */
+static std::vector<uint8_t> math_simple_add(
+	std::vector<uint8_t> x_,
+	std::vector<uint8_t> y_){
+	std::pair<std::vector<uint8_t>, std::vector<uint8_t> >  raw_number_data;
+	std::pair<std::vector<uint8_t>, std::vector<uint8_t> > x =
+		math::number::get::raw_species(
+			x_);
+	std::pair<std::vector<uint8_t>, std::vector<uint8_t> > y =
+		math::number::get::raw_species(
+			x_);
+	if(std::get<0>(x).size() == 0 ||
+	   std::get<1>(x).size() == 0){
+		return y_;
+	}
+	if(std::get<0>(y).size() == 0 ||
+	   std::get<1>(y).size() == 0){
+		return x_;
+	}
+	const uint64_t larger_size_minor =
+		(std::get<1>(x).size() > std::get<1>(y).size()) ? std::get<1>(x).size()-1 : std::get<1>(y).size()-1;
+	uint8_t carry = 0;
+	// minor species
+	for(uint64_t i = 0;i < larger_size_minor;i++){
+		const uint8_t x_val = (std::get<1>(x).size() < i) ? 0 : std::get<1>(x)[i];
+		const uint8_t y_val = (std::get<1>(y).size() < i) ? 0 : std::get<1>(y)[i];
+		std::get<1>(raw_number_data).push_back(
+			x_val+y_val+carry);
+		int16_t carry_data =
+			static_cast<uint16_t>(x_val)+static_cast<uint16_t>(y_val);
+		if(carry_data > UINT8_MAX){
+			carry = 1;
+		}else if(carry_data < 0){
+			carry = -1;
+		}else{
+			carry = 0;
+		}
+		P_V(carry, P_SPAM);
+	}
+	const uint64_t larger_size_major =
+		(std::get<0>(x).size() > std::get<0>(y).size()) ? std::get<0>(x).size()-1 : std::get<0>(y).size()-1;
+	// major species
+	for(uint64_t i = 0;i < larger_size_major;i++){
+		const uint8_t x_val = (std::get<0>(x).size() < i) ? 0 : std::get<1>(x)[i];
+		const uint8_t y_val = (std::get<0>(y).size() < i) ? 0 : std::get<1>(y)[i];
+		std::get<0>(raw_number_data).push_back(
+			x_val+y_val+carry);
+		int16_t carry_data =
+			static_cast<uint16_t>(x_val)+static_cast<uint16_t>(y_val);
+		if(carry_data > UINT8_MAX){
+			carry = 1;
+		}else if(carry_data < 0){
+			carry = -1;
+		}else{
+			carry = 0;
+		}
+		P_V(carry, P_SPAM);
+	}
 	return math::number::create(
-		x_+y_,
-		real_unit);
+		raw_number_data.first,
+		raw_number_data.second,
+		math_unit_logic(
+			math::number::get::unit(x_),
+			math::number::get::unit(y_)));
 }
 
 std::vector<uint8_t> math::number::calc::add(
