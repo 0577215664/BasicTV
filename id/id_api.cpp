@@ -492,114 +492,127 @@ bool encrypt_blacklist_type(type_t_ type_){
 		type_) != encrypt_blacklist.end();
 }
 
-#define ID_SHIFT(x) vector_pos += sizeof(x)
-#define ID_IMPORT(x) memcpy(&x, data.data()+vector_pos, sizeof(x));vector_pos += sizeof(x)
+static std::vector<std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> > import_to_vectorized(
+	std::vector<uint8_t> *vector){
+	std::vector<std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> > retval;
+	while(vector->size() > 0){
+		std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> tmp =
+			{{}, 0, data_id_transport_rules_t({}, {})};
+		IMPORT_STATIC(
+			*vector,
+			std::get<1>(tmp));
+		std::get<2>(tmp) =
+			unstringify_rules(
+				vector);
+		const uint64_t vector_length =
+			import_gen_dynamic_size(
+				vector);
+		for(uint64_t i = 0;i < vector_length;i++){
+			const transport_i_t vector_trans_i =
+				import_gen_dynamic_size(
+					vector);
+			nether_add_at_pos(
+				&(std::get<0>(tmp)),
+				import_dynamic_size_payload(
+					vector),
+				vector_trans_i);
+		}
+		retval.push_back(
+			tmp);
+	}
+	return retval;
+}
+
+static void export_to_vectorized(
+	std::vector<uint8_t> *vector,
+	std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> data){
+	EXPORT_STATIC(
+		*vector,
+		std::get<1>(data));
+	stringify_rules(
+		vector,
+		std::get<2>(data));
+	const std::vector<uint8_t> vector_length =
+		export_gen_dynamic_size(
+			std::get<0>(data).size());
+	vector->insert(
+		vector->end(),
+		vector_length.begin(),
+		vector_length.end());
+	for(uint64_t i = 0;i < std::get<0>(data).size();i++){
+		// we use nether for this, so don't worry about finding the pos
+		const std::vector<uint8_t> vector_iter =
+			export_gen_dynamic_size(
+				i);
+		vector->insert(
+			vector->end(),
+			vector_iter.begin(),
+			vector_iter.end());
+		export_dynamic_size_payload(
+			vector,
+			std::get<0>(data)[i]);
+	}
+}
 
 #pragma message("strip_to_transportable doesn't work properly")
 
 std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	std::vector<uint8_t> data,
 	data_id_transport_rules_t rules){
-	print("FIX THIS CODE, only disabled right now to test the rest of the ID functionality", P_WARN);
-	return data;
-	// ASSERT(rules.tier.size() <= 1, P_ERR);
-	// ASSERT(rules.intermediary.size() <= 1, P_ERR);
-	// force_to_extra(data, 0);
-	// extra_t_ extra;
-	// id_t_ id;
-	// mod_inc_t_ mod_inc;
-	// IMPORT_STATIC(
-	// 	data,
-	// 	extra);
-	// ASSERT(extra == 0, P_ERR);
-	// IMPORT_STATIC(
-	// 	data,
-	// 	id);
-	// IMPORT_STATIC(
-	// 	data,
-	// 	mod_inc);
-	// std::vector<uint8_t> retval;
-	// EXPORT_STATIC(
-	// 	retval,
-	// 	extra);
-	// EXPORT_STATIC(
-	// 	retval,
-	// 	id);
-	// EXPORT_STATIC(
-	// 	retval,
-	// 	mod_inc);
-	// while(data.size() > 0){
-	// 	transport_i_t tmp_i;
-	// 	IMPORT_STATIC(
-	// 		data,
-	// 		tmp_i);
-	// 	data_id_transport_rules_t tmp_rules =
-	// 		unstringify_rules(
-	// 			&data);
-	// 	uint64_t tmp_vector_size =
-	// 		import_gen_dynamic_size(
-	// 			&data);
-	// 	std::vector<std::pair<std::vector<uint8_t>, transport_i_t> > payload;
-	// 	for(uint64_t i = 0;i < tmp_vector_size;i++){
-	// 		std::raise(SIGINT);
-	// 		transport_i_t tmp_vector_i =
-	// 			import_gen_dynamic_size(
-	// 				&data);
-	// 		std::raise(SIGINT);
-	// 		payload.push_back(
-	// 			std::make_pair(
-	// 				import_dynamic_size_payload(
-	// 					&data),
-	// 				tmp_vector_i));
-	// 	}
+	ASSERT(rules.tier.size() <= 1, P_ERR);
+	ASSERT(rules.intermediary.size() <= 1, P_ERR);
+	force_to_extra(data, 0);
+	extra_t_ extra;
+	id_t_ id;
+	mod_inc_t_ mod_inc;
+	IMPORT_STATIC(
+		data,
+		extra);
+	ASSERT(extra == 0, P_ERR);
+	IMPORT_STATIC(
+		data,
+		id);
+	IMPORT_STATIC(
+		data,
+		mod_inc);
+	std::vector<uint8_t> retval;
+	EXPORT_STATIC(
+		retval,
+		extra);
+	EXPORT_STATIC(
+		retval,
+		id);
+	EXPORT_STATIC(
+		retval,
+		mod_inc);
 
-	// 	bool good_tier = rules.tier.size() == 0;
-	// 	for(uint64_t i = 0;i < tmp_rules.tier.size();i++){
-	// 		good_tier |=
-	// 			std::find(
-	// 				rules.tier.begin(),
-	// 				rules.tier.end(),
-	// 				tmp_rules.tier[i]) != rules.tier.end();
-	// 	}
-	// 	bool good_intermediary = rules.intermediary.size() == 0;
-	// 	for(uint64_t i = 0;i < tmp_rules.intermediary.size();i++){
-	// 		good_intermediary |=
-	// 			std::find(
-	// 				rules.intermediary.begin(),
-	// 				rules.intermediary.end(),
-	// 				tmp_rules.intermediary[i]) != rules.intermediary.end();
-	// 	}
-	// 	if(!(good_tier && good_intermediary)){
-	// 		continue;
-	// 	}
-	// 	EXPORT_STATIC(
-	// 		retval,
-	// 		tmp_i);
-	// 	stringify_rules(
-	// 		&retval,
-	// 		rules);
-
-	// 	std::vector<uint8_t> dyn_size_ =
-	// 		export_gen_dynamic_size(
-	// 			tmp_vector_size);
-	// 	retval.insert(
-	// 		retval.end(),
-	// 		dyn_size_.begin(),
-	// 		dyn_size_.end());
-	// 	for(uint64_t i = 0;i < payload.size();i++){
-	// 		const std::vector<uint8_t> tmp_vector_i =
-	// 			export_gen_dynamic_size(
-	// 				std::get<1>(payload[i]));
-	// 		retval.insert(
-	// 			retval.end(),
-	// 			tmp_vector_i.begin(),
-	// 			tmp_vector_i.end());
-	// 		export_dynamic_size_payload(
-	// 			&retval,
-	// 			(std::get<0>(payload[i])));
-	// 	}
-	// }
-	// return retval;
+	const std::vector<std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> > all_import =
+		import_to_vectorized(
+			&data);
+	for(uint64_t i = 0;i < all_import.size();i++){
+		bool good_tier = rules.tier.size() == 0;
+		for(uint64_t c = 0;c < std::get<2>(all_import[i]).tier.size();c++){
+			good_tier |=
+				std::find(
+					rules.tier.begin(),
+					rules.tier.end(),
+					std::get<2>(all_import[i]).tier[c]) != rules.tier.end();
+		}
+		bool good_intermediary = rules.intermediary.size() == 0;
+		for(uint64_t c = 0;c < std::get<2>(all_import[i]).intermediary.size();c++){
+			good_intermediary |=
+				std::find(
+					rules.intermediary.begin(),
+					rules.intermediary.end(),
+					std::get<2>(all_import[i]).intermediary[c]) != rules.intermediary.end();
+		}
+		if(good_tier && good_intermediary){
+			export_to_vectorized(
+				&retval,
+				all_import[i]);
+		}
+	}
+	return retval;
 }
 
 std::vector<uint8_t> id_api::raw::force_to_extra(

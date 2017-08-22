@@ -269,7 +269,7 @@ void export_ptr_from_data_id_ptr(
 	}
 }
 
-static void nether_add_at_pos(
+void nether_add_at_pos(
 	std::vector<std::vector<uint8_t> > *nether,
 	std::vector<uint8_t> data,
 	uint64_t pos){

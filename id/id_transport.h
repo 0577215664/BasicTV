@@ -72,4 +72,10 @@ extern void export_ptr_from_data_id_ptr(
 extern void import_ptr_to_data_id_ptr(
 	std::vector<uint8_t> *puller,
 	std::vector<data_id_ptr_t> *data_id_ptr);
+
+// only extern for strip_to_transportable
+extern void nether_add_at_pos(
+	std::vector<std::vector<uint8_t> > *nether,
+	std::vector<uint8_t> data,
+	uint64_t pos);
 #endif
