@@ -233,6 +233,9 @@ void export_ptr_from_data_id_ptr(
 	const std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > standardized =
 		export_standardize_data_ptr(
 			data_id_ptr);
+	if(standardized.size() == 0){
+		return;
+	}
 	ASSERT(standardized.size() == 1, P_ERR);
 	EXPORT_STATIC(
 		*pusher,
@@ -248,10 +251,8 @@ void export_ptr_from_data_id_ptr(
 		vector_length.begin(),
 		vector_length.end());
 	for(uint64_t i = 0;i < standardized.size();i++){
-		if(std::get<0>(standardized[i]) == nullptr ||
-		   std::get<2>(standardized[i]) == 0){
-			continue;
-		}
+		ASSERT(std::get<0>(standardized[i]) != nullptr &&
+		       std::get<2>(standardized[i]) != 0, P_ERR);
 		const std::vector<uint8_t> vector_iter =
 			export_gen_dynamic_size(
 				std::get<1>(standardized[i]));
@@ -293,7 +294,6 @@ void import_ptr_to_data_id_ptr(
 	uint64_t vector_length =
 		import_gen_dynamic_size(
 			puller);
-	ASSERT(vector_length == 1, P_ERR);
 	// nether is a working copy of the 2D vector we are inserting,
 	// only types currently using more than 1D is a byte vector vector
 	std::vector<std::vector<uint8_t> > nether;

@@ -528,9 +528,17 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 		uint64_t tmp_vector_size =
 			import_gen_dynamic_size(
 				&data);
-		std::vector<uint8_t> tmp_payload =
-			import_dynamic_size_payload(
-				&data);
+		std::vector<std::pair<std::vector<uint8_t>, transport_i_t> > payload;
+		for(uint64_t i = 0;i < tmp_vector_size;i++){
+			transport_i_t tmp_vector_i =
+				import_gen_dynamic_size(
+					&data);
+			payload.push_back(
+				std::make_pair(
+					import_dynamic_size_payload(
+						&data),
+					tmp_vector_i));
+		}
 
 		bool good_tier = rules.tier.size() == 0;
 		for(uint64_t i = 0;i < tmp_rules.tier.size();i++){
@@ -557,17 +565,27 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 		stringify_rules(
 			&retval,
 			rules);
-		std::vector<uint8_t> dyn_size =
+
+		std::vector<uint8_t> dyn_size_ =
 			export_gen_dynamic_size(
 				tmp_vector_size);
 		retval.insert(
 			retval.end(),
-			dyn_size.begin(),
-			dyn_size.end());
-		export_dynamic_size_payload(
-			&retval,
-			tmp_payload);
-		
+			dyn_size_.begin(),
+			dyn_size_.end());
+
+		for(uint64_t i = 0;i < payload.size();i++){
+			const std::vector<uint8_t> tmp_vector_i =
+				export_gen_dynamic_size(
+					std::get<1>(payload[i]));
+			retval.insert(
+				retval.end(),
+				tmp_vector_i.begin(),
+				tmp_vector_i.end());
+			export_dynamic_size_payload(
+				&retval,
+				(std::get<0>(payload[i])));
+		}
 	}
 	return retval;
 }

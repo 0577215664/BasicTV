@@ -22,6 +22,9 @@ std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > export_standardize_d
 			std::vector<uint8_t> *byte_vector =
 				reinterpret_cast<std::vector<uint8_t>* >(
 					data_id_ptr->get_ptr());
+			if(byte_vector->size() == 0){
+				return {};
+			}
 			return std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> >(
 				{std::make_tuple(
 						byte_vector->data(),
@@ -34,6 +37,9 @@ std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > export_standardize_d
 			std::vector<uint64_t> *byte_vector =
 				reinterpret_cast<std::vector<uint64_t> *>(
 					data_id_ptr->get_ptr());
+			if(byte_vector->size() == 0){
+				return {};
+			}
 			return std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> >(
 				{std::make_tuple(
 						reinterpret_cast<uint8_t*>(byte_vector->data()),
