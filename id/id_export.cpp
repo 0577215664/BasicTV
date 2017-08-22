@@ -33,6 +33,9 @@ std::vector<uint8_t> data_id_t::export_data(
 	EXPORT_STATIC(
 		retval,
 		id);
+	EXPORT_STATIC(
+		retval,
+		modification_incrementor);
 	for(uint64_t i = 0;i < data_vector.size();i++){
 		try{
 			export_ptr_from_data_id_ptr(

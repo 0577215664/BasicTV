@@ -503,6 +503,7 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	force_to_extra(data, 0);
 	extra_t_ extra;
 	id_t_ id;
+	mod_inc_t_ mod_inc;
 	IMPORT_STATIC(
 		data,
 		extra);
@@ -510,6 +511,9 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	IMPORT_STATIC(
 		data,
 		id);
+	IMPORT_STATIC(
+		data,
+		mod_inc);
 	std::vector<uint8_t> retval;
 	EXPORT_STATIC(
 		retval,
@@ -517,6 +521,9 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	EXPORT_STATIC(
 		retval,
 		id);
+	EXPORT_STATIC(
+		retval,
+		mod_inc);
 	while(data.size() > 0){
 		transport_i_t tmp_i;
 		IMPORT_STATIC(
