@@ -500,104 +500,106 @@ bool encrypt_blacklist_type(type_t_ type_){
 std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	std::vector<uint8_t> data,
 	data_id_transport_rules_t rules){
-	ASSERT(rules.tier.size() <= 1, P_ERR);
-	ASSERT(rules.intermediary.size() <= 1, P_ERR);
-	force_to_extra(data, 0);
-	extra_t_ extra;
-	id_t_ id;
-	mod_inc_t_ mod_inc;
-	IMPORT_STATIC(
-		data,
-		extra);
-	ASSERT(extra == 0, P_ERR);
-	IMPORT_STATIC(
-		data,
-		id);
-	IMPORT_STATIC(
-		data,
-		mod_inc);
-	std::vector<uint8_t> retval;
-	EXPORT_STATIC(
-		retval,
-		extra);
-	EXPORT_STATIC(
-		retval,
-		id);
-	EXPORT_STATIC(
-		retval,
-		mod_inc);
-	while(data.size() > 0){
-		transport_i_t tmp_i;
-		IMPORT_STATIC(
-			data,
-			tmp_i);
-		data_id_transport_rules_t tmp_rules =
-			unstringify_rules(
-				&data);
-		uint64_t tmp_vector_size =
-			import_gen_dynamic_size(
-				&data);
-		std::vector<std::pair<std::vector<uint8_t>, transport_i_t> > payload;
-		for(uint64_t i = 0;i < tmp_vector_size;i++){
-			std::raise(SIGINT);
-			transport_i_t tmp_vector_i =
-				import_gen_dynamic_size(
-					&data);
-			std::raise(SIGINT);
-			payload.push_back(
-				std::make_pair(
-					import_dynamic_size_payload(
-						&data),
-					tmp_vector_i));
-		}
+	print("FIX THIS CODE, only disabled right now to test the rest of the ID functionality", P_WARN);
+	return data;
+	// ASSERT(rules.tier.size() <= 1, P_ERR);
+	// ASSERT(rules.intermediary.size() <= 1, P_ERR);
+	// force_to_extra(data, 0);
+	// extra_t_ extra;
+	// id_t_ id;
+	// mod_inc_t_ mod_inc;
+	// IMPORT_STATIC(
+	// 	data,
+	// 	extra);
+	// ASSERT(extra == 0, P_ERR);
+	// IMPORT_STATIC(
+	// 	data,
+	// 	id);
+	// IMPORT_STATIC(
+	// 	data,
+	// 	mod_inc);
+	// std::vector<uint8_t> retval;
+	// EXPORT_STATIC(
+	// 	retval,
+	// 	extra);
+	// EXPORT_STATIC(
+	// 	retval,
+	// 	id);
+	// EXPORT_STATIC(
+	// 	retval,
+	// 	mod_inc);
+	// while(data.size() > 0){
+	// 	transport_i_t tmp_i;
+	// 	IMPORT_STATIC(
+	// 		data,
+	// 		tmp_i);
+	// 	data_id_transport_rules_t tmp_rules =
+	// 		unstringify_rules(
+	// 			&data);
+	// 	uint64_t tmp_vector_size =
+	// 		import_gen_dynamic_size(
+	// 			&data);
+	// 	std::vector<std::pair<std::vector<uint8_t>, transport_i_t> > payload;
+	// 	for(uint64_t i = 0;i < tmp_vector_size;i++){
+	// 		std::raise(SIGINT);
+	// 		transport_i_t tmp_vector_i =
+	// 			import_gen_dynamic_size(
+	// 				&data);
+	// 		std::raise(SIGINT);
+	// 		payload.push_back(
+	// 			std::make_pair(
+	// 				import_dynamic_size_payload(
+	// 					&data),
+	// 				tmp_vector_i));
+	// 	}
 
-		bool good_tier = rules.tier.size() == 0;
-		for(uint64_t i = 0;i < tmp_rules.tier.size();i++){
-			good_tier |=
-				std::find(
-					rules.tier.begin(),
-					rules.tier.end(),
-					tmp_rules.tier[i]) != rules.tier.end();
-		}
-		bool good_intermediary = rules.intermediary.size() == 0;
-		for(uint64_t i = 0;i < tmp_rules.intermediary.size();i++){
-			good_intermediary |=
-				std::find(
-					rules.intermediary.begin(),
-					rules.intermediary.end(),
-					tmp_rules.intermediary[i]) != rules.intermediary.end();
-		}
-		if(!(good_tier && good_intermediary)){
-			continue;
-		}
-		EXPORT_STATIC(
-			retval,
-			tmp_i);
-		stringify_rules(
-			&retval,
-			rules);
+	// 	bool good_tier = rules.tier.size() == 0;
+	// 	for(uint64_t i = 0;i < tmp_rules.tier.size();i++){
+	// 		good_tier |=
+	// 			std::find(
+	// 				rules.tier.begin(),
+	// 				rules.tier.end(),
+	// 				tmp_rules.tier[i]) != rules.tier.end();
+	// 	}
+	// 	bool good_intermediary = rules.intermediary.size() == 0;
+	// 	for(uint64_t i = 0;i < tmp_rules.intermediary.size();i++){
+	// 		good_intermediary |=
+	// 			std::find(
+	// 				rules.intermediary.begin(),
+	// 				rules.intermediary.end(),
+	// 				tmp_rules.intermediary[i]) != rules.intermediary.end();
+	// 	}
+	// 	if(!(good_tier && good_intermediary)){
+	// 		continue;
+	// 	}
+	// 	EXPORT_STATIC(
+	// 		retval,
+	// 		tmp_i);
+	// 	stringify_rules(
+	// 		&retval,
+	// 		rules);
 
-		std::vector<uint8_t> dyn_size_ =
-			export_gen_dynamic_size(
-				tmp_vector_size);
-		retval.insert(
-			retval.end(),
-			dyn_size_.begin(),
-			dyn_size_.end());
-		for(uint64_t i = 0;i < payload.size();i++){
-			const std::vector<uint8_t> tmp_vector_i =
-				export_gen_dynamic_size(
-					std::get<1>(payload[i]));
-			retval.insert(
-				retval.end(),
-				tmp_vector_i.begin(),
-				tmp_vector_i.end());
-			export_dynamic_size_payload(
-				&retval,
-				(std::get<0>(payload[i])));
-		}
-	}
-	return retval;
+	// 	std::vector<uint8_t> dyn_size_ =
+	// 		export_gen_dynamic_size(
+	// 			tmp_vector_size);
+	// 	retval.insert(
+	// 		retval.end(),
+	// 		dyn_size_.begin(),
+	// 		dyn_size_.end());
+	// 	for(uint64_t i = 0;i < payload.size();i++){
+	// 		const std::vector<uint8_t> tmp_vector_i =
+	// 			export_gen_dynamic_size(
+	// 				std::get<1>(payload[i]));
+	// 		retval.insert(
+	// 			retval.end(),
+	// 			tmp_vector_i.begin(),
+	// 			tmp_vector_i.end());
+	// 		export_dynamic_size_payload(
+	// 			&retval,
+	// 			(std::get<0>(payload[i])));
+	// 	}
+	// }
+	// return retval;
 }
 
 std::vector<uint8_t> id_api::raw::force_to_extra(
