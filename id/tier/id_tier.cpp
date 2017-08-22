@@ -432,7 +432,8 @@ static void id_tier_init_disk(){
 #endif
 		path += "BasicTV";
 	}
-	P_V_S(path, P_VAR);
+	print("setting data folder path to '" + path + "'", P_NOTE);
+	// P_V_S(path, P_VAR);
 	disk_state_ptr->path =
 		convert::string::to_bytes(
 			path);

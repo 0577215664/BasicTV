@@ -16,7 +16,7 @@ std::vector<std::tuple<uint8_t*, transport_i_t, uint64_t> > export_standardize_d
 			{std::make_tuple(
 					static_cast<uint8_t*>(data_id_ptr->get_ptr()),
 					0, 
-					static_cast<uint64_t>(data_id_ptr->get_length()))});
+					static_cast<uint64_t>(data_id_ptr->get_length()*sizeof(id_t_)))});
 	case ID_DATA_BYTE_VECTOR:
 		if(true){
 			std::vector<uint8_t> *byte_vector =
@@ -88,7 +88,7 @@ std::vector<uint8_t*> import_standardize_data_ptr(
 				reinterpret_cast<uint8_t*>(data_id_ptr->get_ptr())});
 	case ID_DATA_ID:
 		ASSERT(target_size.size() == 1, P_ERR);
-		ASSERT(data_id_ptr->get_length() == target_size[0], P_ERR);
+		ASSERT(data_id_ptr->get_length()*sizeof(id_t_) == target_size[0], P_ERR);
 		return std::vector<uint8_t*>({
 				reinterpret_cast<uint8_t*>(data_id_ptr->get_ptr())});
 	case ID_DATA_BYTE_VECTOR:
