@@ -14,11 +14,9 @@ void data_id_t::import_data(
 	ASSERT(data.size() > 0, P_UNABLE);
 	ASSERT(data[0] == 0, P_ERR);
 	data.erase(data.begin()); // extra is zero
-	mem_del_id(this);
 	IMPORT_STATIC(
 		data,
 		id);
-	mem_add_id(this);
 	IMPORT_STATIC(
 		data,
 		modification_incrementor);
@@ -29,4 +27,9 @@ void data_id_t::import_data(
 				&data_vector);
 		}
 	}catch(...){}
+	id_tier_mem_regen_state_cache();
+	id_tier_mem_update_state_cache(
+		PTR_DATA(id_tier::state_tier::only_state_of_tier(
+				 0, 0),
+			 id_tier_state_t));
 }

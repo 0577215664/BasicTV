@@ -277,6 +277,7 @@ static void nether_add_at_pos(
 		nether->push_back(
 			std::vector<uint8_t>({}));
 	}
+	ASSERT(nether->at(pos).size() == 0, P_ERR);
 	nether->at(pos) = data;
 }
 

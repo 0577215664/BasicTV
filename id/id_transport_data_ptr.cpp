@@ -120,6 +120,12 @@ std::vector<uint8_t*> import_standardize_data_ptr(
 		}
 		break;
 	case ID_DATA_BYTE_VECTOR_VECTOR:
+		if(target_size.size() == 1){
+			print("byte vector vector only given one dimension, assuming all previous levels are ones", P_WARN);
+			target_size.insert(
+				target_size.begin(),
+				1);
+		}
 		ASSERT(target_size.size() == 2, P_ERR);
 		if(true){
 			std::vector<uint8_t*> retval;

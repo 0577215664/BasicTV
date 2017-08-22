@@ -495,6 +495,8 @@ bool encrypt_blacklist_type(type_t_ type_){
 #define ID_SHIFT(x) vector_pos += sizeof(x)
 #define ID_IMPORT(x) memcpy(&x, data.data()+vector_pos, sizeof(x));vector_pos += sizeof(x)
 
+#pragma message("strip_to_transportable doesn't work properly")
+
 std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	std::vector<uint8_t> data,
 	data_id_transport_rules_t rules){
@@ -537,9 +539,11 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 				&data);
 		std::vector<std::pair<std::vector<uint8_t>, transport_i_t> > payload;
 		for(uint64_t i = 0;i < tmp_vector_size;i++){
+			std::raise(SIGINT);
 			transport_i_t tmp_vector_i =
 				import_gen_dynamic_size(
 					&data);
+			std::raise(SIGINT);
 			payload.push_back(
 				std::make_pair(
 					import_dynamic_size_payload(
@@ -580,7 +584,6 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 			retval.end(),
 			dyn_size_.begin(),
 			dyn_size_.end());
-
 		for(uint64_t i = 0;i < payload.size();i++){
 			const std::vector<uint8_t> tmp_vector_i =
 				export_gen_dynamic_size(
