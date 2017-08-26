@@ -15,7 +15,9 @@ void test::math::number::add(){
 			::math::number::create(
 					static_cast<uint64_t>(1UL),
 					UNIT(0, 0, 0))});
-		ASSERT(static_cast<uint64_t>(::math::number::get::number(number)) == sys_num, P_ERR);
+		const uint64_t cur_num =
+			static_cast<uint64_t>(::math::number::get::number(number));
+		ASSERT(cur_num == sys_num, P_ERR);
 	}
 }
 
@@ -23,7 +25,7 @@ void test::math::number::sub(){
 	std::vector<uint8_t> number =
 		::math::number::create(
 			0L, UNIT(0, 0, 0));
-	uint64_t sys_num = 0;
+	int64_t sys_num = 0;
 	for(uint64_t i = 0;i < 65536;i++){
 		sys_num--;
 		number = ::math::number::calc::add(
@@ -31,6 +33,6 @@ void test::math::number::sub(){
 			::math::number::create(
 					static_cast<int64_t>(-1),
 					UNIT(0, 0, 0))});
-		ASSERT(static_cast<uint64_t>(::math::number::get::number(number)) == sys_num, P_ERR);
+		ASSERT(static_cast<int64_t>(::math::number::get::number(number)) == sys_num, P_ERR);
 	}
 }

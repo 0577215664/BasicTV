@@ -98,6 +98,9 @@ std::pair<std::vector<uint8_t>,
 		  std::vector<uint8_t> data){
 	uint64_t start =
 		sizeof(math_number_unit_t);
+	if(data.size() < start){
+		return std::pair<std::vector<uint8_t>, std::vector<uint8_t> >({}, {});
+	}
 	data.erase(
 		data.begin(),
 		data.begin()+start); // truncate unit

@@ -48,69 +48,47 @@ static uint64_t math_unit_logic(
   This can subtract as well, so base all other functions off of this and
   comparison functions
  */
+
+// made for carry specifically, but can be used for pretty much anything
+static void math_simple_add_byte(std::vector<uint8_t> *vector,
+				 int8_t byte){
+	for(uint64_t i = 0;i < vector->size()-1;i++){
+		if(likely(static_cast<int16_t>((*vector)[i]) + static_cast<int16_t>(byte) <= UINT8_MAX)){
+			(*vector)[i] += byte;
+			return;
+		}
+	}
+	if(likely(static_cast<int16_t>((*vector)[vector->size()-1]) + static_cast<int16_t>(byte) <= UINT8_MAX)){
+		(*vector)[vector->size()-1] += byte;
+	}else{
+		vector->push_back(
+			byte);
+	}
+}
+
+#define PULL_IF_VALID(x, y) (x.size() > y) ? x[y] : 0
+
+#define SIGN_POS true
+#define SIGN_NEG false
+
+// do math as signed of a higher bit 
+
+static std::vector<uint8_t> math_add_raw_unsigned_species(
+	std::vector<uint8_t> x,
+	std::vector<uint8_t> y,
+	bool sign){
+	bool computing = true;
+	if(x.size() < y.size()){
+		std::swap(x, y);
+	}
+	const bool x_sign = math::number::simple::get_sign();
+	for(uint64_t i = 0;i <
+	return x;
+}
+
 static std::vector<uint8_t> math_simple_add(
-	std::vector<uint8_t> x_,
-	std::vector<uint8_t> y_){
-	std::pair<std::vector<uint8_t>, std::vector<uint8_t> >  raw_number_data;
-	std::pair<std::vector<uint8_t>, std::vector<uint8_t> > x =
-		math::number::get::raw_species(
-			x_);
-	std::pair<std::vector<uint8_t>, std::vector<uint8_t> > y =
-		math::number::get::raw_species(
-			x_);
-	if(std::get<0>(x).size() == 0 ||
-	   std::get<1>(x).size() == 0){
-		return y_;
-	}
-	if(std::get<0>(y).size() == 0 ||
-	   std::get<1>(y).size() == 0){
-		return x_;
-	}
-	const uint64_t larger_size_minor =
-		(std::get<1>(x).size() > std::get<1>(y).size()) ? std::get<1>(x).size()-1 : std::get<1>(y).size()-1;
-	uint8_t carry = 0;
-	// minor species
-	for(uint64_t i = 0;i < larger_size_minor;i++){
-		const uint8_t x_val = (std::get<1>(x).size() < i) ? 0 : std::get<1>(x)[i];
-		const uint8_t y_val = (std::get<1>(y).size() < i) ? 0 : std::get<1>(y)[i];
-		std::get<1>(raw_number_data).push_back(
-			x_val+y_val+carry);
-		int16_t carry_data =
-			static_cast<uint16_t>(x_val)+static_cast<uint16_t>(y_val);
-		if(carry_data > UINT8_MAX){
-			carry = 1;
-		}else if(carry_data < 0){
-			carry = -1;
-		}else{
-			carry = 0;
-		}
-		P_V(carry, P_SPAM);
-	}
-	const uint64_t larger_size_major =
-		(std::get<0>(x).size() > std::get<0>(y).size()) ? std::get<0>(x).size()-1 : std::get<0>(y).size()-1;
-	// major species
-	for(uint64_t i = 0;i < larger_size_major;i++){
-		const uint8_t x_val = (std::get<0>(x).size() < i) ? 0 : std::get<1>(x)[i];
-		const uint8_t y_val = (std::get<0>(y).size() < i) ? 0 : std::get<1>(y)[i];
-		std::get<0>(raw_number_data).push_back(
-			x_val+y_val+carry);
-		int16_t carry_data =
-			static_cast<uint16_t>(x_val)+static_cast<uint16_t>(y_val);
-		if(carry_data > UINT8_MAX){
-			carry = 1;
-		}else if(carry_data < 0){
-			carry = -1;
-		}else{
-			carry = 0;
-		}
-		P_V(carry, P_SPAM);
-	}
-	return math::number::create(
-		raw_number_data.first,
-		raw_number_data.second,
-		math_unit_logic(
-			math::number::get::unit(x_),
-			math::number::get::unit(y_)));
+	std::vector<uint8_t> x,
+	std::vector<uint8_t> y){
 }
 
 std::vector<uint8_t> math::number::calc::add(
@@ -124,6 +102,7 @@ std::vector<uint8_t> math::number::calc::add(
 			(int64_t)0,
 			math::number::get::unit(
 				data[0]));
+	std::raise(SIGINT);
 	for(uint64_t i = 0;i < data.size();i++){
 		retval =
 			math_simple_add(

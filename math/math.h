@@ -1,28 +1,7 @@
 #ifndef MATH_H
 #define MATH_H
-/*
-  Fancy math things I need that aren't provided by the C++ standard (in a
-  friendly way) can be handled through this API. Some examples include:
-  Regressions
-  Hypothesis testing
-  Large data collecting
-  Variable precision numbers exporting to string (tv_frame_numbers)
-  Generic device unit conversions
-  - Pressure to altitude above sea level
-  - Wattage from amperage and voltage
-  - Imperial units from metric units
-  - (Possible) conversions to and from log scales
- */
-#endif
 #include "stats/math_stats.h"
 #include "numbers/math_numbers.h"
-
-/*
-  A few of these are only vectors for uniformity across calls,
-  and it might make more sense to redefine it as just two
-  numbers (number and base, probably uint64_t if we want to
-  get more sane)
- */
 
 #define MATH_ADD(x, y) math::number::calc::add({x, y})
 #define MATH_SUB(x, y) math::number::calc::sub({x, y})
@@ -40,17 +19,6 @@ namespace math{
 			std::vector<std::vector<uint8_t> > data,
 			id_t_ math_number_set_id);
 		namespace get{
-			/*
-			  PLEASE NOTE:
-			  having the number be exportable to long double
-			  doesn't define the upper internal limit as that
-			  of a long double, but just as a simple way of 
-			  exporting and representing it.
-
-			  There really is no defined upper limit of
-			  these numbers, at least not in terms of defined
-			  bit lengths
-			 */
 			long double number(std::vector<uint8_t> data);
 			uint64_t unit(std::vector<uint8_t> data);
 			std::pair<std::vector<uint8_t>,
@@ -237,3 +205,5 @@ namespace math{
 		};
 	};
 };
+
+#endif
