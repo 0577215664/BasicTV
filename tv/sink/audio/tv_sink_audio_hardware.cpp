@@ -107,10 +107,10 @@ static void tv_sink_audio_hardware_resort_playback_vector(){
 
 TV_SINK_MEDIUM_INIT(audio_hardware){
 	ASSERT(flow_direction == TV_SINK_MEDIUM_FLOW_DIRECTION_OUT, P_ERR); // no inputs yet
-	tv_sink_state_t *state_ptr =
-		new tv_sink_state_t;
-	tv_sink_audio_hardware_state_t *audio_hardware_state_ptr =
-		new tv_sink_audio_hardware_state_t;
+	STD_STATE_INIT(tv_sink_state_t,
+		       state_ptr,
+		       tv_sink_audio_hardware_state_t,
+		       audio_hardware_state_ptr);
 	if(pa_init == false){
 		const int32_t init_retval =
 			Pa_Initialize();
@@ -150,9 +150,6 @@ TV_SINK_MEDIUM_INIT(audio_hardware){
 		ASSERT(Pa_StartStream(stream) == paNoError, P_ERR);
 		pa_init = true;
 	}
-	state_ptr->set_state_ptr(
-		reinterpret_cast<void*>(
-			audio_hardware_state_ptr));
 	state_ptr->set_medium(
 		TV_SINK_MEDIUM_AUDIO_HARDWARE);
 	state_ptr->set_frame_type(
