@@ -296,3 +296,14 @@ void data_id_t::set_most_liberal_rules(
 		rules.tier[rules.tier.size()-1],
 		rules.intermediary[rules.intermediary.size()-1]);
 }
+
+std::vector<id_t_> data_id_t::all_ids(){
+	std::vector<id_t_> retval;
+	for(uint64_t i = 0;i < data_vector.size();i++){
+		if(data_vector[i].get_flags() == ID_DATA_ID){
+			ASSERT(data_vector[i].get_ptr() != nullptr, P_ERR);
+			retval.push_back(*reinterpret_cast<id_t_*>(data_vector[i].get_ptr()));
+		}
+	}
+	return retval;
+}

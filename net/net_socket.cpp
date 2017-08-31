@@ -322,15 +322,3 @@ bool net_socket_t::activity(){
 id_t_ net_socket_t::get_proxy_id(){
 	return proxy_id;
 }
-
-void net_socket_t::register_inbound_data(
-	uint32_t bytes,
-	uint64_t start_time_micro_s,
-	uint64_t end_time_micro_s){
-	net::stats::add_throughput_datum(
-		bytes,
-		start_time_micro_s,
-		end_time_micro_s,
-		id.get_id(),
-		proxy_id);
-}

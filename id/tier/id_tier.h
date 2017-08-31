@@ -44,6 +44,29 @@
 
 typedef std::pair<id_t_, mod_inc_t_> id_buffer_t;
 
+// ping just means delays in accessing, seek times/ping/etc
+struct id_tier_state_benchmark_t{
+private:
+	uint64_t ping_micro_s = 0;
+	uint64_t throughput_bits_second = 0;
+	data_id_t *id = nullptr;
+public:
+	void list_virtual_data(data_id_t *id);
+	GET_SET_V(ping_micro_s, uint64_t);
+	GET_SET_V(throughput_bits_second, uint64_t);
+};
+
+struct id_tier_state_storage_t{
+private:
+	uint64_t total_bytes = 0;
+	uint64_t used_bytes = 0;
+	data_id_t *id = nullptr;
+public:
+	void list_virtual_data(data_id_t *id);
+	GET_SET_V(total_bytes, uint64_t);
+	GET_SET_V(used_bytes, uint64_t);
+};
+
 struct id_tier_state_t{
 private:
 	uint8_t medium = 0;
@@ -117,6 +140,12 @@ namespace id_tier{
 			std::vector<std::pair<uint8_t, uint8_t> > tier_vector);
 	};
 	namespace operation{
+		namespace smart{
+			// specific tiers aren't delegated, just load it
+			// to what the program thinks is the best (directly
+			// load to tiers to fill requests, redundancy, whatnot)
+			std::vector<id_t_> add_data(std::vector<std::vector<uint8_t> > data);		
+		};
 		void add_data_to_state(
 			std::vector<id_t_> state_id,
 			std::vector<std::vector<uint8_t> > data);

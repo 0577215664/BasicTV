@@ -20,22 +20,14 @@ namespace id_api{
 		};
 		int64_t pos_in_linked_list(id_t_ ref_id, id_t_ goal_id, uint64_t max_search_radius);
 	};
-	namespace sort{
-		std::vector<id_t_> fingerprint(std::vector<id_t_> tmp);
-		/*
-		  Perhaps sort by last access time (when that gets implemented)?
-		*/
-	};
-	// comment out import really soon
-	namespace import{
-		void load_all_of_type(std::string type, uint8_t flags);
-		// used for saving, not needed for network (too slow as well)
-		uint64_t ver_on_disk(id_t_);
-		// used internally, called by id_api::array::ptr_* and others
-		void load_from_net(id_t_);
-	};
 	namespace bulk_fetch{
 		std::vector<uint64_t> mod(std::vector<id_t_> vector);
+	};
+	namespace transport{
+		std::vector<std::pair<std::vector<uint8_t>, std::vector<id_t_> > > smart_id_export(
+			std::vector<id_t_> id_list);
+		std::vector<id_t_> smart_id_import(
+			std::vector<uint8_t> data);
 	};
 	std::vector<id_t_> get_all();
 	void free_mem();

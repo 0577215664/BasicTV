@@ -82,12 +82,6 @@ namespace math{
 		 */
 	};
 	namespace functions{
-		std::vector<uint8_t> sum_inclusive(
-			id_t_ math_number_set_id,
-			uint64_t interval_dim,
-			uint64_t sum_dim,
-			std::vector<uint8_t> start_sum,
-			std::vector<uint8_t> end_sum);
 	};
 	/*
 	  math_stat_pval_t (uint32_t) is a measure of P-value, on a scale of 0-1
@@ -99,10 +93,7 @@ namespace math{
 			  BasicTV can be referenced in this sort of way
 			 */
 			namespace add{
-				void throughput_number_set(
-					id_t_ set_id,
-					uint64_t volume,
-					uint64_t timestamp_micro_s);
+				// probably reimplement this
 			};
 			namespace reduce{
 				

@@ -248,7 +248,6 @@ private:
 	void init_gen_id(type_t_);
 	void init_type_cache();
 	void add_data(void *ptr_, std::vector<uint32_t> size_, uint8_t flags_, data_id_transport_rules_t transport_rules_);
-
 public:
 	data_id_t(void *ptr_, uint8_t type);
 	~data_id_t();
@@ -288,6 +287,8 @@ public:
 		uint8_t intermediary_rule);
 	void set_most_liberal_rules(
 		data_id_transport_rules_t rules);
+
+	std::vector<id_t_> all_ids();
 };
 
 typedef uint16_t transport_i_t;

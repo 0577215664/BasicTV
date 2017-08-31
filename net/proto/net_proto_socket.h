@@ -9,20 +9,9 @@
 /*
   net_proto_socket_t: handles protocol specific transcoding
 
-  net_proto_socket_t handles removing requests when the information
-  is received, as well as encrypting all IDs for sending and abstracting
-  out everything needed to maintain a connection (establishing connections,
-  especially with TCP holepunching, requires direct access to the socket to
-  start, which falls outside of what this datatype does).
-
-  net_proto_socket_t, for statistics reasons, should only be bound to one peer
-  for the lifetime of it. The same logic applies to sockets.
-
-  It is possible to disable encryption for certain parts of the stream to allow
-  for sending encrypt_pub_key_t along the socket without having to take care
-  of SSL or creating an entire non-encrypted connection.
-
-  TODO: re-add stats somehow
+  net_proto_socket_t is getting re-implemented as an ID tier so the
+  statistics information can be fetched, computed, and IDs can be
+  managed more efficiently on disks and individual peers.
  */
 
 #define NET_PROTO_SOCKET_NO_ENCRYPT (1 << 1)
@@ -34,9 +23,6 @@ struct net_proto_socket_t{
 private:
 	id_t_ socket_id = ID_BLANK_ID;
 	id_t_ peer_id = ID_BLANK_ID;
-	// math_number_set_t
-	id_t_ inbound_id_set_id = ID_BLANK_ID;
-	id_t_ outbound_id_set_id = ID_BLANK_ID;
 	uint8_t flags = 0;
 	uint8_t state = 0;
 	uint64_t last_recv_micro_s = 0;
@@ -48,10 +34,6 @@ private:
 	void load_blocks();
 	void check_state();
 	
-	// other init functions
-	void init_create_id_sets();
-	void add_id_to_inbound_id_set(id_t_ payload_id);
-	void add_id_to_outbound_id_set(id_t_ payload_id);
 public:
 	data_id_t id;
 	net_proto_socket_t();

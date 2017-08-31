@@ -1,9 +1,12 @@
 #ifndef TV_SINK_H
 #define TV_SINK_H
+
 /*
   TV sinks are designed for real-time playback to software, like playing
   audio to a speaker, RTSP streaming, or any situation where this program
-  initiates sending and managing the stream
+  initiates sending and managing the stream. Any situation where the client
+  controls how it is being processed is (currently) only in the HTTP frontend
+  and uses HTTP GET requests for downloading.
 
   TODO: should probably be renamed to TV_SINK_STREAM, since TV_SINK_METADATA
   also exists, and has a seperate interface

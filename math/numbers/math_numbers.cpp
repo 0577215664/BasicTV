@@ -6,51 +6,7 @@
 
 #define MINOR_SPECIES_MULTIPLIER (pow(2, 64)-1)
 
-math_number_set_t::math_number_set_t() : id(this, TYPE_MATH_NUMBER_SET_T){
-}
-
-math_number_set_t::~math_number_set_t(){
-}
-
-void math_number_set_t::add_raw_data(std::vector<std::vector<uint8_t> > data){
-	if(data.size() != dim_count){
-		print("dim_count and parameter size mismatch, not adding", P_WARN);
-	}else{
-		for(uint64_t i = 0;i < dim_data.size();i++){
-			if(dim_data[i] == MATH_NUMBER_DIM_CAT){
-				data[i] = convert::nbo::to(data[i]);
-			}
-			// numbers are natively stored in NBO
-			raw_number_data.push_back(
-				data[i]);
-		}
-	}
-}
-
-std::vector<std::vector<uint8_t> >  math_number_set_t::get_raw_data(){
-	return raw_number_data;
-}
-
-void math_number_set_t::set_dim_count(uint16_t dim_count_, std::vector<uint8_t> dim_data_){
-	if(dim_data_.size() != dim_count_){
-		print("dim_data and dim_count do not match", P_ERR);
-		/*
-		  We don't need both dim_count_ and dim_data_, but honestly it 
-		  helps out with typos right now and I could care less to change
-		  it over.
-		*/
-	}
-	dim_count = dim_count_;
-	dim_data = dim_data_;
-}
-
-uint16_t math_number_set_t::get_dim_count(){
-	return dim_count;
-}
-
-std::vector<uint8_t> math_number_set_t::get_dim_data(){
-	return dim_data;
-}
+// proxy functions
 
 static void number_sanity_fetch(void *ptr, uint64_t start, uint64_t size, std::vector<uint8_t> *data){
 	if(data->size() < start+size){
@@ -136,7 +92,7 @@ long double math::number::get::number(std::vector<uint8_t> data){
   number of bytes needed to represent this (not even in powers of two, which
   is pretty nice). As of right now, it is stuck at the (somewhat reasonable)
   max of 8-bytes (64-bit), but slimming that down could help a lot if I choose
-  to optimize math_number_set_t internally (specifically removing overheads
+  to optimize math_number_set_simple_t internally (specifically removing overheads
   with multiple vectors).
  */
 
@@ -252,6 +208,6 @@ void math::number::add_data_to_set(
 	if(math_number_set_ptr == nullptr){
 		print("math_number_set_ptr is a nullptr", P_ERR);
 	}
-	math_number_set_ptr->add_raw_data(
+	math_number_set_ptr->add_data(
 		data);
 }
