@@ -23,10 +23,6 @@ namespace net{
 			uint64_t end_time_micro_s,
 			id_t_ socket_id,
 			id_t_ proxy_id);
-		// individual ID stats is handled on protocol
-		// level somehow (tie net_proto_socket_t and
-		// net_proto_peer_t to it)
-		id_t_ pull_net_stats_from_global(id_t_ net_id);
 	};
 	std::string get_cache(std::string url, int stale_time);
 	void force_url(std::string url);

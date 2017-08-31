@@ -18,7 +18,7 @@
 // match directly based on pubkey hash only
 #define ID_REQUEST_FORMAT_HASH 2
 
-struct id_request_tier_entry_t{
+struct id_request_tier_entry_t : public state_t{
 private:
 	id_t_ tier_id = ID_BLANK_ID;
 	uint8_t format = 0;
@@ -59,6 +59,30 @@ public:
 	GET_SET_S(tier_vector, std::vector<id_request_tier_entry_t>);
 };
 
+/*
+  Statistics driver, responsible for generating the P-value and that's
+  about it.
+ */
+
+struct id_request_tier_entry_medium_t{
+public:
+	id_request_tier_entry_t* (*init)() = nullptr;
+	void (*close)(id_request_tier_entry_t *ther_entry_state_ptr) = nullptr;
+	void (*refresh)(id_request_tier_entry_t *tier_entry_state_ptr) = nullptr;
+
+	uint8_t medium = 0;
+	id_request_tier_entry_medium_t(
+		uint8_t medium_,
+		id_request_tier_entry_t* (*init_)(),
+		void (*close_)(id_request_tier_entry_t *tier_entry_state_ptr),
+		void (*refresh_)(id_request_tier_entry_t *tier_entry_state_ptr)){
+		medium = medium_;
+		init = init_;
+		close = close_;
+		refresh = refresh_;
+	}
+};
+
 // states are used to optimize statistics by keeping a cache stored locally
 struct id_request_request_t{
 private:
@@ -79,12 +103,14 @@ public:
 	~id_request_response_t();
 };
 
-#define ID_REQUEST_FORMAT_INIT(format) void id_request_##format##_init(uint8_t type)
-#define ID_REQUEST_FORMAT_CLOSE(format) void id_request_##format##_close()
-#define ID_REQUEST_FORMAT_REFRESH(format) void id_request_##format##_refresh()
+#define ID_REQUEST_FORMAT_INIT(format) id_request_tier_entry_t* id_request_##format##_init()
+#define ID_REQUEST_FORMAT_CLOSE(format) void id_request_##format##_close(id_request_tier_entry_t *tier_entry_state_ptr)
+#define ID_REQUEST_FORMAT_REFRESH(format) void id_request_##format##_refresh(id_request_tier_entry_t *tier_entry_state_ptr)
 
 extern void id_request_init();
 extern void id_request_loop();
 extern void id_request_close();
+
+extern const std::vector<id_request_tier_entry_medium_t> id_request_tier_mediums;
 
 #endif
