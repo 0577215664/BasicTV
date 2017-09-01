@@ -88,7 +88,7 @@ ID_TIER_DEL_STATE(mem){
 // TODO: make this search for valid data first
 ID_TIER_ADD_DATA(mem){	
 	GET_TIER_STATE();
-	ASSERT(tier_state_ptr->is_allowed_extra(
+	ASSERT(tier_state_ptr->storage.is_allowed_extra(
 		       id_api::raw::fetch_extra(
 			       data),
 		       id_api::raw::fetch_id(

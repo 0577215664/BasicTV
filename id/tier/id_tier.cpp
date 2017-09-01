@@ -133,7 +133,8 @@ std::vector<std::tuple<id_t_, uint8_t, uint8_t> > id_tier::operation::valid_stat
 				 id_tier_state_t);
 		CONTINUE_IF_NULL(id_tier_state_ptr, P_WARN);
 		std::vector<std::pair<id_t_, mod_inc_t_> > state_cache =
-			id_tier_state_ptr->get_id_buffer();
+			id_tier::lookup::id_mod_inc::from_state(
+				id_tier_state_ptr);
 		print("don't bother right now", P_CRIT);
 		std::vector<id_t_> all_ids =
 			id_tier::lookup::ids::from_state(
@@ -205,7 +206,7 @@ void id_tier::operation::shift_data_to_state(
 			std::vector<uint8_t> shift_payload;
 			try{
 				std::vector<uint8_t> allowed_extra =
-					end_state_ptr->get_allowed_extra();
+					end_state_ptr->storage.get_extras();
 				ASSERT(allowed_extra.size() > 0, P_ERR);
 				shift_payload =
 					first_medium.get_id(
@@ -328,7 +329,7 @@ void id_tier::operation::add_data_to_state(
 					id_tier::get_medium(
 						tier_state_ptr->get_medium());
 				const extra_t_ extra_byte =
-					tier_state_ptr->get_allowed_extra().at(0);
+					tier_state_ptr->storage.get_extras().at(0);
 				if(extra_vector[extra_byte].size() == 0){
 					for(uint8_t ext = 0;ext < 4;ext++){
 						// lower extras are simpler
@@ -362,32 +363,11 @@ void id_tier::operation::add_data_to_state(
 }
 
 id_tier_state_t::id_tier_state_t() : id(this, TYPE_ID_TIER_STATE_T){
+	storage.list_virtual_data(&id);
+	benchmark.list_virtual_data(&id);
 }
 
 id_tier_state_t::~id_tier_state_t(){
-}
-
-bool id_tier_state_t::is_allowed_extra(extra_t_ extra_, id_t_ id_){
-	return std::find(
-		allowed_extra.begin(),
-		allowed_extra.end(),
-		extra_) != allowed_extra.end() ||
-		std::find(
-			encrypt_blacklist.begin(),
-			encrypt_blacklist.end(),
-			get_id_type(id_)) != encrypt_blacklist.end();
-	// anything that shouldn't be encrypted overrides the is_allowed_extra,
-	// but should probably enforce compression
-}
-
-void id_tier_state_t::del_id_buffer(id_t_ id_){
-	for(uint64_t i = 0;i < id_buffer.size();i++){
-		if(id_buffer[i].first == id_){
-			id_buffer.erase(
-				id_buffer.begin()+i);
-			break;
-		}
-	}
 }
 
 
@@ -399,14 +379,14 @@ static void id_tier_init_disk(){
 			ID_TIER_MEDIUM_DISK);
 	id_tier_state_t *tier_state_ptr =
 		PTR_DATA(disk_medium_ptr.init_state(), id_tier_state_t);
-	tier_state_ptr->add_allowed_extra(
-		ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS);
 	tier_state_ptr->set_medium(
 		ID_TIER_MEDIUM_DISK);
 	tier_state_ptr->set_tier_major(
 		ID_TIER_MAJOR_DISK);
 	tier_state_ptr->set_tier_minor(
 		0);
+	tier_state_ptr->storage.set_extras(
+		{ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS});
 
 	id_tier_disk_state_t *disk_state_ptr =
 		reinterpret_cast<id_tier_disk_state_t*>(
@@ -475,8 +455,8 @@ static void id_tier_init_cache(){
 	for(uint64_t i = 0;i < cache_data.size();i++){
 		id_tier_state_t *tier_state_ptr =
 			std::get<0>(cache_data[i]);
-		tier_state_ptr->add_allowed_extra(
-			std::get<1>(cache_data[i]));
+		tier_state_ptr->storage.set_extras(
+			{std::get<1>(cache_data[i])});
 		tier_state_ptr->set_medium(
 			std::get<2>(cache_data[i]));
 		tier_state_ptr->set_tier_major(

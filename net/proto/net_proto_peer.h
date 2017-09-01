@@ -17,7 +17,7 @@ private:
 	uint8_t flags = 0;
 	id_t_ crypto_wallet_id = ID_BLANK_ID;
 	id_t_ address_id = ID_BLANK_ID;
-
+	id_t_ tier_state_id = ID_BLANK_ID;
 	// cache
 	uint8_t local_flags = 0;
 public:

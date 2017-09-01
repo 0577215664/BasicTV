@@ -28,7 +28,7 @@ ID_TIER_DEL_STATE(cache){
 
 ID_TIER_ADD_DATA(cache){
 	GET_ALL_STATE_PTR(cache);
-	ASSERT(tier_state_ptr->is_allowed_extra(
+	ASSERT(tier_state_ptr->storage.is_allowed_extra(
 		       id_api::raw::fetch_extra(
 			       data),
 		       id_api::raw::fetch_id(
@@ -64,14 +64,14 @@ ID_TIER_ADD_DATA(cache){
 			data);
 		wrote = true;
 	}
-	tier_state_ptr->add_id_buffer(
+	tier_state_ptr->storage.add_id_buffer(
 		std::make_pair(id_new,
 			       mod_inc_new));
 }
 
 ID_TIER_DEL_ID(cache){
 	GET_ALL_STATE_PTR(cache);
-	tier_state_ptr->del_id_buffer(
+	tier_state_ptr->storage.del_id_buffer(
 		id);
 	for(uint64_t i = 0;i < cache_state_ptr->cache_data.size();i++){
 		const id_t_ id_tmp =

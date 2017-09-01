@@ -4,6 +4,9 @@
 #include "../id.h"
 #include "../id_api.h"
 
+#include "benchmark/id_tier_benchmark.h"
+#include "storage/id_tier_storage.h"
+
 #define PTR_DATA(id_, type_) ((type_*)id_tier::mem::get_ptr(id_, #type_, all_tiers))
 #define PTR_ID(id_, type_) (id_tier::mem::get_id_ptr(id_, #type_, all_tiers))
 
@@ -42,62 +45,25 @@
 #define ID_TIER_GET_ID(medium) std::vector<uint8_t> id_tier_##medium##_get_id(id_t_ state_id, id_t_ id)
 #define ID_TIER_UPDATE_CACHE(medium) void id_tier_##medium##_update_cache(id_t_ state_id)
 
-typedef std::pair<id_t_, mod_inc_t_> id_buffer_t;
-
-// ping just means delays in accessing, seek times/ping/etc
-struct id_tier_state_benchmark_t{
-private:
-	uint64_t ping_micro_s = 0;
-	uint64_t throughput_bits_second = 0;
-	data_id_t *id = nullptr;
-public:
-	void list_virtual_data(data_id_t *id);
-	GET_SET_V(ping_micro_s, uint64_t);
-	GET_SET_V(throughput_bits_second, uint64_t);
-};
-
-struct id_tier_state_storage_t{
-private:
-	uint64_t total_bytes = 0;
-	uint64_t used_bytes = 0;
-	data_id_t *id = nullptr;
-public:
-	void list_virtual_data(data_id_t *id);
-	GET_SET_V(total_bytes, uint64_t);
-	GET_SET_V(used_bytes, uint64_t);
-};
-
 struct id_tier_state_t{
 private:
 	uint8_t medium = 0;
 	uint8_t tier_major = 0;
 	uint8_t tier_minor = 0;	
-	uint64_t total_size_bytes = 0;
-	uint64_t used_bytes = 0;
-	uint64_t free_bytes = 0;
-	std::vector<std::pair<id_t_, mod_inc_t_> > id_buffer;
-	std::vector<uint8_t> allowed_extra;
-	uint64_t last_state_refresh_micro_s = 0;
-	uint64_t refresh_interval_micro_s = 0;
+	
 	void *payload = nullptr;
 public:
 	data_id_t id;
+
+	id_tier_state_storage_t storage;
+	id_tier_state_benchmark_t benchmark;
+	
 	id_tier_state_t();
 	~id_tier_state_t();
-	bool is_allowed_extra(extra_t_ extra_, id_t_ id);
 	GET_SET(medium, uint8_t);
 	GET_SET(tier_major, uint8_t);
 	GET_SET(tier_minor, uint8_t);
-	GET_SET(total_size_bytes, uint64_t);
-	GET_SET(used_bytes, uint64_t);
-	GET_SET(free_bytes, uint64_t);
-	void del_id_buffer(id_t_ id);
-	ADD_DEL_VECTOR(id_buffer, id_buffer_t);
-	GET_SET(id_buffer, std::vector<id_buffer_t>);
-	ADD_DEL_VECTOR(allowed_extra, uint8_t);
-	GET_SET(allowed_extra, std::vector<uint8_t>);
-	GET_SET(last_state_refresh_micro_s, uint64_t);
-	GET_SET(refresh_interval_micro_s, uint64_t);
+
 	GET_SET(payload, void*);
 };
 

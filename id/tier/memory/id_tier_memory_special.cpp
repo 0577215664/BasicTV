@@ -20,7 +20,7 @@ void id_tier_mem_update_state_cache(
 	id_tier_state_t *tier_state_ptr){
 	// Probably could use some pointer magic
 	ASSERT(tier_state_ptr != nullptr, P_ERR);
-	tier_state_ptr->set_id_buffer(
+	tier_state_ptr->storage.set_id_buffer(
 		id_buffer);
 }
 

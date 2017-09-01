@@ -106,6 +106,7 @@ public:
 #define ID_REQUEST_FORMAT_INIT(format) id_request_tier_entry_t* id_request_##format##_init()
 #define ID_REQUEST_FORMAT_CLOSE(format) void id_request_##format##_close(id_request_tier_entry_t *tier_entry_state_ptr)
 #define ID_REQUEST_FORMAT_REFRESH(format) void id_request_##format##_refresh(id_request_tier_entry_t *tier_entry_state_ptr)
+#define ID_REQUEST_FORMAT_GET_P_VAL(format) math_stat_pval_t id_request_##format##_get_p_val(id_request_tier_entry_t *tier_entry_state_ptr)
 
 extern void id_request_init();
 extern void id_request_loop();

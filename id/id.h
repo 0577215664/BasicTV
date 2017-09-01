@@ -1,5 +1,3 @@
-#include "../main.h"
-#include "../util.h"
 #ifndef ID_H
 #define ID_H
 #include <cstdint>
@@ -16,6 +14,7 @@
   id_t: ID and pointer system for the networking system
  */
 #define GET_CONST_PTR_RAW(data_to_get, type, id_str) type const * get_const_ptr_##data_to_get(){return (type const *)&data_to_get;}
+
 #define GET_RAW(data_to_get, type, id_str) type get_##data_to_get(){return data_to_get;}GET_CONST_PTR_RAW(data_to_get, type, id_str);
 
 
@@ -37,7 +36,6 @@
 	uint64_t find_iter_##data_to_set(std::function<bool(const type)> function_){return std::distance(data_to_set.begin(),std::find_if(data_to_set.begin(), data_to_set.end(), function_));}	\
 	uint64_t find_##data_to_set(type datum){return std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum));}\
 	uint64_t search_dist_##data_to_set(std::vector<type> datum){return std::distance(data_to_set.begin(), std::search(data_to_set.begin(), data_to_set.end(), datum.begin(), datum.end()));}\
-
 
 // no prefix == standard exportable datatype, refer to id through mod_inc normally
 
@@ -220,9 +218,6 @@ typedef std::pair<std::vector<id_t_>, std::vector<id_t_> > linked_list_data_t;
   3. ID vector transmission never worked right in the first place	
  */
 
-extern std::vector<id_t_> expand_id_set(std::vector<uint8_t>, uint8_t*);
-extern std::vector<uint8_t> compact_id_set(std::vector<id_t_>, uint8_t);
-
 #define GET_SET_ID_VECTOR(data_to_set)					\
 	std::vector<id_t_> get_##data_to_set(){return expand_id_set(data_to_set);} \
 	void set_##data_to_set(std::vector<id_t_> tmp){data_to_set = compact_id_set(tmp, true);} \
@@ -372,9 +367,10 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 std::string id_breakdown(id_t_ id_);
 
 #define IS_OWNER(id) (id == get_id_hash(production_priv_key_id)
-#include "tier/id_tier.h"
-#include "set/id_set.h"
-// exporting rules
-#include "../net/interface/net_interface_intermediary.h"
 
 #endif
+#include "../main.h"
+#include "../util.h"
+#include "tier/id_tier.h"
+#include "set/id_set.h"
+#include "../net/interface/net_interface_intermediary.h"

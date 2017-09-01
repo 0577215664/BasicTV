@@ -115,24 +115,25 @@ ID_TIER_ADD_DATA(disk){
 	const extra_t_ extra_new =
 		id_api::raw::fetch_extra(
 			data);
-	ASSERT(tier_state_ptr->is_allowed_extra(
+	ASSERT(tier_state_ptr->storage.is_allowed_extra(
 		       extra_new,
 		       new_id), P_ERR);
 	const std::string filename =
 		gen_filename(
 			new_id,
 			mod_inc_new);
-	ASSERT(tier_state_ptr->is_allowed_extra(
+	ASSERT(tier_state_ptr->storage.is_allowed_extra(
 		       ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS,
 		       new_id), P_ERR);
 	const std::string pathname =
 		convert::string::from_bytes(
 			disk_state_ptr->path);
 	file::write_file_vector(pathname + "/" + filename, data);
-	tier_state_ptr->add_id_buffer(
-		std::make_pair(
-			new_id,
-			mod_inc_new));
+
+	tier_state_ptr->storage.add_id_buffer(
+	 	std::make_pair(
+	 		new_id,
+	 		mod_inc_new));
 }
 
 ID_TIER_DEL_ID(disk){
@@ -141,13 +142,13 @@ ID_TIER_DEL_ID(disk){
 		gen_filename(
 			id,
 			mod_inc_from_id_buffer(
-				tier_state_ptr->get_id_buffer(),
+				id_tier::lookup::id_mod_inc::from_state(tier_state_ptr),
 				id));
 	const std::string pathname =
 		convert::string::from_bytes(
 			disk_state_ptr->path);
 	system_handler::rm(pathname + "/" + filename);
-	tier_state_ptr->del_id_buffer(
+	tier_state_ptr->storage.del_id_buffer(
 		id);
 }
 
@@ -162,7 +163,7 @@ ID_TIER_GET_ID(disk){
 				gen_filename(
 					id,
 				        mod_inc_from_id_buffer(
-						tier_state_ptr->get_id_buffer(),
+						id_tier::lookup::id_mod_inc::from_state(tier_state_ptr),
 						id)));
 	}catch(...){}
 	return retval;
@@ -173,9 +174,9 @@ ID_TIER_UPDATE_CACHE(disk){
 	system_handler::mkdir(
 		convert::string::from_bytes(
 			disk_state_ptr->path) + "/");
-	tier_state_ptr->set_id_buffer(
+	tier_state_ptr->storage.set_id_buffer(
 		gen_id_buffer(
 			disk_state_ptr->path));
-	tier_state_ptr->set_last_state_refresh_micro_s(
+	tier_state_ptr->storage.set_last_refresh_micro_s(
 		get_time_microseconds());
 }

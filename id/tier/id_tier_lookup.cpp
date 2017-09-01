@@ -5,7 +5,20 @@
 std::vector<std::pair<id_t_, mod_inc_t_> > id_tier::lookup::id_mod_inc::from_state(
 	id_tier_state_t *tier_state_ptr){
 	ASSERT(tier_state_ptr != nullptr, P_ERR);
-	return tier_state_ptr->get_id_buffer();
+	const std::vector<id_t_> id_list =
+		tier_state_ptr->storage.get_ids();
+	const std::vector<mod_inc_t_> mod_inc_list =
+		tier_state_ptr->storage.get_mod_incs();
+	ASSERT(id_list.size() == mod_inc_list.size(), P_ERR);
+	std::vector<std::pair<id_t_, mod_inc_t_> > retval;
+	retval.reserve(id_list.size());
+	for(uint64_t i = 0;i < id_list.size();i++){
+		retval.push_back(
+			std::make_pair(
+				id_list[i],
+				mod_inc_list[i]));
+	}
+	return retval;
 }
 
 std::vector<std::pair<id_t_, mod_inc_t_> > id_tier::lookup::id_mod_inc::from_state(
