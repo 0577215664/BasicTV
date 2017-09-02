@@ -100,6 +100,9 @@ ID_TIER_GET_ID(cache){
 	return std::vector<uint8_t>({});
 }
 
+ID_TIER_GET_HINT_ID(cache){
+}
+
 ID_TIER_UPDATE_CACHE(cache){
 	ASSERT(state_id != ID_BLANK_ID, P_ERR);
 	return;

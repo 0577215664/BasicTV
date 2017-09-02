@@ -13,6 +13,7 @@ extern ID_TIER_DEL_STATE(disk);
 extern ID_TIER_ADD_DATA(disk);
 extern ID_TIER_DEL_ID(disk);
 extern ID_TIER_GET_ID(disk);
+extern ID_TIER_GET_HINT_ID(disk);
 extern ID_TIER_UPDATE_CACHE(disk);
 	
 #endif

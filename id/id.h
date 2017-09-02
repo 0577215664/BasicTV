@@ -348,8 +348,12 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 #define TYPE_NET_HTTP_FILE_T				33
 #define TYPE_TV_FRAME_NUMERICAL_T			34
 #define TYPE_NET_HTTP_FILE_DRIVER_STATE_T		35
+#define TYPE_ID_REQUEST_REQUEST_T			36
+#define TYPE_ID_REQUEST_RESPONSE_T			37
+#define TYPE_ID_TIER_NETWORK_SIMPLE_REQUEST_T		38
+#define TYPE_ID_TIER_NETWORK_SIMPLE_RESPONSE_T		39
 
-#define TYPE_COUNT 37
+#define TYPE_COUNT 40
 
 #define ID_MAKE_TMP(x)					\
 	if(true){					\

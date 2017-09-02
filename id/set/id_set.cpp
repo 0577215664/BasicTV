@@ -54,10 +54,16 @@ std::vector<uint8_t> compact_id_set(
 	if(id_set.size() == 0){
 		return std::vector<uint8_t>({});
 	}
-	for(uint64_t i = 0;i < id_set.size();i++){
-		id_api::assert_valid_id(
-			id_set[i]);
-	}
+	// this is no longer a safe assumption if we are using these
+	// inside the structs because of id_tier and bootstrapping
+	
+	// TODO: should opt instead to just using the IDs for transport,
+	// since we can assume this is correct if we enforce that no
+	// exporting happens before a valid production_priv_key_id
+	// for(uint64_t i = 0;i < id_set.size();i++){
+	// 	id_api::assert_valid_id(
+	// 	 	id_set[i]);
+	// }
 	uint8_t scheme =
 		ID_SET_SCHEME_COPY;
 	// if(order){

@@ -31,6 +31,8 @@
 #define ID_TIER_MEDIUM_MEM 1
 #define ID_TIER_MEDIUM_CACHE 2
 #define ID_TIER_MEDIUM_DISK 3
+#define ID_TIER_MEDIUM_NETWORK 4
+
 
 #define ID_TIER_CACHE_GET(type_) (id_tier::lookup::type::from_tier(all_tiers, type_))
 // expose more nitty gritties to the user later on
@@ -43,6 +45,7 @@
 #define ID_TIER_ADD_DATA(medium) void id_tier_##medium##_add_data(id_t_ state_id, std::vector<uint8_t> data)
 #define ID_TIER_DEL_ID(medium) void id_tier_##medium##_del_id(id_t_ state_id, id_t_ id)
 #define ID_TIER_GET_ID(medium) std::vector<uint8_t> id_tier_##medium##_get_id(id_t_ state_id, id_t_ id)
+#define ID_TIER_GET_HINT_ID(medium) void id_tier_##medium##_get_hint_id(id_t_ state_id, id_t_ id)
 #define ID_TIER_UPDATE_CACHE(medium) void id_tier_##medium##_update_cache(id_t_ state_id)
 
 struct id_tier_state_t{
@@ -66,6 +69,18 @@ public:
 
 	GET_SET(payload, void*);
 };
+
+/*
+  id_tier_medium_t calls hang until either a timeout, a valid response, or an
+  excpetion are thrown. 
+
+  GET_HINT_ID sends a request for data down an id_tier, saves the response in
+  an internal cache, and from the internal cache it dishes the data out
+
+  Because networking is probably the most latent ID tier by a long shot, this
+  GET_HINT_ID only does something on that front, the rest of the calls don't
+  do anything and let the full latency happen in GET_ID
+ */
 
 struct id_tier_medium_t{
 public:

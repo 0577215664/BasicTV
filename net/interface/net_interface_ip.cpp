@@ -95,7 +95,6 @@ INTERFACE_CALCULATE_MOST_EFFICIENT_TRANSFER(ip){
 }
 
 #pragma message("no attempt at UDP support whatever right now")
-#pragma message("packetizer isn't actually called for TCP (doesn't NEED to be)")
 
 INTERFACE_SEND(ip){
 	INTERFACE_SET_HW_PTR(hardware_dev_id);

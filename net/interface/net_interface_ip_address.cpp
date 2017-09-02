@@ -1,4 +1,5 @@
 #include "net_interface_ip_address.h"
+#include "net_interface_api.h"
 
 net_interface_ip_address_t::net_interface_ip_address_t() : id(this, TYPE_NET_INTERFACE_IP_ADDRESS_T){
 	list_virtual_data(&id);

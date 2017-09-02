@@ -7,6 +7,12 @@
   disks and other storage systems like that (IPFS, etc.)
 
   Each id_request_request_t creates a list of id_request_entry_t
+
+  PLEASE NOTE: id_request_request_t and id_request_response_t are meant for
+  high level use. Actual requesting and responding (i.e. peers on a network)
+  will depend on something lower level, since the majority of instances where
+  id_request_request_t and id_request_response_t are used involve high level
+  statistics and meta-management of sorts.
  */
 
 #include "../../state.h"
@@ -96,9 +102,18 @@ public:
 struct id_request_response_t{
 private:
 	id_t_ id_request_request_id = ID_BLANK_ID;
-	std::vector<std::tuple<std::vector<uint8_t>, std::vector<id_t_> > > payload;
+	std::vector<std::vector<uint8_t> > response;
+	// each subvector is an escaped list of IDs (multidimensional ID
+	// vectors don't exist yet, but that's fine since we may be able to
+	// compact the information down).
+	std::vector<std::vector<uint8_t> > ids;
 public:
 	data_id_t id;
+
+	GET_SET(id_request_request_id, id_t_);
+	GET_SET(response, std::vector<std::vector<uint8_t> >);
+	GET_SET(ids, std::vector<std::vector<uint8_t> >);
+	
 	id_request_response_t();
 	~id_request_response_t();
 };

@@ -169,6 +169,9 @@ ID_TIER_GET_ID(disk){
 	return retval;
 }
 
+ID_TIER_GET_HINT_ID(disk){
+}
+
 ID_TIER_UPDATE_CACHE(disk){
 	GET_ALL_STATE_PTR(disk);
 	system_handler::mkdir(

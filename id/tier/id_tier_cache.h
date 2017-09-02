@@ -5,6 +5,7 @@ extern ID_TIER_DEL_STATE(cache);
 extern ID_TIER_ADD_DATA(cache);
 extern ID_TIER_DEL_ID(cache);
 extern ID_TIER_GET_ID(cache);
+extern ID_TIER_GET_HINT_ID(cache);
 extern ID_TIER_UPDATE_CACHE(cache);
 
 struct id_tier_cache_state_t{

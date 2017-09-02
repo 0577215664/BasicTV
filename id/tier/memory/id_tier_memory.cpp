@@ -237,6 +237,9 @@ ID_TIER_GET_ID(mem){
 	return std::vector<uint8_t>({});
 }
 
+ID_TIER_GET_HINT_ID(mem){
+}
+
 ID_TIER_UPDATE_CACHE(mem){
 	ASSERT(state_id != ID_BLANK_ID, P_ERR);
 	return;
