@@ -94,12 +94,12 @@ private:
 public:
 	data_id_t id;
 
+	id_request_response_t();
+	~id_request_response_t();
+	
 	GET_SET(id_request_request_id, id_t_);
 	GET_SET(response, std::vector<std::vector<uint8_t> >);
 	GET_SET(ids, std::vector<std::vector<uint8_t> >);
-	
-	id_request_response_t();
-	~id_request_response_t();
 };
 
 #define ID_REQUEST_FORMAT_INIT(format) id_request_tier_entry_t* id_request_##format##_init()
