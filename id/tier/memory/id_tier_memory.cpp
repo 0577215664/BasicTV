@@ -13,13 +13,8 @@
 #include "../../../tv/tv_channel.h"
 #include "../../../tv/tv_window.h"
 #include "../../../tv/tv_item.h"
-#include "../../../net/proto/inbound/net_proto_inbound_data.h"
-#include "../../../net/proto/outbound/net_proto_outbound_data.h"
-#include "../../../net/proto/net_proto_con_req.h"
 #include "../../../net/proto/net_proto_peer.h"
-#include "../../../net/proto/net_proto_con_req.h"
 #include "../../../net/proto/net_proto.h"
-#include "../../../net/proto/net_proto_socket.h"
 #include "../../../net/net_cache.h"
 #include "../../../net/net.h"
 #include "../../../input/input.h"
@@ -115,12 +110,7 @@ ID_TIER_ADD_DATA(mem){
 	// net (proto and standard)
 	CHECK_TYPE(net_socket_t);
 	CHECK_TYPE(net_proto_peer_t);
-	CHECK_TYPE(net_proto_socket_t);
-	CHECK_TYPE(net_proto_type_request_t);
-	CHECK_TYPE(net_proto_id_request_t);
-	CHECK_TYPE(net_proto_linked_list_request_t);
-	CHECK_TYPE(net_proto_con_req_t);
-
+	
 	// IR
 	CHECK_TYPE(ir_remote_t);
 
@@ -170,11 +160,7 @@ ID_TIER_DEL_ID(mem){
 	// net (proto and standard)
 	DELETE_TYPE_2(net_socket_t);
 	DELETE_TYPE_2(net_proto_peer_t);
-	DELETE_TYPE_2(net_proto_socket_t);
-	DELETE_TYPE_2(net_proto_type_request_t);
-	DELETE_TYPE_2(net_proto_id_request_t);
-	DELETE_TYPE_2(net_proto_linked_list_request_t);
-	DELETE_TYPE_2(net_proto_con_req_t);
+
 	DELETE_TYPE_2(net_cache_t);
 
 	// IR
@@ -297,20 +283,6 @@ data_id_t *id_tier::mem::get_id_ptr(
 				&shift_payload);
 		}
 		retval = mem_helper::lookup::id(id);
-		if(retval == nullptr &&
-		   tier_vector == all_tiers &&
-		   production_priv_key_id != ID_BLANK_ID){
-			// TODO: direct comparison to all_tiers doesn't consider order
-			if(std::find(
-				   net_proto_request_blacklist.begin(),
-				   net_proto_request_blacklist.end(),
-				   get_id_type(id)) == net_proto_request_blacklist.end()){
-				net_proto::request::add_id(
-					id);
-			}else{
-				print("not listing net_proto_request_blacklist type in ID request vector", P_SPAM);
-			}
-		}
 	}catch(...){
 	}
 	lookup_vector.erase(lookup_vector.end()-1);

@@ -28,7 +28,6 @@ extern void net_proto_close();
 
 #endif
 // here for legacy reasons
-#include "net_proto_request.h"
 #include "net_proto_peer.h"
 #include "net_proto_api.h"
 #include "../interface/net_interface.h"

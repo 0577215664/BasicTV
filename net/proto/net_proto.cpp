@@ -7,15 +7,7 @@
 #include "../../id/id_api.h"
 
 #include "net_proto.h"
-#include "net_proto_socket.h"
-#include "inbound/net_proto_inbound_connections.h"
-#include "inbound/net_proto_inbound_data.h"
-#include "outbound/net_proto_outbound_connections.h"
-#include "outbound/net_proto_outbound_data.h"
-#include "net_proto_connections.h"
-#include "net_proto_meta.h"
 #include "net_proto_api.h"
-#include "net_proto_request.h"
 
 
 /*
@@ -23,10 +15,6 @@
  */
 
 void net_proto_loop(){
-	net_proto_handle_inbound_data();
-	net_proto_handle_outbound_requests();
-	net_proto_connection_manager(); // in and out
-	net_proto_requests_loop();
 }
 
 /*

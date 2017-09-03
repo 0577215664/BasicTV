@@ -2,7 +2,6 @@
 #include "../id/id_api.h"
 #include "../id/id_transport.h"
 // type of choice
-#include "../net/proto/net_proto_request.h"
 #include "../tv/tv_item.h"
 // SHA-256 hash for ID spoofing
 #include "../encrypt/encrypt.h"
@@ -107,8 +106,8 @@ void test::id_system::transport::proper(){
 }
 
 void test::id_system::transport::import::random(){
-	net_proto_id_request_t *tmp_type_ptr =
-		new net_proto_id_request_t;
+ 	tv_item_t *tmp_type_ptr =
+		new tv_item_t;
 	tmp_type_ptr->id.import_data(
 		true_rand_byte_vector(
 			true_rand(

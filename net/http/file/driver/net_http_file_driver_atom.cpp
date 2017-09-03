@@ -131,9 +131,7 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 	std::string retval_str;
 	try{
 		if(file_driver_state_ptr->get_service_id() != ID_BLANK_ID){
-			net_proto::request::add_type_hash_whitelist(
-				{TYPE_TV_ITEM_T},
-				get_id_hash(file_driver_state_ptr->get_service_id()));
+			// request data
 		}
 		std::vector<id_t_> item_vector =
 			ID_TIER_CACHE_GET(

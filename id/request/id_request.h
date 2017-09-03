@@ -46,25 +46,6 @@ public:
 	void update();
 };
 
-struct id_request_entry_t{
-private:
-	id_t_ request_id = ID_BLANK_ID;
-	std::vector<id_request_tier_entry_t> tier_vector;
-public:
-	id_request_entry_t(id_t_ id_){
-		request_id = id_;
-	}
-	bool operator==(const id_request_entry_t &rhs) const {
-		return request_id == rhs.request_id &&
-		tier_vector == rhs.tier_vector;
-	}
-	bool operator!=(const id_request_entry_t &rhs) const {
-		return !(*this == rhs);
-	}
-	GET_SET_ID_S(request_id);
-	GET_SET_S(tier_vector, std::vector<id_request_tier_entry_t>);
-};
-
 /*
   Statistics driver, responsible for generating the P-value and that's
   about it.
@@ -92,11 +73,14 @@ public:
 // states are used to optimize statistics by keeping a cache stored locally
 struct id_request_request_t{
 private:
-	std::vector<id_request_entry_t> ids;
+	id_t_ requested_id;
+	std::vector<id_request_tier_entry_t> tier_vector;
 public:
 	data_id_t id;
 	id_request_request_t();
 	~id_request_request_t();
+
+	void set_request_id(id_t_ requested_id);
 };
 
 struct id_request_response_t{

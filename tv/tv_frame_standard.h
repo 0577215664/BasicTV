@@ -114,9 +114,6 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 			data = nullptr;
 		}
 	}
-	// only out that isn't valid is data = PTR_ID...
-	net_proto::request::add_id(
-		request_vector);
 	if(data != nullptr){
 		return data->id.get_id();
 	}

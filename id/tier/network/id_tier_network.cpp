@@ -244,10 +244,19 @@ ID_TIER_GET_ID(network){
 		id_tier_network_read_interface_packet(
 			(*inbound_buffer)[i]);
 	}
-
-	print("actually parse the inbound ledger to try and find IDs to return", P_ERR);
-	// Also maybe don't directly load anything sent here through the IDs and
-	// have a general good behaviour metric in the calling logic
+	for(uint64_t i = 0;i < network_state_ptr->outbound_ledger.size();i++){
+		id_tier_network_simple_response_t *simple_response_ptr =
+			PTR_DATA(network_state_ptr->outbound_ledger[i].simple_response_id,
+				 id_tier_network_simple_response_t);
+		CONTINUE_IF_NULL(simple_response_ptr, P_NOTE);
+		const std::vector<std::vector<uint8_t> > *payload_ptr =
+			simple_response_ptr->get_const_ptr_payload();
+		for(uint64_t c = 0;c < payload_ptr->size();c++){
+			if(id_api::raw::fetch_id((*payload_ptr)[c]) == id){
+				return (*payload_ptr)[c];
+			}
+		}
+	}
 	return std::vector<uint8_t>({});
 }
 

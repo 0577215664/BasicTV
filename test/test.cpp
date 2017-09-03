@@ -74,11 +74,6 @@ void test_id_subsystem(){
 	// RUN_TEST(test::id_system::transport::import::random);
 }
 
-void test_net(){
-	RUN_TEST(test::net::socket::send_recv);
-	RUN_TEST(test::net::proto_socket::send_recv);
-}
-
 void test_escape(){
 	RUN_TEST(test::escape::proper);
 	// RUN_TEST(test::escape::random);
@@ -102,6 +97,5 @@ void test_suite(){
 	test_math();
 	test_escape();
 	test_id_subsystem();
-	test_net();
 	test_audio();
 }

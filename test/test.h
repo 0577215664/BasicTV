@@ -37,14 +37,6 @@ namespace test{
 		};
 		void linked_list();
 	};
-	namespace net{
-		namespace proto_socket{
-			void send_recv();
-		};
-		namespace socket{
-			void send_recv();
-		};
-	};
 	namespace math{ 
 		namespace number{
 			void add();

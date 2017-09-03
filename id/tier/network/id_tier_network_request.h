@@ -25,6 +25,7 @@ public:
 	~id_tier_network_simple_response_t();
 
 	GET_SET(payload, std::vector<std::vector<uint8_t> >);
+	FULL_VECTOR_CONTROL(payload, std::vector<uint8_t>);
 };
 
 #endif
