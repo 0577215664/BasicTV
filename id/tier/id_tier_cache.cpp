@@ -107,3 +107,10 @@ ID_TIER_UPDATE_CACHE(cache){
 	ASSERT(state_id != ID_BLANK_ID, P_ERR);
 	return;
 }
+
+ID_TIER_LOOP(cache){
+	GET_ALL_STATE_PTR(cache);
+	ID_TIER_LOOP_STANDARD(
+		id_tier_cache_add_data,
+		id_tier_cache_get_id);
+}

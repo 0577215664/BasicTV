@@ -28,7 +28,10 @@
   There is only one address bound to an ID tier, to help prevent
   discrepencies with certain addresses not responding with the same
   data.
- */
+
+  TODO: allow for exportind id_tier_state_t to disk, so we can have a 
+  peer indexes survive reboots.
+*/
 
 #define TIER_GET_STATE_PTR()			\
 	id_tier_state_t *tier_state_ptr =	\
@@ -94,10 +97,11 @@ ID_TIER_DEL_STATE(network){
 
   ADD_DATA directly packetizes and sends anything passed through it. The net
   interface packetizer sends all the data at once, so make sure any data sent
-  to it is complete enough to be interpreted).
+  to it is complete enough to be interpreted. In sendind everything at once,
+  the interface packetizer generates one packet, which makes it easier to
+  decipher
 
   DEL_ID doesn't do anything
-
  */
 
 ID_TIER_ADD_DATA(network){
@@ -119,14 +123,8 @@ ID_TIER_DEL_ID(network){
  */
 
 ID_TIER_GET_HINT_ID(network){
-	id_tier_state_t *tier_state_ptr =
-		PTR_DATA(state_id,
-			 id_tier_state_t);
-	PRINT_IF_NULL(tier_state_ptr, P_ERR);
-	id_tier_network_t *network_state_ptr =
-		reinterpret_cast<id_tier_network_t*>(
-			tier_state_ptr->get_payload());
-	PRINT_IF_NULL(network_state_ptr, P_ERR);
+	TIER_GET_STATE_PTR();
+	TIER_GET_NETWORK_PTR();
 
 	id_tier_network_ledger_entry_t outbound_entry;
 	id_tier_network_simple_request_t *simple_request_ptr =
@@ -269,4 +267,15 @@ ID_TIER_UPDATE_CACHE(network){
 		state_id,
 		id_tier_network_meta_write(
 			meta));
+}
+
+ID_TIER_LOOP(network){
+	id_tier_state_t *tier_state_ptr =
+		PTR_DATA(state_id,
+			 id_tier_state_t);
+	PRINT_IF_NULL(tier_state_ptr, P_ERR);
+	
+	ID_TIER_LOOP_STANDARD(
+		id_tier_network_add_data,
+		id_tier_network_get_id);
 }

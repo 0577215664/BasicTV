@@ -314,3 +314,14 @@ data_id_t *id_tier::mem::get_id_ptr(
 		(type == "") ? 0 : convert::type::to(type),
 	        tier_vector);
 }
+
+ID_TIER_LOOP(mem){
+	id_tier_state_t *tier_state_ptr =
+		PTR_DATA(state_id,
+			 id_tier_state_t);
+	PRINT_IF_NULL(tier_state_ptr, P_ERR);
+
+	ID_TIER_LOOP_STANDARD(
+		id_tier_mem_add_data,
+		id_tier_mem_get_id);
+}

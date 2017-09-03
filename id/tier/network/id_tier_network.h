@@ -54,9 +54,11 @@ public:
 
 extern ID_TIER_INIT_STATE(network);
 extern ID_TIER_DEL_STATE(network);
-extern ID_TIER_ADD_DATA(network);
-extern ID_TIER_DEL_ID(network);
-extern ID_TIER_GET_ID(network);
-extern ID_TIER_UPDATE_CACHE(network);
+extern ID_TIER_LOOP(network);
+
+/* extern ID_TIER_ADD_DATA(network); */
+/* extern ID_TIER_DEL_ID(network); */
+/* extern ID_TIER_GET_ID(network); */
+/* extern ID_TIER_UPDATE_CACHE(network); */
 
 #endif

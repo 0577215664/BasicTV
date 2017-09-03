@@ -1,44 +1,15 @@
 #include "id_tier_move.h"
+#include "id_tier_move_network.h"
 #include "../id_tier.h"
 
 #pragma message("seperate tier_move_logic into standard and network shifting rules")
 
 static std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_standard_move_logic(
 	id_t_ first_id,
-	id_t_ second_id){
-}
-
-std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
-	id_t_ first_id,
-	id_t_ second_id){
+	id_t_ second_id,
+	std::vector<std::pair<id_t_, mod_inc_t_> > first_id_buffer,
+	std::vector<std::pair<id_t_, mod_inc_t_> > second_id_buffer){
 	std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > retval;
-	
-	id_tier_state_t *first_state_ptr =
-		PTR_DATA(first_id,
-			 id_tier_state_t);
-	ASSERT(first_state_ptr != nullptr, P_ERR);
-	id_tier_state_t *second_state_ptr =
-		PTR_DATA(second_id,
-			 id_tier_state_t);
-	ASSERT(second_state_ptr != nullptr, P_ERR);
-
-	// We don't bother with cache right now, since that's more hinting
-	// and pre-loading (which isn't an optimization until MT gets going)
-	if(first_state_ptr->get_tier_major() == second_state_ptr->get_tier_major()){
-		return retval;
-	}
-
-	if(first_state_ptr->get_tier_major() > second_state_ptr->get_tier_major()){
-		std::swap(first_state_ptr, second_state_ptr);
-		std::swap(first_id, second_id);
-	}
-
-	const std::vector<std::pair<id_t_, mod_inc_t_> > first_id_buffer =
-		id_tier::lookup::id_mod_inc::from_state(
-			first_state_ptr);
-	const std::vector<std::pair<id_t_, mod_inc_t_> > second_id_buffer =
-		id_tier::lookup::id_mod_inc::from_state(
-			second_state_ptr);
 	for(uint64_t a = 0;a < first_id_buffer.size();a++){
 		bool found = false;
 		const id_t_ a_id = std::get<0>(first_id_buffer[a]);
@@ -93,5 +64,50 @@ std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
 					COPY_UP));
 		}
 	}
+	return retval;
+}
+
+std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
+	id_t_ first_id,
+	id_t_ second_id){
+	std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > retval;
+	
+	id_tier_state_t *first_state_ptr =
+		PTR_DATA(first_id,
+			 id_tier_state_t);
+	ASSERT(first_state_ptr != nullptr, P_ERR);
+	id_tier_state_t *second_state_ptr =
+		PTR_DATA(second_id,
+			 id_tier_state_t);
+	ASSERT(second_state_ptr != nullptr, P_ERR);
+
+	// We don't bother with cache right now, since that's more hinting
+	// and pre-loading (which isn't an optimization until MT gets going)
+	if(first_state_ptr->get_tier_major() == second_state_ptr->get_tier_major()){
+		return retval;
+	}
+
+	if(first_state_ptr->get_tier_major() > second_state_ptr->get_tier_major()){
+		std::swap(first_state_ptr, second_state_ptr);
+		std::swap(first_id, second_id);
+	}
+	if(second_state_ptr->get_tier_major() == ID_TIER_MAJOR_NETWORK){
+		return tier_network_move_push_logic(
+			first_state_ptr,
+			second_state_ptr);
+	}else{
+		const std::vector<std::pair<id_t_, mod_inc_t_> > first_id_buffer =
+			id_tier::lookup::id_mod_inc::from_state(
+				first_state_ptr);
+		const std::vector<std::pair<id_t_, mod_inc_t_> > second_id_buffer =
+			id_tier::lookup::id_mod_inc::from_state(
+				second_state_ptr);
+		return tier_standard_move_logic(
+			first_id,
+			second_id,
+			first_id_buffer,
+			second_id_buffer);
+	}
+	
 	return retval;
 }

@@ -183,3 +183,10 @@ ID_TIER_UPDATE_CACHE(disk){
 	tier_state_ptr->storage.set_last_refresh_micro_s(
 		get_time_microseconds());
 }
+
+ID_TIER_LOOP(disk){
+	GET_ALL_STATE_PTR(disk);
+	ID_TIER_LOOP_STANDARD(
+		id_tier_disk_add_data,
+		id_tier_disk_get_id);
+}

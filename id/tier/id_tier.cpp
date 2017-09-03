@@ -23,24 +23,19 @@ std::vector<id_tier_medium_t> id_tier_medium = {
 	id_tier_medium_t(
 		id_tier_mem_init_state,
 		id_tier_mem_del_state,
-		id_tier_mem_add_data,
-		id_tier_mem_del_id,
-		id_tier_mem_get_id,
-		id_tier_mem_update_cache),
+		id_tier_mem_loop),
 	id_tier_medium_t(
 		id_tier_cache_init_state,
 		id_tier_cache_del_state,
-		id_tier_cache_add_data,
-		id_tier_cache_del_id,
-		id_tier_cache_get_id,
-		id_tier_cache_update_cache),
+		id_tier_cache_loop),
 	id_tier_medium_t(
 		id_tier_disk_init_state,
 		id_tier_disk_del_state,
-		id_tier_disk_add_data,
-		id_tier_disk_del_id,
-		id_tier_disk_get_id,
-		id_tier_disk_update_cache)
+		id_tier_disk_loop),
+	id_tier_medium_t(
+		id_tier_network_init_state,
+		id_tier_network_del_state,
+		id_tier_network_loop)
 };
 
 id_tier_medium_t id_tier::get_medium(uint8_t medium_type){
@@ -169,23 +164,14 @@ void id_tier::operation::shift_data_to_state(
 	id_tier_state_t *start_state_ptr,
 	id_tier_state_t *end_state_ptr,
 	std::vector<id_t_> *id_vector){
-
 	ASSERT(start_state_ptr != nullptr, P_ERR);
 	ASSERT(end_state_ptr != nullptr, P_ERR);
-	
 	std::vector<id_t_> first_buffer =
 		id_tier::lookup::ids::from_state(
 			start_state_ptr);
 	std::vector<id_t_> second_buffer =
 		id_tier::lookup::ids::from_state(
 			end_state_ptr);
-
-	id_tier_medium_t first_medium =
-		id_tier::get_medium(
-			start_state_ptr->get_medium());
-	id_tier_medium_t second_medium =
-		id_tier::get_medium(
-			end_state_ptr->get_medium());
 	for(uint64_t i = 0;i < id_vector->size();i++){
 		if(std::find(
 			   memory_locked.begin(),
@@ -211,9 +197,9 @@ void id_tier::operation::shift_data_to_state(
 					end_state_ptr->storage.get_extras();
 				ASSERT(allowed_extra.size() > 0, P_ERR);
 				shift_payload =
-					first_medium.get_id(
-						start_state_ptr->id.get_id(),
-						(*id_vector)[i]);
+					get_data_from_state(
+						std::vector<id_t_>({start_state_ptr->id.get_id()}),
+						std::vector<id_t_>({(*id_vector)[i]})).at(0);
 				if(shift_payload.size() == 0){
 					continue;
 				}
@@ -228,25 +214,19 @@ void id_tier::operation::shift_data_to_state(
 									{std::make_pair(end_state_ptr->get_tier_major(),
 											end_state_ptr->get_tier_minor())}),
 								std::vector<uint8_t>({})));
-				} // don't care, can't reconstruct
-				// TODO: can probably decrypt and check, blacklist against DDoS?
+				}
 				if(shift_payload.size() == 0){
 					// probably set to completely non-exportable
 					continue;
 				}
-				// TODO: make an interface for mediums that
-				// can just ask if an ID can be exported based
-				// on the type and all that jazz so we don't
-				// have to redundantly compress stuff in
-				// cases where it can't
 				shift_payload =
 					id_api::raw::force_to_extra(
 						shift_payload,
 						allowed_extra[0]); // TODO: compute this stuff better (?)
 				try{
-					second_medium.add_data(
-						end_state_ptr->id.get_id(),
-						shift_payload);
+					add_data_to_state(
+						std::vector<id_t_>({end_state_ptr->id.get_id()}),
+						std::vector<std::vector<uint8_t> >({shift_payload}));
 					id_vector->erase(
 						id_vector->begin()+i);
 				}catch(...){
@@ -262,22 +242,17 @@ void id_tier::operation::shift_data_to_state(
 void id_tier::operation::del_id_from_state(
 	std::vector<id_t_> state_id,
 	std::vector<id_t_> id){
+	id_tier_operation_entry_t oper;
+	oper.set_ids(id);
+	oper.set_operation(ID_TIER_OPERATION_DEL);
 	for(uint64_t i = 0;i < state_id.size();i++){
 		try{
 			id_tier_state_t *tier_state_ptr =
 				PTR_DATA(state_id[i],
 					 id_tier_state_t);
 			PRINT_IF_NULL(tier_state_ptr, P_ERR);
-			id_tier_medium_t medium =
-				id_tier::get_medium(
-					tier_state_ptr->get_medium());
-			for(uint64_t c = 0;c < id.size();c++){
-				try{
-					medium.del_id(
-						tier_state_ptr->id.get_id(),
-						id[c]);
-				}catch(...){}
-			}
+			tier_state_ptr->operations.push_back(
+				oper);
 		}catch(...){}
 	}
 }
@@ -294,20 +269,26 @@ std::vector<std::vector<uint8_t> > id_tier::operation::get_data_from_state(
 						PTR_DATA(state_id[i],
 							 id_tier_state_t);
 					CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
-					std::vector<id_t_> state_cache =
-						id_tier::lookup::ids::from_state(
-							tier_state_ptr);
-					id_tier_medium_t medium =
-						id_tier::get_medium(
-							tier_state_ptr->get_medium());
-					std::vector<uint8_t> id_exp =
-						medium.get_id(
-							tier_state_ptr->id.get_id(),
-							id_vector[c]);
-					if(id_exp.size() > 0){
-						retval.push_back(
-							id_exp);
-						break;
+					std::vector<id_tier_transport_entry_t>::iterator req_iter =
+						std::find_if(
+							tier_state_ptr->inbound_transport.begin(),
+							tier_state_ptr->inbound_transport.end(),
+							[&](const id_tier_transport_entry_t &rhs){
+								return rhs.get_payload_id() == id_vector[i];
+							});	
+					if(req_iter == tier_state_ptr->inbound_transport.end()){
+						id_tier_transport_entry_t transport_entry;
+						transport_entry.set_payload_id(
+							id_vector[i]);
+						tier_state_ptr->inbound_transport.push_back(
+						        transport_entry);
+					}else{
+						if(req_iter->get_payload().size() != 0){
+							retval.push_back(
+								req_iter->get_payload());
+							tier_state_ptr->inbound_transport.erase(
+								req_iter);
+						}
 					}
 				}catch(...){}
 			}
@@ -327,9 +308,9 @@ void id_tier::operation::add_data_to_state(
 					PTR_DATA(state_id[c],
 						 id_tier_state_t);
 				PRINT_IF_NULL(tier_state_ptr, P_UNABLE);
-				id_tier_medium_t medium =
-					id_tier::get_medium(
-						tier_state_ptr->get_medium());
+				// id_tier_medium_t medium =
+				// 	id_tier::get_medium(
+				// 		tier_state_ptr->get_medium());
 				const extra_t_ extra_byte =
 					tier_state_ptr->storage.get_extras().at(0);
 				if(extra_vector[extra_byte].size() == 0){
@@ -353,9 +334,14 @@ void id_tier::operation::add_data_to_state(
 								extra_byte);
 					}
 				}
-				medium.add_data(
-					tier_state_ptr->id.get_id(),
+				id_tier_transport_entry_t transport_entry;
+				transport_entry.set_payload(
 					extra_vector[extra_byte]);
+				transport_entry.set_payload_id(
+					id_api::raw::fetch_id(
+						extra_vector[extra_byte]));
+				tier_state_ptr->outbound_transport.push_back(
+					transport_entry);
 			}catch(...){
 				print("couldn't insert " + id_breakdown(id_api::raw::fetch_id(data_vector[i])) + " into " +
 				      id_breakdown(state_id[c]), P_WARN);
@@ -419,8 +405,6 @@ static void id_tier_init_disk(){
 	disk_state_ptr->path =
 		convert::string::to_bytes(
 			path);
-	disk_medium_ptr.update_cache(
-		tier_state_ptr->id.get_id());
 }
 
 static void id_tier_init_cache(){

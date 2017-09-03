@@ -15,11 +15,11 @@
  */
 #define GET_CONST_PTR_RAW(data_to_get, type, id_str) type const * get_const_ptr_##data_to_get(){return (type const *)&data_to_get;}
 
-#define GET_RAW(data_to_get, type, id_str) type get_##data_to_get(){return data_to_get;}GET_CONST_PTR_RAW(data_to_get, type, id_str);
+#define GET_RAW(data_to_get, type, id_str) type get_##data_to_get() const {return data_to_get;}GET_CONST_PTR_RAW(data_to_get, type, id_str);
 
 
 #define SET_RAW(data_to_set, type, id_str) void set_##data_to_set(const type datum){if(data_to_set != datum){id_str;}data_to_set = (type)datum;}	
-#define GET_ID_RAW(data_to_get, id_str) id_t_ get_##data_to_get(){if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
+#define GET_ID_RAW(data_to_get, id_str) id_t_ get_##data_to_get() const {if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
 #define SET_ID_RAW(data_to_set, id_str) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){id_str;}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
 #define GET_SET_ID_RAW(data, id_str) GET_RAW(data, id_t_, id_str);SET_RAW(data, id_t_, id_str)
 #define GET_SET_RAW(data, type, id_str) GET_RAW(data, type, id_str);SET_RAW(data, type, id_str)
