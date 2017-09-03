@@ -1,4 +1,7 @@
 #include "id_tier_network.h"
+#include "id_tier_network_meta.h"
+#include "id_tier_network_cache.h"
+#include "id_tier_network_request.h"
 #include "../id_tier.h"
 #include "../../id_transport.h"
 #include "../../id.h"
@@ -26,6 +29,24 @@
   discrepencies with certain addresses not responding with the same
   data.
  */
+
+#define TIER_GET_STATE_PTR()			\
+	id_tier_state_t *tier_state_ptr =	\
+		PTR_DATA(state_id,		\
+			 id_tier_state_t);	\
+	PRINT_IF_NULL(tier_state_ptr, P_ERR);	\
+
+#define TIER_GET_NETWORK_PTR()				\
+	id_tier_network_t *network_state_ptr =		\
+		reinterpret_cast<id_tier_network_t*>(	\
+			tier_state_ptr->get_payload());	\
+	PRINT_IF_NULL(network_state_ptr, P_ERR);	\
+	
+#define TIER_GET_NETWORK_SOFTDEV_PTR()				\
+	net_interface_software_dev_t *software_dev_ptr =	\
+		PTR_DATA(network_state_ptr->address_id,		\
+			 net_interface_software_dev_t);		\
+	PRINT_IF_NULL(software_dev_ptr, P_ERR);
 
 ID_TIER_INIT_STATE(network){
 	id_tier_state_t *tier_state_ptr =
@@ -80,9 +101,15 @@ ID_TIER_DEL_STATE(network){
  */
 
 ID_TIER_ADD_DATA(network){
+	TIER_GET_STATE_PTR();
+	TIER_GET_NETWORK_PTR();
+	TIER_GET_NETWORK_SOFTDEV_PTR();
+	software_dev_ptr->add_outbound_data(
+		data);
 }
 
 ID_TIER_DEL_ID(network){
+	print("can't delete an ID from another peer", P_ERR);
 }
 
 /*
@@ -110,6 +137,12 @@ ID_TIER_GET_HINT_ID(network){
 		state_id,
 		simple_request_ptr->id.export_data(
 			ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS));
+	outbound_entry.simple_request_id =
+		simple_request_ptr->id.get_id();
+	outbound_entry.request_time_micro_s =
+		get_time_microseconds();
+	network_state_ptr->outbound_ledger.push_back(
+		outbound_entry);
 }
 
 static std::vector<uint8_t> id_tier_network_write_interface_packet(
@@ -128,6 +161,36 @@ static std::vector<uint8_t> id_tier_network_write_interface_packet(
 		export_dynamic_size_payload(
 			&retval,
 			data[i]);
+	}
+	return retval;
+}
+/*
+  The transmission order doesn't actually matter, because the network
+  interface only ensures that data arrives in order inside of a packet
+  returned (an element in the inbound_buffer vector).
+
+  The actual transmission format is something like this:
+  1. The first ID_TIER_NETWORK_META_SIZE bytes are the network metadata.
+  The metadata itself uses a custom exporter so it can easily be
+  interpreted by future versions, so the size is static (as all elements
+  are as well).
+
+  2. The rest of the packet is just an escaped list of ID data that we
+  read in. 
+
+  If this is a id_tier_request_t, then we catalog it inside
+  the outbound ledger as a request, and let another part of the code
+  deal with crafting a response and responding (and cataloging it as
+  well).
+*/
+
+// returns what should be sent back to the peer
+static std::vector<std::vector<uint8_t> > id_tier_network_read_interface_packet_macros(
+	uint8_t macros){
+	std::vector<std::vector<uint8_t> > retval;
+	if(macros & ID_TIER_NETWORK_META_SEND_CACHE){
+		retval.push_back(
+			id_tier_network_cache_create_serialize());
 	}
 	return retval;
 }
@@ -177,34 +240,24 @@ ID_TIER_GET_ID(network){
 	
 	const std::vector<std::vector<uint8_t> > *inbound_buffer =
 		software_dev_ptr->get_const_ptr_inbound_data();
-
-	uint64_t pos = 0;
-	bool reading = true;
-
-	/*
-	  The transmission order doesn't actually matter, because the network
-	  interface only ensures that data arrives in order inside of a packet
-	  returned (an element in the inbound_buffer vector).
-
-	  The actual transmission format is something like this:
-	  1. The first ID_TIER_NETWORK_META_SIZE bytes are the network metadata.
-	     The metadata itself uses a custom exporter so it can easily be
-	     interpreted by future versions, so the size is static (as all elements
-	     are as well).
-
-	  2. The rest of the packet is just an escaped list of ID data that we
-	     read in. 
-
-             If this is a id_tier_request_t, then we catalog it inside
-	     the outbound ledger as a request, and let another part of the code
-	     deal with crafting a response and responding (and cataloging it as
-	     well).
-	*/
-	if(pos != 0){
-		software_dev_ptr->pull_erase_until_pos_inbound_data(
-			pos);
+	for(uint64_t i = 0;i < inbound_buffer->size();i++){
+		id_tier_network_read_interface_packet(
+			(*inbound_buffer)[i]);
 	}
+
+	print("actually parse the inbound ledger to try and find IDs to return", P_ERR);
+	// Also maybe don't directly load anything sent here through the IDs and
+	// have a general good behaviour metric in the calling logic
+	return std::vector<uint8_t>({});
 }
 
+// meta doesn't need any payload associated with it
 ID_TIER_UPDATE_CACHE(network){
+	id_tier_network_meta_t meta =
+		id_tier_network_meta_gen_standard();
+	meta.macros |= ID_TIER_NETWORK_META_SEND_CACHE;
+	id_tier_network_add_data(
+		state_id,
+		id_tier_network_meta_write(
+			meta));
 }

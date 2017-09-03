@@ -33,6 +33,17 @@
 #define ID_TIER_MEDIUM_DISK 3
 #define ID_TIER_MEDIUM_NETWORK 4
 
+/*
+  Only tiers that should exist are:
+  0.0 (in memory)
+  1.0 (cache, unencrypted and uncompressed)
+  1.1 (cache, unencrypted and compressed)
+  1.2 (cache, encrypted and compressed)
+  2.0 (all disk)
+  4.0 (all network peers)
+
+  Library isn't used right now, and probably should be taken out honestly
+ */
 
 #define ID_TIER_CACHE_GET(type_) (id_tier::lookup::type::from_tier(all_tiers, type_))
 // expose more nitty gritties to the user later on

@@ -3,6 +3,8 @@
 #include "../id_tier.h"
 #include "../../id.h"
 
+#include "../../../net/proto/net_proto_api.h"
+
 #define WRITE_DATA_META(data_) retval.insert(retval.end(), &data_, &data_+1)
 
 std::vector<uint8_t> id_tier_network_meta_write(
@@ -68,3 +70,11 @@ void id_tier_network_meta_read(std::vector<uint8_t> data,
 	}
 }
 
+id_tier_network_meta_t id_tier_network_meta_gen_standard(){
+	id_tier_network_meta_t meta;
+	meta.ver_major = VERSION_MAJOR;
+	meta.ver_minor = VERSION_MINOR;
+	meta.ver_patch = VERSION_REVISION;
+	meta.peer_id = net_proto::peer::get_self_as_peer();
+	return meta;
+}

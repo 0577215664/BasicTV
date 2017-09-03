@@ -2,6 +2,9 @@
 #ifndef ID_TIER_NETWORK_META_H
 #define ID_TIER_NETWORK_META_H
 
+// also send an updated version of id_tier_network_cache_t
+#define ID_TIER_NETWORK_META_SEND_CACHE (1 << 0)
+
 typedef id_t_ id_tier_network_meta_id_t;
 typedef uint32_t id_tier_network_meta_size_t;
 typedef uint8_t id_tier_network_meta_ver_t;
@@ -27,5 +30,7 @@ extern std::vector<uint8_t> id_tier_network_meta_write(
 extern void id_tier_network_meta_read(
 	std::vector<uint8_t> data,
 	id_tier_network_meta_t *standard_data);
-	
+
+extern id_tier_network_meta_t id_tier_network_meta_gen_standard();
+
 #endif

@@ -9,6 +9,12 @@ struct id_tier_network_ledger_entry_t{
 public:
 	id_t_ simple_request_id = ID_BLANK_ID;
 	id_t_ simple_response_id = ID_BLANK_ID;
+
+	// timing information is only accurate with a high iteration
+	// rate, otherwise it's just sitting in a buffer
+	uint64_t request_time_micro_s = 0;
+	uint64_t response_time_micro_s = 0;
+	
 	id_tier_network_meta_t meta;
 	bool complete = false;
 	uint8_t flags = 0;
