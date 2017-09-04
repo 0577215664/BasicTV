@@ -51,6 +51,10 @@ ID_TIER_INIT_STATE(mem){
 		new id_tier_state_t;
 	tier_state_ptr->set_medium(
 		ID_TIER_MEDIUM_MEM);
+	tier_state_ptr->set_tier_major(
+		ID_TIER_MAJOR_MEM);
+	tier_state_ptr->set_tier_minor(
+		0);
 	tier_state_ptr->set_payload(
 		nullptr); // id_tier_memory_t isn't used
 	id_tier_mem_update_state_cache(

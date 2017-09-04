@@ -13,6 +13,8 @@ ID_TIER_INIT_STATE(cache){
 		new id_tier_cache_state_t;
 	tier_state_ptr->set_medium(
 		ID_TIER_MEDIUM_CACHE); // ?
+	tier_state_ptr->set_tier_major(
+		ID_TIER_MAJOR_CACHE);
 	tier_state_ptr->set_payload(
 		cache_state_ptr);
 	return tier_state_ptr->id.get_id();

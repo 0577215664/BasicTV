@@ -148,6 +148,9 @@ void update_print_level(){
 }
 
 void print_(std::string data, uint64_t level){
+	if(unlikely(level == P_VAR)){
+		update_print_level();
+	}
 	if(unlikely(level >= print_level)){
 		if(unlikely(print_delay_milli_s != 0)){
 			sleep_ms(print_delay_milli_s, true);

@@ -555,7 +555,7 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	data_id_transport_rules_t rules){
 	ASSERT(rules.tier.size() <= 1, P_ERR);
 	ASSERT(rules.intermediary.size() <= 1, P_ERR);
-	force_to_extra(data, 0);
+	data = force_to_extra(data, 0);
 	extra_t_ extra;
 	id_t_ id;
 	mod_inc_t_ mod_inc;
@@ -660,7 +660,7 @@ void id_api::assert_valid_id(id_t_ id){
 	}
 	ASSERT(type <= TYPE_COUNT, P_ERR);
 	ASSERT(uuid != 0, P_ERR);
-	ASSERT(hash != blank_hash, P_ERR);
+	// ASSERT(hash != blank_hash, P_ERR);
 }
 
 void id_api::assert_valid_id(std::vector<id_t_> id){

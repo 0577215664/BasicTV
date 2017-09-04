@@ -81,6 +81,10 @@ ID_TIER_INIT_STATE(disk){
 		ID_TIER_MEDIUM_DISK);
 	tier_state_ptr->set_payload(
 		disk_state_ptr);
+	tier_state_ptr->set_tier_major(
+		ID_TIER_MAJOR_DISK);
+	tier_state_ptr->set_tier_minor(
+		0);
 	return tier_state_ptr->id.get_id();
 }
 
@@ -106,6 +110,11 @@ static std::string gen_filename(id_t_ id, mod_inc_t_ mod_inc){
 
 ID_TIER_ADD_DATA(disk){
 	GET_ALL_STATE_PTR(disk);
+
+	system_handler::mkdir(
+		convert::string::from_bytes(
+			disk_state_ptr->path) + "/");
+	
 	const id_t_ new_id =
 		id_api::raw::fetch_id(
 			data);
@@ -174,9 +183,6 @@ ID_TIER_GET_HINT_ID(disk){
 
 ID_TIER_UPDATE_CACHE(disk){
 	GET_ALL_STATE_PTR(disk);
-	system_handler::mkdir(
-		convert::string::from_bytes(
-			disk_state_ptr->path) + "/");
 	tier_state_ptr->storage.set_id_buffer(
 		gen_id_buffer(
 			disk_state_ptr->path));

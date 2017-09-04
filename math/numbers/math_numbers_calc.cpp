@@ -101,7 +101,7 @@ std::vector<uint8_t> math::number::calc::add(
 			(int64_t)0,
 			math::number::get::unit(
 				data[0]));
-	std::raise(SIGINT);
+	// std::raise(SIGINT);
 	for(uint64_t i = 0;i < data.size();i++){
 		retval =
 			math_simple_add(

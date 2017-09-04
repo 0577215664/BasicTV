@@ -140,8 +140,8 @@ uint64_t import_gen_dynamic_size(
 	convert::nbo::from(
 		reinterpret_cast<uint8_t*>(&retval),
 		size_size);
-	P_V(size_size, P_DEBUG);
-	P_V(retval, P_DEBUG);
+	// P_V(size_size, P_DEBUG);
+	// P_V(retval, P_DEBUG);
 	return retval;
 }
 
@@ -256,7 +256,6 @@ void export_ptr_from_data_id_ptr(
 		const std::vector<uint8_t> vector_iter =
 			export_gen_dynamic_size(
 				std::get<1>(standardized[i]));
-		P_V(std::get<1>(standardized[i]), P_VAR);
 		pusher->insert(
 			pusher->end(),
 			vector_iter.begin(),

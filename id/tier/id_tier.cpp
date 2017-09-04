@@ -164,6 +164,7 @@ void id_tier::operation::shift_data_to_state(
 	id_tier_state_t *start_state_ptr,
 	id_tier_state_t *end_state_ptr,
 	std::vector<id_t_> *id_vector){
+
 	ASSERT(start_state_ptr != nullptr, P_ERR);
 	ASSERT(end_state_ptr != nullptr, P_ERR);
 	std::vector<id_t_> first_buffer =
@@ -192,48 +193,56 @@ void id_tier::operation::shift_data_to_state(
 			   first_buffer.end(),
 			   (*id_vector)[i]) != first_buffer.end()){
 			std::vector<uint8_t> shift_payload;
-			try{
-				std::vector<uint8_t> allowed_extra =
-					end_state_ptr->storage.get_extras();
+			std::vector<uint8_t> allowed_extra =
+				end_state_ptr->storage.get_extras();
 				ASSERT(allowed_extra.size() > 0, P_ERR);
-				shift_payload =
+			try{
+				const std::vector<std::vector<uint8_t> > state_data =
 					get_data_from_state(
 						std::vector<id_t_>({start_state_ptr->id.get_id()}),
-						std::vector<id_t_>({(*id_vector)[i]})).at(0);
-				if(shift_payload.size() == 0){
+						std::vector<id_t_>({(*id_vector)[i]}));
+				if(state_data.size() == 0){
+					print("no data returned from get_data_from_state", P_WARN);
 					continue;
 				}
-				if(get_id_hash((*id_vector)[i]) ==
-				   get_id_hash(production_priv_key_id)){
-					// can't re-encrypt data we don't have
+				shift_payload = state_data[0];
+			}catch(...){
+				print("get_data_from_state failed", P_ERR);
+			}
+			CONTINUE_IF_TRUE(shift_payload.size() == 0);
+			if(get_id_hash((*id_vector)[i]) ==
+			   get_id_hash(production_priv_key_id)){
+				try{
+					const data_id_transport_rules_t tmp_rules(
+						std::vector<std::pair<uint8_t, uint8_t> >(
+							{std::make_pair(end_state_ptr->get_tier_major(),
+									end_state_ptr->get_tier_minor())}),
+						std::vector<uint8_t>({}));
 					shift_payload =
 						id_api::raw::strip_to_transportable(
 							shift_payload,
-							data_id_transport_rules_t(
-								std::vector<std::pair<uint8_t, uint8_t> >(
-									{std::make_pair(end_state_ptr->get_tier_major(),
-											end_state_ptr->get_tier_minor())}),
-								std::vector<uint8_t>({})));
+							tmp_rules);
+				}catch(...){
+					print("strip_to_transportable failed", P_ERR);
 				}
-				if(shift_payload.size() == 0){
-					// probably set to completely non-exportable
-					continue;
-				}
+			}
+			CONTINUE_IF_TRUE(shift_payload.size() == 0);
+			try{
 				shift_payload =
 					id_api::raw::force_to_extra(
 						shift_payload,
 						allowed_extra[0]); // TODO: compute this stuff better (?)
-				try{
-					add_data_to_state(
-						std::vector<id_t_>({end_state_ptr->id.get_id()}),
-						std::vector<std::vector<uint8_t> >({shift_payload}));
-					id_vector->erase(
-						id_vector->begin()+i);
-				}catch(...){
-					// print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (set)", P_WARN);
-				}
 			}catch(...){
-				// print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (get)", P_WARN);
+				print("force_to_extra failed", P_ERR);
+			}
+			try{
+				add_data_to_state(
+					std::vector<id_t_>({end_state_ptr->id.get_id()}),
+					std::vector<std::vector<uint8_t> >({shift_payload}));
+				id_vector->erase(
+					id_vector->begin()+i);
+			}catch(...){
+				print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (set)", P_WARN);
 			}
 		}
 	}
@@ -262,37 +271,47 @@ std::vector<std::vector<uint8_t> > id_tier::operation::get_data_from_state(
 	std::vector<id_t_> id_vector){
 	std::vector<std::vector<uint8_t> > retval;
 	for(uint64_t c = 0;c < id_vector.size();c++){
-		try{
-			for(uint64_t i = 0;i < state_id.size();i++){
-				try{
-					id_tier_state_t *tier_state_ptr =
-						PTR_DATA(state_id[i],
-							 id_tier_state_t);
-					CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
-					std::vector<id_tier_transport_entry_t>::iterator req_iter =
+		for(uint64_t i = 0;i < state_id.size();i++){
+			try{
+				id_tier_state_t *tier_state_ptr =
+					PTR_DATA(state_id[i],
+						 id_tier_state_t);
+				CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
+				std::vector<id_tier_transport_entry_t>::iterator req_iter =
+					std::find_if(
+						tier_state_ptr->inbound_transport.begin(),
+						tier_state_ptr->inbound_transport.end(),
+						[&](const id_tier_transport_entry_t &rhs){
+							return rhs.get_payload_id() == id_vector[i];
+						});	
+				if(req_iter == tier_state_ptr->inbound_transport.end()){
+					id_tier_transport_entry_t transport_entry;
+					transport_entry.set_payload_id(
+						id_vector[i]);
+					tier_state_ptr->inbound_transport.push_back(
+						transport_entry);
+					id_tier_medium_t medium =
+						id_tier::get_medium(
+							tier_state_ptr->get_medium());
+					medium.loop(
+						tier_state_ptr->id.get_id());
+					req_iter =
 						std::find_if(
 							tier_state_ptr->inbound_transport.begin(),
 							tier_state_ptr->inbound_transport.end(),
 							[&](const id_tier_transport_entry_t &rhs){
 								return rhs.get_payload_id() == id_vector[i];
-							});	
-					if(req_iter == tier_state_ptr->inbound_transport.end()){
-						id_tier_transport_entry_t transport_entry;
-						transport_entry.set_payload_id(
-							id_vector[i]);
-						tier_state_ptr->inbound_transport.push_back(
-						        transport_entry);
-					}else{
-						if(req_iter->get_payload().size() != 0){
-							retval.push_back(
-								req_iter->get_payload());
-							tier_state_ptr->inbound_transport.erase(
-								req_iter);
-						}
-					}
-				}catch(...){}
-			}
-		}catch(...){}
+							});
+				}
+
+				if(req_iter->get_payload().size() != 0){
+					retval.push_back(
+						req_iter->get_payload());
+					tier_state_ptr->inbound_transport.erase(
+						req_iter);
+				}
+			}catch(...){}
+		}
 	}
 	return retval;
 }
@@ -498,14 +517,38 @@ void id_tier_loop(){
 					// completely normal behavior, since we
 					// let shift_data_to_state handle a lot
 					// of the rules
-					// print("couldn't shift data over", P_SPAM);
+					print("couldn't shift data over", P_SPAM);
 				}else{
 					// update this if we have bulk transfers
 					// refer to tiers as tier major and tier minor
-					// print("shifted data " + id_breakdown(std::get<0>(move_logic[a])) + " from tier " + id_breakdown(from_id) + " to " + id_breakdown(to_id), P_SPAM);
+					id_tier_state_t *from_state_ptr =
+						PTR_DATA(from_id,
+							 id_tier_state_t);
+					ASSERT(from_state_ptr != nullptr, P_ERR);
+					id_tier_state_t *to_state_ptr =
+						PTR_DATA(to_id,
+							 id_tier_state_t);
+					ASSERT(to_state_ptr != nullptr, P_ERR);
+					const std::string from_tier =
+						std::to_string(from_state_ptr->get_tier_major()) + "." +
+						std::to_string(from_state_ptr->get_tier_minor());
+					const std::string to_tier =
+						std::to_string(to_state_ptr->get_tier_major()) + "." +
+						std::to_string(to_state_ptr->get_tier_minor());
+					print("shifted data " + id_breakdown(std::get<0>(move_logic[a])) + " from tier " + from_tier + " to tier " + to_tier, P_SPAM);
 				}
 			}
 		}
+		id_tier_state_t *tier_state_ptr =
+			PTR_DATA(tier_state_vector[i],
+				 id_tier_state_t);
+		CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
+		id_tier_medium_t medium =
+			id_tier::get_medium(
+				tier_state_ptr->get_medium());
+		medium.loop(
+			tier_state_ptr->id.get_id());
+		
 	}
 }
 

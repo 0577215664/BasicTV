@@ -36,7 +36,7 @@
 			try{						\
 				add_func(				\
 					state_id,			\
-					tier_state_ptr->inbound_transport[i].get_payload()); \
+					tier_state_ptr->outbound_transport[i].get_payload()); \
 				complete = true;			\
 			}catch(...){					\
 			}						\
