@@ -307,3 +307,10 @@ std::vector<id_t_> data_id_t::all_ids(){
 	}
 	return retval;
 }
+
+data_id_t *throw_if_null(data_id_t *id){
+	if(id == nullptr){
+		print("id is a nullptr", P_ERR);
+	}
+	return id;
+}

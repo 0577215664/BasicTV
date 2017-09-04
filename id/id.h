@@ -17,21 +17,20 @@
 
 #define GET_RAW(data_to_get, type, id_str) type get_##data_to_get() const {return data_to_get;}GET_CONST_PTR_RAW(data_to_get, type, id_str);
 
-
-#define SET_RAW(data_to_set, type, id_str) void set_##data_to_set(const type datum){if(data_to_set != datum){id_str;}data_to_set = (type)datum;}	
+#define SET_RAW(data_to_set, type, id_str) void set_##data_to_set(const type datum){if(data_to_set != datum){try{id_str;}catch(...){}}data_to_set = (type)datum;}	
 #define GET_ID_RAW(data_to_get, id_str) id_t_ get_##data_to_get() const {if(data_to_get == ID_BLANK_ID){print(#data_to_get" is a nullptr (getting)", P_WARN);}return data_to_get;}
-#define SET_ID_RAW(data_to_set, id_str) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){id_str;}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
+#define SET_ID_RAW(data_to_set, id_str) void set_##data_to_set(id_t_ datum){if(data_to_set != datum){try{id_str;}catch(...){}}if(datum == ID_BLANK_ID){print(#data_to_set" is a nullptr (setting)", P_WARN);}data_to_set = datum;}
 #define GET_SET_ID_RAW(data, id_str) GET_RAW(data, id_t_, id_str);SET_RAW(data, id_t_, id_str)
 #define GET_SET_RAW(data, type, id_str) GET_RAW(data, type, id_str);SET_RAW(data, type, id_str)
 
 #define FULL_VECTOR_CONTROL_RAW(data_to_set, type, id_str) ADD_DEL_VECTOR_RAW(data_to_set, type, id_str)
 #define ADD_DEL_VECTOR_RAW(data_to_set, type, id_str)				\
-	void add_##data_to_set(type datum){id_str;for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
-	void del_##data_to_set(type datum){id_str;for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
+	void add_##data_to_set(type datum){try{id_str;}catch(...){}for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){return;}}data_to_set.push_back(datum);} \
+	void del_##data_to_set(type datum){try{id_str;}catch(...){};for(uint64_t i = 0;i < data_to_set.size();i++){if(data_to_set[i]==datum){data_to_set.erase(data_to_set.begin()+i);break;}}} \
 	type get_elem_##data_to_set(uint64_t pos){return data_to_set.at(pos);} \
-	void append_##data_to_set(std::vector<type> datum){id_str;data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
-	std::vector<type> pull_erase_until_entry_##data_to_set(type datum){std::vector<type> retval;uint64_t dist;if((dist = std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum))) != data_to_set.size()){id_str;retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);}return retval;} \
-	std::vector<type> pull_erase_until_pos_##data_to_set(uint64_t entry){std::vector<type> retval;uint64_t dist = entry;ASSERT(data_to_set.size() >= dist, P_UNABLE);id_str;retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);return retval;} \
+	void append_##data_to_set(std::vector<type> datum){try{id_str;}catch(...){}data_to_set.insert(data_to_set.end(), datum.begin(), datum.end());} \
+	std::vector<type> pull_erase_until_entry_##data_to_set(type datum){std::vector<type> retval;uint64_t dist;if((dist = std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum))) != data_to_set.size()){try{id_str;}catch(...){}retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);}return retval;} \
+	std::vector<type> pull_erase_until_pos_##data_to_set(uint64_t entry){std::vector<type> retval;uint64_t dist = entry;ASSERT(data_to_set.size() >= dist, P_UNABLE);try{id_str;}catch(...){}retval = std::vector<type>(data_to_set.begin(), data_to_set.begin()+dist);data_to_set.erase(data_to_set.begin(), data_to_set.begin()+dist);return retval;} \
 	uint64_t get_size_##data_to_set(){return data_to_set.size();}	\
 	uint64_t find_iter_##data_to_set(std::function<bool(const type)> function_){return std::distance(data_to_set.begin(),std::find_if(data_to_set.begin(), data_to_set.end(), function_));}	\
 	uint64_t find_##data_to_set(type datum){return std::distance(data_to_set.begin(), std::find(data_to_set.begin(), data_to_set.end(), datum));}\
@@ -51,14 +50,14 @@
 
 // V == Virtual inheritance (id is stored as a ptr)
 
-#define GET_V(a, b) GET_RAW(a, b, id->mod_inc())
-#define GET_CONST_PTR_V(a, b) GET_CONST_PTR_RAW(a, b, id->mod_inc())
-#define SET_V(a, b) GET_SET(a, b, id->mod_inc())
-#define GET_ID_V(a) GET_ID(a, id->mod_inc())
-#define SET_ID_V(a) SET_ID(a, id->mod_inc())
-#define GET_SET_ID_V(a) GET_SET_ID_RAW(a, id->mod_inc())
-#define GET_SET_V(a, b) GET_SET_RAW(a, b, id->mod_inc())
-#define FULL_VECTOR_CONTROL_V(a, b) FULL_VECTOR_CONTROL_RAW(a, b, id->mod_inc())
+#define GET_V(a, b) GET_RAW(a, b, throw_if_null(id)->mod_inc())
+#define GET_CONST_PTR_V(a, b) GET_CONST_PTR_RAW(a, b, throw_if_null(id)->mod_inc())
+#define SET_V(a, b) GET_SET(a, b, throw_if_null(id)->mod_inc())
+#define GET_ID_V(a) GET_ID(a, throw_if_null(id)->mod_inc())
+#define SET_ID_V(a) SET_ID(a, throw_if_null(id)->mod_inc())
+#define GET_SET_ID_V(a) GET_SET_ID_RAW(a, throw_if_null(id)->mod_inc())
+#define GET_SET_V(a, b) GET_SET_RAW(a, b, throw_if_null(id)->mod_inc())
+#define FULL_VECTOR_CONTROL_V(a, b) FULL_VECTOR_CONTROL_RAW(a, b, throw_if_null(id)->mod_inc())
 #define ADD_DEL_VECTOR_V(a, b) FULL_VECTOR_CONTROL_V(a, b)
 
 // S == Simple (no ID to register with)
@@ -372,6 +371,10 @@ extern void set_id_type(id_t_ *id, type_t_ type);
 std::string id_breakdown(id_t_ id_);
 
 #define IS_OWNER(id) (id == get_id_hash(production_priv_key_id)
+
+
+extern data_id_t *throw_if_null(data_id_t *id);
+
 
 #endif
 #include "../main.h"

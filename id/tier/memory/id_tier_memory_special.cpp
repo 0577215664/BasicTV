@@ -38,10 +38,15 @@ void mem_add_id(data_id_t *ptr){
 			ptr->get_id(),
 			ptr->get_mod_inc()));
 	id_tier_mem_regen_state_cache();
-	id_tier_mem_update_state_cache(
+	std::vector<id_tier_state_t*> tier_state_vector =
 		mem_helper::lookup::tier_state(
 			std::vector<std::pair<uint8_t, uint8_t> >({
-					std::make_pair(0, 0)})).at(0));
+					std::make_pair(0, 0)}));
+	if(tier_state_vector.size() != 0){
+		ASSERT(tier_state_vector.size() == 1, P_ERR);
+		id_tier_mem_update_state_cache(
+			tier_state_vector[0]);
+	}
 }
 
 void mem_del_id(data_id_t *ptr){

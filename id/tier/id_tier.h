@@ -112,8 +112,8 @@ public:
 struct id_tier_state_t{
 private:
 	uint8_t medium = 0;
-	uint8_t tier_major = 0;
-	uint8_t tier_minor = 0;	
+	uint8_t tier_major = 255;
+	uint8_t tier_minor = 255;	
 	
 	void *payload = nullptr;
 public:
