@@ -192,6 +192,8 @@ ID_TIER_UPDATE_CACHE(disk){
 
 ID_TIER_LOOP(disk){
 	GET_ALL_STATE_PTR(disk);
+	id_tier_disk_update_cache(
+		state_id);
 	ID_TIER_LOOP_STANDARD(
 		id_tier_disk_add_data,
 		id_tier_disk_get_id);

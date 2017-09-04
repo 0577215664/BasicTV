@@ -424,6 +424,9 @@ static void id_tier_init_disk(){
 	disk_state_ptr->path =
 		convert::string::to_bytes(
 			path);
+
+	disk_medium_ptr.loop(
+		tier_state_ptr->id.get_id());
 }
 
 static void id_tier_init_cache(){
@@ -474,8 +477,6 @@ static void id_tier_init_cache(){
 void id_tier_init(){
 	// memory is handled in-line in init() for private key loading
 	id_tier_init_cache();
-	// disk seems to be working fine, but tier shfiting code doesn't
-	// debug it with cache tiers first, then enable disk
 	id_tier_init_disk();
 }
 
@@ -548,7 +549,6 @@ void id_tier_loop(){
 				tier_state_ptr->get_medium());
 		medium.loop(
 			tier_state_ptr->id.get_id());
-		
 	}
 }
 

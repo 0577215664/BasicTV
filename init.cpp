@@ -168,7 +168,7 @@ void init(){
 	settings::set_setting("run_tests", "false");
 	settings::set_setting("print_backtrace", "false");
 	settings::set_setting("print_color", "true");
-
+	
 	settings::set_setting("print_delay", "0");
 
 	settings::set_setting("test_catch_all", "false");
