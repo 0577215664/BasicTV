@@ -23,19 +23,23 @@ std::vector<id_tier_medium_t> id_tier_medium = {
 	id_tier_medium_t(
 		id_tier_mem_init_state,
 		id_tier_mem_del_state,
-		id_tier_mem_loop),
+		id_tier_mem_loop,
+		id_tier_mem_update_cache),
 	id_tier_medium_t(
 		id_tier_cache_init_state,
 		id_tier_cache_del_state,
-		id_tier_cache_loop),
+		id_tier_cache_loop,
+		id_tier_cache_update_cache),
 	id_tier_medium_t(
 		id_tier_disk_init_state,
 		id_tier_disk_del_state,
-		id_tier_disk_loop),
+		id_tier_disk_loop,
+		id_tier_disk_update_cache),
 	id_tier_medium_t(
 		id_tier_network_init_state,
 		id_tier_network_del_state,
-		id_tier_network_loop)
+		id_tier_network_loop,
+		id_tier_network_update_cache)
 };
 
 id_tier_medium_t id_tier::get_medium(uint8_t medium_type){
@@ -244,6 +248,7 @@ void id_tier::operation::shift_data_to_state(
 			}catch(...){
 				print("couldn't shift id " + id_breakdown((*id_vector)[i]) + " over to new device (set)", P_WARN);
 			}
+			
 		}
 	}
 }
@@ -361,6 +366,12 @@ void id_tier::operation::add_data_to_state(
 						extra_vector[extra_byte]));
 				tier_state_ptr->outbound_transport.push_back(
 					transport_entry);
+				id_tier_medium_t medium =
+					id_tier::get_medium(
+						tier_state_ptr->get_medium());
+				medium.loop(
+					tier_state_ptr->id.get_id());
+
 			}catch(...){
 				print("couldn't insert " + id_breakdown(id_api::raw::fetch_id(data_vector[i])) + " into " +
 				      id_breakdown(state_id[c]), P_WARN);
@@ -424,8 +435,7 @@ static void id_tier_init_disk(){
 	disk_state_ptr->path =
 		convert::string::to_bytes(
 			path);
-
-	disk_medium_ptr.loop(
+	disk_medium_ptr.update_cache(
 		tier_state_ptr->id.get_id());
 }
 
@@ -549,6 +559,13 @@ void id_tier_loop(){
 				tier_state_ptr->get_medium());
 		medium.loop(
 			tier_state_ptr->id.get_id());
+		if(tier_state_ptr->control.flags & ID_TIER_CONTROL_FLAG_UPDATE_CACHE){
+			medium.update_cache(
+				tier_state_ptr->id.get_id());
+			tier_state_ptr->control.flags &=
+				~(static_cast<uint64_t>(
+					  ID_TIER_CONTROL_FLAG_UPDATE_CACHE));
+		}
 	}
 }
 

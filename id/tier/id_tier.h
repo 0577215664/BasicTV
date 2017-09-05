@@ -6,6 +6,7 @@
 
 #include "benchmark/id_tier_benchmark.h"
 #include "storage/id_tier_storage.h"
+#include "id_tier_control.h"
 
 #define PTR_DATA(id_, type_) ((type_*)id_tier::mem::get_ptr(id_, #type_, all_tiers))
 #define PTR_ID(id_, type_) (id_tier::mem::get_id_ptr(id_, #type_, all_tiers))
@@ -118,6 +119,7 @@ private:
 	void *payload = nullptr;
 public:
 	data_id_t id;
+	id_tier_state_control_t control;
 	id_tier_state_storage_t storage;
 	id_tier_state_benchmark_t benchmark;
 	
@@ -154,13 +156,16 @@ public:
 	id_t_ (*init_state)() = nullptr;
 	void (*del_state)(id_t_) = nullptr;
 	void (*loop)(id_t_) = nullptr;
+	void (*update_cache)(id_t_) = nullptr;
 	id_tier_medium_t(
 		id_t_ (*init_state_)(),
 		void (*del_state_)(id_t_ state_id),
-		void (*loop_)(id_t_ state_id)){
+		void (*loop_)(id_t_ state_id),
+		void (*update_cache_)(id_t_ state_id)){
 		init_state = init_state_;
 		del_state = del_state_;
 		loop = loop_;
+		update_cache = update_cache_;
 	}
 };
 

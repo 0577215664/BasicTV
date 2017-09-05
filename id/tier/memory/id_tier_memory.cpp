@@ -281,13 +281,21 @@ data_id_t *id_tier::mem::get_id_ptr(
 			if(tier_state_vector[i]->get_tier_major() == 0){
 				continue;
 			}
-			id_tier::operation::shift_data_to_state(
-				tier_state_vector[i],
-				mem_state_ptr,
-				&shift_payload);
+			try{
+				id_tier::operation::shift_data_to_state(
+					tier_state_vector[i],
+					mem_state_ptr,
+					&shift_payload);
+				id_tier_medium_t tier_medium =
+					id_tier::get_medium(
+						tier_state_vector[i]->get_medium());
+				tier_medium.loop(
+					tier_state_vector[i]->id.get_id());
+			}catch(...){}
 		}
 		retval = mem_helper::lookup::id(id);
 	}catch(...){
+		print("caught an unknown exception", P_ERR);
 	}
 	lookup_vector.erase(lookup_vector.end()-1);
 	return retval;
