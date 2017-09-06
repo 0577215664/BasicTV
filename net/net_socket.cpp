@@ -10,13 +10,7 @@ static void recv_to_buffer(
 	bool *recv_running,
 	net_socket_t *ptr){
 
-	ptr->thread_mutex.lock();
-	print("recv buffer has started", P_NOTE);
-	const bool recv_running_ =
-		*recv_running;
-	ptr->thread_mutex.unlock();
-	ASSERT(recv_running_ == true, P_ERR);
-	
+	print("recv buffer has started", P_NOTE);	
 	char recv_buffer[65536];
 	while(ptr != nullptr &&
 	      *recv_running){
@@ -61,12 +55,7 @@ static void send_from_buffer(
 	bool *send_running,
 	net_socket_t *ptr){
 
-	ptr->thread_mutex.lock();
 	print("send buffer has started", P_NOTE);
-	const bool send_running_ =
-		*send_running;
-	ptr->thread_mutex.unlock();
-	ASSERT(send_running_ == true, P_ERR);
 	
 	std::vector<uint8_t> send_buffer;
 	while(ptr != nullptr &&

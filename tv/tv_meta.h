@@ -13,17 +13,24 @@ struct tv_meta_t{
 private:
 	// escpaed
 	std::vector<uint8_t> vorbis_comment;
+	// would be pretty interesting to see a breakdown of contributions
+	// by episode in a series
+	id_t_ wallet_set_id = ID_BLANK_ID;
+
+	data_id_t *id = nullptr;
 public:
 	tv_meta_t();
 	~tv_meta_t();
 
-	void list_virtual_data(data_id_t *id);
+	void list_virtual_data(data_id_t *id_);
 	std::vector<std::string> search_for_param(
 		std::string param);
 	void add_param(
 		std::string param,
 		std::string value,
 		bool replace);
+
+	GET_SET_ID_V(wallet_set_id);
 };
 
 #endif

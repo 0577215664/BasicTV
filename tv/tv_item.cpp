@@ -47,7 +47,6 @@ void tv_item_t::clear_frame_sets(){
 
 tv_item_t::tv_item_t() : id(this, TYPE_TV_ITEM_T){
 	ADD_DATA(tv_channel_id, public_ruleset);
-	ADD_DATA(wallet_set_id, public_ruleset);
 	id.add_data_one_byte_vector(&frame_sets, ~0, public_ruleset);
 	id.add_data_one_byte_vector(&name, ~0, public_ruleset);
 	id.add_data_one_byte_vector(&desc, ~0, public_ruleset);

@@ -44,7 +44,6 @@ private:
 	// Item wallet takes precedence over tv_channel_t wallet, can
 	// be pretty interesting to get donation stats on individual
 	// programs vs. the channel itself
-	id_t_ wallet_set_id = ID_BLANK_ID;
 	id_t_ tv_channel_id = ID_BLANK_ID;
 
 	// TODO: convert over from name & desc to Vorbis comments for
@@ -58,7 +57,6 @@ public:
 	data_id_t id;
 	tv_item_t();
 	~tv_item_t();
-	GET_SET_ID(wallet_set_id);
 	GET_SET_ID(tv_channel_id);
 	GET_SET(start_time_micro_s, uint64_t);
 	GET_SET(end_time_micro_s, uint64_t);
