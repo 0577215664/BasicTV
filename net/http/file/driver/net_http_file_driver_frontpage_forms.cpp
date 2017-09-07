@@ -22,6 +22,7 @@ std::string net_http_file_driver_frontpage_form_create_wallet_set(){
 std::string net_http_file_driver_frontpage_form_add_wallet_to_set(){
 	return H1("Add Wallet to Set")
 		FORM_START
+		FORM_TEXT("Wallet Set ID", add_wallet_to_set_id)
 		FORM_TEXT("Address", add_wallet_to_set_address)
 		FORM_TEXT("Trading Code (BTC, ETH, USD, etc)", add_wallet_to_set_code)
 		FORM_SUBMIT("Add Wallet", add_wallet_to_set_submit)
