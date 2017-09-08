@@ -43,12 +43,12 @@ NET_HTTP_FILE_DRIVER_MEDIUM_CLOSE(frontpage){
 		net_http_file_driver_frontpage_state_t);
 }
 
-#define REPLACE_WITH_STR(temp, temp_str, string_)	\
-	if(true){					\
-		uint64_t pos = temp.find(temp_str);	\
-		if(pos != temp.size()){			\
+#define REPLACE_WITH_STR(temp, temp_str, string_)			\
+	if(true){							\
+		uint64_t pos = temp.find(temp_str);			\
+		if(pos != temp.size()){					\
 			temp.erase(pos, strlen(temp_str));		\
-			const std::string tmp_retval = string_;	\
+			const std::string tmp_retval = string_;		\
 			temp.insert(pos, tmp_retval.data(), tmp_retval.size());	\
 		}							\
 	}								\

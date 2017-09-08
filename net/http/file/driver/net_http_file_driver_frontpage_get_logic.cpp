@@ -81,7 +81,28 @@ std::string net_http_file_driver_frontpage_create_tv_item_plain(
 	std::vector<std::pair<std::string, std::string> > get_vector){
 	tv_item_t *tv_item_ptr =
 		new tv_item_t;
-	return "Created TV Item " + convert::array::id::to_hex(tv_item_ptr->id.get_id());
+	std::string error_str;
+	const GET_STR(create_tv_item_plain_title);
+	const GET_STR(create_tv_item_plain_desc);
+	const GET_STR(create_tv_item_plain_wallet_id);
+	tv_item_ptr->add_param(
+		VORBIS_COMMENT_PARAM_TITLE,
+		create_tv_item_plain_title,
+		true);
+	tv_item_ptr->add_param(
+		VORBIS_COMMENT_PARAM_DESCRIPTION,
+		create_tv_item_plain_desc,
+		true);
+	if(create_tv_item_plain_wallet_id != ""){
+		try{
+			tv_item_ptr->set_wallet_set_id(
+				convert::array::id::from_hex(
+					create_tv_item_plain_wallet_id));
+		}catch(...){
+			error_str = "Couldn't bind Wallet ID";
+		}
+	}
+	return error_str + "<br />Created TV Item " + convert::array::id::to_hex(tv_item_ptr->id.get_id());
 }
 
 std::string net_http_file_driver_frontpage_get_logic(
@@ -93,6 +114,9 @@ std::string net_http_file_driver_frontpage_get_logic(
 		GET_LOGIC_VAR_RUN(create_wallet_set);
 		GET_LOGIC_VAR_RUN(add_wallet_to_set);
 		GET_LOGIC_VAR_RUN(create_tv_channel);
+		GET_LOGIC_VAR_RUN(create_tv_item_plain);
+		// GET_LOGIC_VAR_RUN(create_tv_item_upload);
+		// hold off on uploads until we have good HTTP upload handling
 	}
 	return ""; // TODO: actually make a proper response
 }

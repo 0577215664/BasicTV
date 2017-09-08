@@ -135,7 +135,7 @@ std::vector<std::pair<std::string, std::string> > http::header::get::var_list(
 						equal_pos+1,
 						div_pos-equal_pos)));
 			path.erase(
-				0, div_pos);
+				0, div_pos+1);
 				
 		}catch(...){
 			print("random exception caught in url_var", P_WARN);
