@@ -18,11 +18,11 @@
 
 #define NET_HTTP_PAYLOAD_CHUNK_SENT (1 << 0)
 
-typedef std::pair<std::vector<std::pair<std::vector<std::string>, uint8_t> >, uint8_t> net_http_header_chunk_header_t;
+typedef std::pair<std::vector<std::pair<std::vector<std::string>, uint8_t> >, uint8_t> net_http_chunk_header_t;
 
 struct net_http_chunk_t{
 private:
-	net_http_header_chunk_header_t header;
+	net_http_chunk_header_t header;
 	std::vector<uint8_t> payload;
 	bool sent = false;
 
@@ -40,7 +40,7 @@ public:
 		return ~(*this == rhs);
 	}
 	
-	GET_SET_S(header, net_http_header_chunk_header_t);
+	GET_SET_S(header, net_http_chunk_header_t);
 	GET_SET_S(payload, std::vector<uint8_t>);
 	GET_SET_S(sent, bool);
 
