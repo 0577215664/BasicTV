@@ -29,6 +29,9 @@ namespace http{
 				std::vector<std::pair<std::string, std::string> > var_list,
 				std::string var);
 		};
+		namespace mime{
+			
+		};
 	};
 };
 

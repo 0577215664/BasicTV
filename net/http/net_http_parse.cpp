@@ -28,7 +28,6 @@ std::string http::header::make_header(
 	return retval;
 }
 	
-
 std::vector<std::vector<std::string> > http::header::pull_from_socket(
 	net_socket_t *socket_ptr){
 	PRINT_IF_NULL(socket_ptr, P_ERR);
