@@ -4,8 +4,8 @@
 #define FORM_START "<form action=\"/\" method=\"get\">"
 #define FORM_END "</form>"
 
-#define H1(var) "<bold>" var "</bold><br />"
-#define FORM(hr, var, type) hr "<input type=" #type " name=" #var " /><br />"
+#define H1(var) "<bold>" var "</bold>"
+#define FORM(hr, var, type) "<input type=" #type " name=" #var " placeholder=\'" hr "\' /><br />"
 
 #define FORM_TEXT(hr, var) FORM(hr, var, text)
 #define FORM_SUBMIT(hr, var) FORM(hr, var, submit)
