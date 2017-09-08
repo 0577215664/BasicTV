@@ -106,9 +106,16 @@ static std::string net_http_file_driver_frontpage_create_tv_item_plain(
 	return error_str + "<br />Created TV Item " + convert::array::id::to_hex(tv_item_ptr->id.get_id());
 }
 
+// tv_item_t isn't bound to the window, this function just creates a
+// seed frame type from the tv_sink_state_t's frame_type, and adds
+// a binding between the sink state and the seed frame to the tv_window_t,
+// and adds the seed frame id to the tv_item_t.
+
+// TODO: should expand upon this and expose individual streams being
+// bound, instead of assuming one stream per frame
+
 static std::string net_http_file_driver_frontpage_bind_tv_sink_item_window(
 	std::vector<std::pair<std::string, std::string> > get_vector){
-	std::string retval;
 	const GET_STR(bind_tv_sink_item_window_sink_id);
 	const GET_STR(bind_tv_sink_item_window_item_id);
 	const GET_STR(bind_tv_sink_item_window_window_id);
@@ -153,8 +160,37 @@ static std::string net_http_file_driver_frontpage_bind_tv_sink_item_window(
 						bind_tv_sink_item_window_sink_id),
 					std::vector<uint8_t>({}))}));
 	// Vorbis bindings/etc aren't used right now
-			
-	return retval;
+	item_ptr->add_frame_id(
+		std::vector<id_t_>({frame_id}));
+	return "Bound TV Item, TV Sink, and TV Window";
+}
+
+static std::string net_http_file_driver_frontpage_unbind_tv_sink_item_window(
+	std::vector<std::pair<std::string, std::string> > get_vector){
+	const GET_STR(unbind_tv_sink_item_window_item_id);
+	const GET_STR(unbind_tv_sink_item_window_sink_id);
+	const GET_STR(unbind_tv_sink_item_window_window_id);
+	tv_window_t *window_ptr =
+		PTR_DATA(convert::array::id::from_hex(
+				 unbind_tv_sink_item_window_item_id),
+			 tv_window_t);
+	if(window_ptr == nullptr){
+		return "TV Window is NULL";
+	}
+	std::vector<
+		std::tuple<
+			id_t_,
+			id_t_,
+			std::vector<uint8_t> > > active_streams =
+		window_ptr->get_active_streams();
+	return "TODO: make the unbinding code go to the end of the linked list"
+		" and check to see for any overlap";
+	// const id_t frame_id =
+	// 	convert::array::id::from_hex(
+	// 		unbind_tv_sink_item_window_item_id);
+	// for(uint64_t i = 0;i < active_streams.size();i++){
+	// 	if(std::get<0>(active_streams[i]) == 
+	// }
 }
 
 std::string net_http_file_driver_frontpage_get_logic(
