@@ -85,11 +85,11 @@ static std::string net_http_file_driver_frontpage_generate(
 	REPLACE_WITH_STR(
 		retval,
 		"BIND_TV_SINK_ITEM",
-		net_http_file_driver_frontpage_form_bind_tv_sink_item());
+		net_http_file_driver_frontpage_form_bind_tv_sink_item_window());
 	REPLACE_WITH_STR(
 		retval,
 		"UNBIND_TV_SINK_ITEM",
-		net_http_file_driver_frontpage_form_unbind_tv_sink_item());
+		net_http_file_driver_frontpage_form_unbind_tv_sink_item_window());
 	REPLACE_WITH_STR(
 		retval,
 		"CONTROL_WINDOW",

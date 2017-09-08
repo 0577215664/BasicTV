@@ -60,20 +60,22 @@ std::string net_http_file_driver_frontpage_form_create_tv_item_upload(){
 		FORM_END;
 }
 
-std::string net_http_file_driver_frontpage_form_bind_tv_sink_item(){
-	return H1("Bind TV Sink to Item")
+std::string net_http_file_driver_frontpage_form_bind_tv_sink_item_window(){
+	return H1("Bind TV Sink, TV Item, and TV Window")
 		FORM_START
-		FORM_TEXT("TV Sink ID", bind_tv_sink_item_sink_id)
-		FORM_TEXT("TV Item ID", bind_tv_sink_item_item_id)
+		FORM_TEXT("TV Sink ID", bind_tv_sink_item_window_sink_id)
+		FORM_TEXT("TV Item ID", bind_tv_sink_item_window_item_id)
+		FORM_TEXT("TV Window ID", bind_tv_sink_item_window_window_id)
 		FORM_SUBMIT("Bind TV Sink to Item", bind_tv_sink_item_submit)
 		FORM_END;
 }
 
-std::string net_http_file_driver_frontpage_form_unbind_tv_sink_item(){
-	return H1("Unbind TV Sink to Item")
+std::string net_http_file_driver_frontpage_form_unbind_tv_sink_item_window(){
+	return H1("Unbind TV Sink, TV Item, and TV Window")
 		FORM_START
 		FORM_TEXT("TV Sink ID", unbind_tv_sink_item_sink_id)
 		FORM_TEXT("TV Item ID", unbind_tv_sink_item_item_id)
+		FORM_TEXT("TV Window ID", unbind_tv_sink_item_window_id)
 		FORM_SUBMIT("Unbind TV Sink to Item", unbind_tv_sink_item_submit)
 		FORM_END;
 }

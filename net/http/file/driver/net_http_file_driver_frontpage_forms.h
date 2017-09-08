@@ -15,8 +15,8 @@ extern std::string net_http_file_driver_frontpage_form_add_wallet_to_set();
 extern std::string net_http_file_driver_frontpage_form_create_tv_channel();
 extern std::string net_http_file_driver_frontpage_form_create_tv_item_plain();
 extern std::string net_http_file_driver_frontpage_form_create_tv_item_upload();
-extern std::string net_http_file_driver_frontpage_form_bind_tv_sink_item();
-extern std::string net_http_file_driver_frontpage_form_unbind_tv_sink_item();
+extern std::string net_http_file_driver_frontpage_form_bind_tv_sink_item_window();
+extern std::string net_http_file_driver_frontpage_form_unbind_tv_sink_item_window();
 extern std::string net_http_file_driver_frontpage_form_control_window();
 
 #endif
