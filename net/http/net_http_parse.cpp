@@ -94,13 +94,16 @@ std::string http::header::pull_value(
 // TODO: step through this and make sure it works, probably doesn't
 std::vector<std::pair<std::string, std::string> > http::header::get::var_list(
 	std::string path){
+	
 	std::vector<std::pair<std::string, std::string> > retval;
-	const uint64_t var_start_pos =
+	uint64_t var_start_pos =
 		path.find_first_of('?');
 	if(var_start_pos == std::string::npos){
 		return retval;
+	}else{
+		var_start_pos++;
 	}
-	path.erase(
+ 	path.erase(
 		0,
 		var_start_pos);
 	uint64_t equal_pos = 0;
@@ -116,10 +119,12 @@ std::vector<std::pair<std::string, std::string> > http::header::get::var_list(
 				path.find(
 					'&',
 					var_start_pos);
-			if(equal_pos == std::string::npos ||
-			   div_pos == std::string::npos){
+			if(equal_pos == std::string::npos){
 				finding_var = false;
 				break;
+			}
+			if(div_pos == std::string::npos){
+				div_pos = path.size();
 			}
 			retval.push_back(
 				std::make_pair(
@@ -130,13 +135,18 @@ std::vector<std::pair<std::string, std::string> > http::header::get::var_list(
 						equal_pos+1,
 						div_pos-equal_pos)));
 			path.erase(
-				0, div_pos-equal_pos);
+				0, div_pos);
 				
 		}catch(...){
 			print("random exception caught in url_var", P_WARN);
 			finding_var = false;
 			break;
 		}
+	}
+	P_V(retval.size(), P_VAR);
+	for(uint64_t i = 0;i < retval.size();i++){
+		P_V_S(retval[i].first, P_VAR);
+		P_V_S(retval[i].second, P_VAR);
 	}
 	return retval;
 }

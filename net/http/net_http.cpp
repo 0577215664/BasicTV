@@ -100,6 +100,9 @@ static void net_http_push_conn_to_file(
 				file_driver_medium.init(
 					url,
 					non_bound_sockets[c]);
+			file_driver_state_ptr->set_var_list(
+				http::header::get::var_list(
+					url));
 			http_data_ptr->add_bound_file_driver_states(
 				file_driver_state_ptr->id.get_id());
 		}catch(...){

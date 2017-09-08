@@ -14,7 +14,7 @@
 #include "../../../../tv/tv_meta.h"
 
 
-#define GET_LOGIC_VAR_RUN(x_) if(get_payload[i].first == #x_ "_submit"){return convert::string::to_bytes(net_http_file_driver_frontpage_##x_(get_payload));}
+#define GET_LOGIC_VAR_RUN(x_) if(get_payload[i].first == #x_ "_submit"){return net_http_file_driver_frontpage_##x_(get_payload);}
 
 #define GET_STR(name) std::string name = http::header::get::value_from_var_list(get_vector, #name);
 
@@ -84,12 +84,15 @@ std::string net_http_file_driver_frontpage_create_tv_item_plain(
 	return "Created TV Item " + convert::array::id::to_hex(tv_item_ptr->id.get_id());
 }
 
-std::vector<uint8_t> net_http_file_driver_frontpage_get_logic(
-	std::vector<std::pair<std::string, std::string> > get_payload){
+std::string net_http_file_driver_frontpage_get_logic(
+	net_http_file_driver_state_t *file_driver_state_ptr){
+	std::vector<std::pair<std::string, std::string> > get_payload =
+		file_driver_state_ptr->get_var_list();
 
 	for(uint64_t i = 0;i < get_payload.size();i++){
 		GET_LOGIC_VAR_RUN(create_wallet_set);
 		GET_LOGIC_VAR_RUN(add_wallet_to_set);
 		GET_LOGIC_VAR_RUN(create_tv_channel);
 	}
+	return ""; // TODO: actually make a proper response
 }

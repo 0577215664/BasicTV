@@ -430,7 +430,7 @@ std::vector<std::string> convert::vector::vectorize_string_with_divider(
 			payload.substr(
 				0,
 				div_pos));
-		P_V_S(retval[retval.size()-1], P_VAR);
+		// P_V_S(retval[retval.size()-1], P_VAR);
 		payload.erase(
 			0,
 			div_pos+1);
