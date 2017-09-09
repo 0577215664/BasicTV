@@ -8,6 +8,6 @@ struct net_http_file_driver_frontpage_state_t{
 
 extern NET_HTTP_FILE_DRIVER_MEDIUM_INIT(frontpage);
 extern NET_HTTP_FILE_DRIVER_MEDIUM_CLOSE(frontpage);
-extern NET_HTTP_FILE_DRIVER_MEDIUM_PULL(frontpage);
+extern NET_HTTP_FILE_DRIVER_MEDIUM_LOOP(frontpage);
 
 #endif

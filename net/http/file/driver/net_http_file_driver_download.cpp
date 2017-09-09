@@ -1,20 +1,10 @@
 #include "net_http_file_driver_download.h"
 #include "net_http_file_driver.h"
 
-#include "../../net_http_parse.h"
+#include "../../parse/net_http_parse.h" // standard_header
 
 #include "../../../../tv/tv_frame_audio.h"
 #include "../../../../tv/tv_item.h"
-
-/*
-  Since the majority of the HTTP GETs at this stage are human generated, the
-  default behaviour is to serve the (only) audio stream down the socket in the
-  native format
- */
-
-/*
-  For now, the COMPLEX flag isn't allowed
- */
 
 NET_HTTP_FILE_DRIVER_MEDIUM_INIT(download){
 	STD_STATE_INIT(
@@ -22,24 +12,20 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(download){
 		file_driver_state_ptr,
 		net_http_file_driver_download_state_t,
 		download_state_ptr);
+	file_driver_state_ptr->request_payload =
+		request_payload;
 	file_driver_state_ptr->set_socket_id(
 		socket_id);
-	const std::vector<std::pair<std::string, std::string> > get_var =
-		http::header::get::var_list(
-			url);
-	file_driver_state_ptr->set_var_list(
-		get_var);
-	file_driver_state_ptr->set_service_id(
-	        http::header::get::pull_id(
-			get_var,
-			"item_id"));	
 	file_driver_state_ptr->set_medium(
 		NET_HTTP_FILE_DRIVER_MEDIUM_DOWNLOAD);
-
+	
 	// download specific
 	ASSERT(ogg_stream_init(download_state_ptr->ogg_state,
 			       0) == 0, P_ERR);
 	ASSERT(download_state_ptr->ogg_state != nullptr, P_ERR);
+
+	file_driver_state_ptr->response_payload.set_direction(
+		NET_HTTP_PAYLOAD_OUT);
 	return file_driver_state_ptr;
 }
 
@@ -70,18 +56,12 @@ static std::vector<std::vector<id_t_> >  net_http_file_driver_download_new_item_
 	std::vector<id_t_> pseudo_retval;
 	
 	tv_item_t *item_ptr =
-		PTR_DATA(file_driver_state_ptr->get_service_id(),
+		PTR_DATA(file_driver_state_ptr->request_payload.form_data.get_id("service_id"),
 			 tv_item_t);
 	PRINT_IF_NULL(item_ptr, P_UNABLE);
 	bool complex =
 		false;
-	try{
-		complex =
-			http::header::get::value_from_var_list(
-				file_driver_state_ptr->get_var_list(),
-				"complex") == "1";
-	}catch(...){}
-	ASSERT(complex == false, P_ERR);
+	// ASSERT(complex == false, P_ERR);
 
 	// currently can't dish out more than one, Murphy's Law protection
 	ASSERT(download_state_ptr->service_log.size() <= 1, P_ERR);
@@ -113,7 +93,8 @@ static std::vector<std::vector<id_t_> >  net_http_file_driver_download_new_item_
 
 static std::vector<uint8_t> net_http_file_driver_download_ogg_packetize(
 	net_http_file_driver_download_state_t *download_state_ptr,
-	std::vector<std::vector<id_t_> > packet_vector){
+	std::vector<std::vector<id_t_> > packet_vector,
+	bool *finished){
 	ASSERT(download_state_ptr->ogg_state != nullptr, P_ERR);
 	ASSERT(packet_vector.size() <= 1, P_ERR);
 	if(packet_vector.size() == 0){
@@ -158,6 +139,9 @@ static std::vector<uint8_t> net_http_file_driver_download_ogg_packetize(
 				       download_state_ptr->ogg_state,
 				       &packet) == 0, P_ERR);
 		}
+		if(last_packet){
+			*finished = true;
+		}
 	}
 	std::vector<uint8_t> retval;
 	bool has_pages = true;
@@ -179,18 +163,26 @@ static std::vector<uint8_t> net_http_file_driver_download_ogg_packetize(
 	return retval;
 }
 
-NET_HTTP_FILE_DRIVER_MEDIUM_PULL(download){
+NET_HTTP_FILE_DRIVER_MEDIUM_LOOP(download){
 	STD_STATE_GET_PTR(
 		file_driver_state_ptr,
 		net_http_file_driver_download_state_t,
 		download_state_ptr);
-	file_driver_state_ptr->set_mime_type(
-		"application/ogg"); // make more complicated later on
-	return std::pair<std::vector<uint8_t>, uint8_t>(
+
+	// file_driver_state_ptr->set_mime_type(
+	// 	"application/ogg"); // make more complicated later on
+
+	net_http_chunk_t payload_chunk;
+	bool finished = false;
+	payload_chunk.set_payload(
 		net_http_file_driver_download_ogg_packetize(
 			download_state_ptr,
 			net_http_file_driver_download_new_item_data(
 				file_driver_state_ptr,
-				download_state_ptr)),
-		file_driver_state_ptr->get_payload_status());
+				download_state_ptr),
+			&finished));
+	file_driver_state_ptr->response_payload.set_finished(
+		finished);
+	file_driver_state_ptr->response_payload.add_chunks(
+		payload_chunk);
 }

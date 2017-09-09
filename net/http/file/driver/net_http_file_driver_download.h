@@ -27,6 +27,6 @@ public:
 
 extern NET_HTTP_FILE_DRIVER_MEDIUM_INIT(download);
 extern NET_HTTP_FILE_DRIVER_MEDIUM_CLOSE(download);
-extern NET_HTTP_FILE_DRIVER_MEDIUM_PULL(download);
+extern NET_HTTP_FILE_DRIVER_MEDIUM_LOOP(download);
 
 #endif

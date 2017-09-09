@@ -1,7 +1,7 @@
 #include "net_http_file_driver_frontpage_get_logic.h"
 #include "net_http_file_driver_frontpage.h"
 #include "../../net_http.h"
-#include "../../net_http_parse.h"
+#include "../../parse/net_http_parse.h"
 
 #include "../../../../cryptocurrency.h"
 #include "../../../../id/id.h"
@@ -15,12 +15,12 @@
 #include "../../../../tv/tv_meta.h"
 
 
-#define GET_LOGIC_VAR_RUN(x_) if(get_payload[i].first == #x_ "_submit"){return net_http_file_driver_frontpage_##x_(get_payload);}
+#define GET_LOGIC_VAR_RUN(x_) if(get_payload[i].first == #x_ "_submit"){return net_http_file_driver_frontpage_##x_(file_driver_state_ptr);}
 
-#define GET_STR(name) std::string name = http::header::get::value_from_var_list(get_vector, #name);
+#define GET_STR(name) std::string name = file_driver_state_ptr->request_payload.form_data.get_str(#name);;
 
 static std::string net_http_file_driver_frontpage_create_wallet_set(
-	std::vector<std::pair<std::string, std::string> > get_vector){
+	net_http_file_driver_state_t *file_driver_state_ptr){
 
 	std::string retval = "Created Wallet Set ";
 	wallet_set_t *wallet_set_ptr =
@@ -30,20 +30,16 @@ static std::string net_http_file_driver_frontpage_create_wallet_set(
 }
 
 static std::string net_http_file_driver_frontpage_add_wallet_to_set(
-	std::vector<std::pair<std::string, std::string> > get_vector){
+	net_http_file_driver_state_t *file_driver_state_ptr){
 	const id_t_ wallet_set_id =
-		convert::array::id::from_hex(
-			http::header::get::value_from_var_list(
-				get_vector,
-				"add_wallet_to_set_id"));
+		file_driver_state_ptr->request_payload.form_data.get_id(
+			"add_wallet_to_set_id");
 	const std::string wallet_set_address =
-		http::header::get::value_from_var_list(
-			get_vector,
+		file_driver_state_ptr->request_payload.form_data.get_str(
 			"add_wallet_to_set_address");
 	const std::string wallet_set_code =
-		http::header::get::value_from_var_list(
-			get_vector,
-			"add_wallet_to_set_code");
+		file_driver_state_ptr->request_payload.form_data.get_str(
+			"add_wallet_to_set_address_code");
 
 	wallet_set_t *wallet_set_ptr =
 		PTR_DATA(wallet_set_id,
@@ -59,7 +55,7 @@ static std::string net_http_file_driver_frontpage_add_wallet_to_set(
 }
 
 static std::string net_http_file_driver_frontpage_create_tv_channel(
-	std::vector<std::pair<std::string, std::string> > get_vector){
+	net_http_file_driver_state_t *file_driver_state_ptr){
 
 	tv_channel_t *channel_ptr =
 		new tv_channel_t;
@@ -79,7 +75,7 @@ static std::string net_http_file_driver_frontpage_create_tv_channel(
 }
 
 static std::string net_http_file_driver_frontpage_create_tv_item_plain(
-	std::vector<std::pair<std::string, std::string> > get_vector){
+	net_http_file_driver_state_t *file_driver_state_ptr){
 	tv_item_t *tv_item_ptr =
 		new tv_item_t;
 	std::string error_str;
@@ -115,7 +111,7 @@ static std::string net_http_file_driver_frontpage_create_tv_item_plain(
 // bound, instead of assuming one stream per frame
 
 static std::string net_http_file_driver_frontpage_bind_tv_sink_item_window(
-	std::vector<std::pair<std::string, std::string> > get_vector){
+	net_http_file_driver_state_t *file_driver_state_ptr){
 	const GET_STR(bind_tv_sink_item_window_sink_id);
 	const GET_STR(bind_tv_sink_item_window_item_id);
 	const GET_STR(bind_tv_sink_item_window_window_id);
@@ -166,7 +162,7 @@ static std::string net_http_file_driver_frontpage_bind_tv_sink_item_window(
 }
 
 static std::string net_http_file_driver_frontpage_unbind_tv_sink_item_window(
-	std::vector<std::pair<std::string, std::string> > get_vector){
+	net_http_file_driver_state_t *file_driver_state_ptr){
 	const GET_STR(unbind_tv_sink_item_window_item_id);
 	const GET_STR(unbind_tv_sink_item_window_sink_id);
 	const GET_STR(unbind_tv_sink_item_window_window_id);
@@ -195,8 +191,8 @@ static std::string net_http_file_driver_frontpage_unbind_tv_sink_item_window(
 
 std::string net_http_file_driver_frontpage_get_logic(
 	net_http_file_driver_state_t *file_driver_state_ptr){
-	std::vector<std::pair<std::string, std::string> > get_payload =
-		file_driver_state_ptr->get_var_list();
+	const std::vector<std::pair<std::string, std::string> > get_payload =
+		file_driver_state_ptr->request_payload.form_data.get_table();
 
 	for(uint64_t i = 0;i < get_payload.size();i++){
 		GET_LOGIC_VAR_RUN(create_wallet_set);

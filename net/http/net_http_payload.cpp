@@ -1,12 +1,63 @@
 #include "net_http_payload.h"
-#include "net_http_parse.h"
+#include "parse/net_http_parse.h"
 #include "net_http.h"
 
-static net_http_chunk_header_t gen_standard_http_header(){
-	net_http_chunk_header_t retval;
-	// typedef std::pair<std::vector<std::pair<std::vector<std::string>, uint8_t> >, uint8_t>
-	
+std::string net_http_chunk_header_t::assemble(){
+	std::vector<std::vector<std::string> > tmp;
+	for(uint64_t a = 0;a < payload.size();a++){
+		tmp.push_back(
+			std::vector<std::string>({}));
+		for(uint64_t b = 0;b < payload[a].size();b++){
+			tmp[a].push_back(payload[a][b]);
+			if(payload[a][b].find("Date") != std::string::npos){
+				tmp[a].push_back(
+					convert::time::to_http_time(get_time_microseconds()));
+			}
+			// MIME type
+		}
+	}
+
+	std::string retval;
+	for(uint64_t a = 0;a < payload.size();a++){
+		for(uint64_t b = 0;b < payload[a].size();b++){
+			retval += payload[a][b];
+			retval += minor_divider;
+		}
+		retval += major_divider;
+	}
+
+	P_V_S(retval, P_VAR);
 	return retval;
+}
+
+std::vector<std::string> net_http_chunk_header_t::fetch_line_from_start(
+	std::string start){
+	for(uint64_t i = 0;i < payload.size();i++){
+		if(payload[i].size() == 0){
+			print("payload line is blank, shouldn't happen", P_WARN);
+			continue;
+		}
+		if(payload[i][0] == start){
+			return payload[i];
+		}
+	}
+	return std::vector<std::string>({});
+}
+
+void net_http_chunk_header_t::set_payload(std::vector<std::vector<std::string> > payload_){
+	try{
+		std::string mime_type_ =
+			http::raw::get_item_from_line(
+				payload_,
+				"Content-Type:",
+				1);
+		if(mime_type_[mime_type_.size()-1] == ';'){
+			mime_type_.erase(
+				mime_type_.end());
+		}
+		mime_type = mime_type_;
+	}catch(...){}
+	payload = payload_;
 }
 
 net_http_chunk_t::net_http_chunk_t(){
@@ -17,17 +68,25 @@ net_http_chunk_t::~net_http_chunk_t(){
 
 std::vector<uint8_t> net_http_chunk_t::assemble(){
 	std::vector<uint8_t> retval;
-	for(uint64_t a = 0;a < header.first.size();a++){
-		for(uint64_t b = 0;b < header.first[a].first.size();b++){
-			retval.insert(
-				retval.end(),
-				header.first[a].first[b].data(),
-				header.first[a].first[b].data()+
-				header.first[a].first[b].size());
-			retval.push_back(header.first[a].second);
-		}
-		retval.push_back(header.first[a].second);
-	}
+	const std::string assembled_header =
+		header.assemble();
+	retval.insert(
+		retval.end(),
+		assembled_header.data(),
+		assembled_header.data()+
+		assembled_header.size());
+	// retval.push_back('\r');
+	// retval.push_back('\n');
+	// retval.push_back('\r');
+	// retval.push_back('\n');
+	retval.insert(
+		retval.end(),
+		http_header_divider.begin(),
+		http_header_divider.end());
+	retval.insert(
+		retval.end(),
+		payload.begin(),
+		payload.end());
 	return retval;
 }
 
@@ -51,7 +110,29 @@ std::vector<uint8_t> net_http_payload_t::pull(){
 				retval.end(),
 				assembled_packet.begin(),
 				assembled_packet.end());
+			retval.insert(
+				retval.end(),
+				http_header_divider.begin(),
+				http_header_divider.end());
 		}
 	}
 	return retval;
+}
+
+std::string net_http_form_data_t::get_str(std::string key){
+	for(uint64_t i = 0;i < table.size();i++){
+		if(table[i].first == key){
+			return table[i].second;
+		}
+	}
+	print("can't find key in table", P_UNABLE);
+}
+
+id_t_ net_http_form_data_t::get_id(std::string key){
+	return convert::array::id::from_hex(
+		get_str(key));
+}
+
+int64_t net_http_form_data_t::get_int(std::string key){
+	return std::stoi(get_str(key));
 }

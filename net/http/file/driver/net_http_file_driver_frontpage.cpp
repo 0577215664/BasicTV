@@ -31,9 +31,9 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(frontpage){
 		socket_id);
 	file_driver_state_ptr->set_medium(
 		NET_HTTP_FILE_DRIVER_MEDIUM_FRONTPAGE);
-	if(url.size() > 1){ // technically HTTP GET, we don't see our own domain
-		print("url is suspiciously large for this stage in development (frontpage)", P_WARN);
-	}
+
+	file_driver_state_ptr->response_payload.set_direction(
+		NET_HTTP_PAYLOAD_OUT);
 	return file_driver_state_ptr;
 }
 
@@ -97,15 +97,18 @@ static std::string net_http_file_driver_frontpage_generate(
 	return retval;
 }
 
-NET_HTTP_FILE_DRIVER_MEDIUM_PULL(frontpage){
-	file_driver_state_ptr->set_payload_status(
-		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);
-	file_driver_state_ptr->set_mime_type(
-		"text/html");
-	return std::make_pair(
+NET_HTTP_FILE_DRIVER_MEDIUM_LOOP(frontpage){
+	// everything here is generated OTF and returned in full, so
+	ASSERT(file_driver_state_ptr->response_payload.get_size_chunks() == 0, P_ERR);
+
+	net_http_chunk_t payload_chunk;
+	payload_chunk.set_payload(
 		convert::string::to_bytes(
 			net_http_file_driver_frontpage_generate(
 				net_http_file_driver_frontpage_get_logic(
-					file_driver_state_ptr))),
-		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);
+					file_driver_state_ptr))));
+	file_driver_state_ptr->response_payload.add_chunks(
+		payload_chunk);
+	file_driver_state_ptr->response_payload.set_finished(
+		true);
 }
