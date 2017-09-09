@@ -99,8 +99,8 @@ static std::string net_http_file_driver_frontpage_generate(
 
 NET_HTTP_FILE_DRIVER_MEDIUM_LOOP(frontpage){
 	// everything here is generated OTF and returned in full, so
-	ASSERT(file_driver_state_ptr->response_payload.get_size_chunks() == 0, P_ERR);
-
+	ASSERT(file_driver_state_ptr->response_payload.get_size_chunks() == 0, P_WARN);
+	
 	net_http_chunk_t payload_chunk;
 	payload_chunk.set_payload(
 		convert::string::to_bytes(

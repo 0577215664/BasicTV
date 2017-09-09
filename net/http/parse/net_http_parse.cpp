@@ -3,26 +3,6 @@
 
 #include "../file/driver/net_http_file_driver.h" // macros
 
-std::string http::raw::get_item_from_line(
-	std::vector<std::vector<std::string> > payload,
-	std::string search,
-	uint8_t offset_from_first){
-	for(uint64_t i = 0;i < payload.size();i++){
-		if(payload.size() < 2){
-			break;
-		}
-		if(payload[i].size() <= offset_from_first){
-			continue;
-		}
-		if(payload[i][0] == search){
-			return payload[i][offset_from_first];
- 		}
- 	}
- 	// std::raise(SIGINT);
- 	print("can't find " + search + " in header", P_UNABLE);
- 	return "";
-}
-
 // // TODO: step through this and make sure it works, probably doesn't
 // std::vector<std::pair<std::string, std::string> > http::header::get::var_list(
 // 	std::string path){
@@ -116,7 +96,25 @@ std::string http::raw::get_item_from_line(
   that only one HTTP request/respone will go over a socket
  */
 
-#pragma error("yo actually write this")
+std::string http::raw::get_item_from_line(
+	std::vector<std::vector<std::string> > payload,
+	std::string search,
+	uint8_t offset_from_first){
+	for(uint64_t i = 0;i < payload.size();i++){
+		if(payload.size() < 2){
+			break;
+		}
+		if(payload[i].size() <= offset_from_first){
+			continue;
+		}
+		if(payload[i][0] == search){
+			return payload[i][offset_from_first];
+ 		}
+ 	}
+ 	// std::raise(SIGINT);
+ 	print("can't find " + search + " in header", P_UNABLE);
+ 	return "";
+}
 
 static std::vector<std::vector<std::string> > net_http_parse_pull_header_from_socket(
 	net_socket_t *socket_ptr){

@@ -114,6 +114,7 @@ std::vector<uint8_t> net_http_payload_t::pull(){
 				retval.end(),
 				http_header_divider.begin(),
 				http_header_divider.end());
+			chunks[i].set_sent(true);
 		}
 	}
 	return retval;

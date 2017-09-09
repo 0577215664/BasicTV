@@ -112,12 +112,14 @@ static void net_http_push_conn_to_file(
 
 static NET_HTTP_FILE_DRIVER_FUNCTION(packetize_file_to_conn){
 	NET_HTTP_FILE_DRIVER_SANE();
-	file_driver_medium.loop(
-		file_driver_state_ptr);
-	if(file_driver_state_ptr->request_payload.get_size_chunks() == 0){
+	try{
+		file_driver_medium.loop(
+			file_driver_state_ptr);
+	}catch(...){}
+	if(file_driver_state_ptr->response_payload.get_size_chunks() == 0){
+		print("no data to service", P_WARN);
 		return; // no dta
 	}
-	ASSERT(file_driver_state_ptr->response_payload.get_size_chunks() == 0, P_ERR);
 	print("dishing out file driver data " + convert::array::id::to_hex(file_driver_state_ptr->id.get_id()), P_DEBUG);
 	http::socket::payload::write(
 		&(file_driver_state_ptr->response_payload),
@@ -132,7 +134,9 @@ static NET_HTTP_FILE_DRIVER_FUNCTION(remove_stale){
 		true;
 	const std::vector<net_http_chunk_t> *chunks =
 		file_driver_state_ptr->response_payload.get_const_ptr_chunks();
+	P_V(serviced, P_VAR);
 	for(uint64_t i = 0;i < chunks->size();i++){
+		P_V((*chunks)[i].get_sent(), P_VAR);
 		if((*chunks)[i].get_sent() == false){
 			emptied = false;
 		}
