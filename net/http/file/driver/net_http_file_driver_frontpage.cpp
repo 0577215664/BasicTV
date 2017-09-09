@@ -2,6 +2,8 @@
 #include "net_http_file_driver_frontpage_forms.h"
 #include "net_http_file_driver_frontpage_get_logic.h"
 
+#include "../../parse/net_http_parse.h" // standard_header
+
 /*
   Frontpage is where a lot of the control happens
  */
@@ -102,6 +104,8 @@ NET_HTTP_FILE_DRIVER_MEDIUM_LOOP(frontpage){
 	ASSERT(file_driver_state_ptr->response_payload.get_size_chunks() == 0, P_WARN);
 	
 	net_http_chunk_t payload_chunk;
+	payload_chunk.set_header(
+		standard_header);
 	payload_chunk.set_payload(
 		convert::string::to_bytes(
 			net_http_file_driver_frontpage_generate(
