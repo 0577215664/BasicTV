@@ -120,6 +120,7 @@ std::vector<uint8_t> net_http_payload_t::pull(){
 				http_header_divider.begin(),
 				http_header_divider.end());
 			chunks[i].set_sent(true);
+			print("adding chunk " + std::to_string(i), P_WARN);
 		}
 	}
 	return retval;
