@@ -10,10 +10,15 @@ std::string net_http_chunk_header_t::assemble(){
 		for(uint64_t b = 0;b < payload[a].size();b++){
 			tmp[a].push_back(payload[a][b]);
 			if(payload[a][b].find("Date") != std::string::npos){
+				print("auto-inserting date", P_SPAM);
 				tmp[a].push_back(
 					convert::time::to_http_time(get_time_microseconds()));
 			}
-			// MIME type
+			if(payload[a][b].find("Content-Type") != std::string::npos){
+				print("auto-inserting mime type", P_SPAM);
+				tmp[a].push_back(
+					mime_type);
+			}
 		}
 	}
 
@@ -102,7 +107,7 @@ std::vector<uint8_t> net_http_payload_t::pull(){
 		if(chunks[i].get_sent() == false){
 			const std::vector<uint8_t> assembled_packet =
 				chunks[i].assemble();
-			for(uint64_t b = 0;b < chunks.size();b++){
+			for(uint64_t b = i+1;b < chunks.size();b++){
 				// can't sent out of order
 				ASSERT(chunks[b].get_sent() == false, P_ERR);
 			}

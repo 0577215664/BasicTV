@@ -9,6 +9,16 @@
 #include "../../net_socket.h"
 #include "../net_http_payload.h"
 
+/*
+  HTTP GET and HTTP POST are actually combined into the same list.
+  HTTP POST variables take precedence over HTTP GET if there is
+  a conflict.
+
+  TODO: should make a stark difference between HTTP GET and
+  HTTP POST. Reserve HTTP POST for forms, and HTTP GET for
+  variables for playback (service_id)
+ */
+
 namespace http{
 	namespace raw{
 		std::string get_item_from_line(

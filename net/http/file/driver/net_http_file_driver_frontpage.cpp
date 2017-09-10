@@ -63,7 +63,6 @@ static std::string net_http_file_driver_frontpage_generate(
 		retval,
 		"PREPEND",
 		prepend);
-	
 	REPLACE_WITH_STR(
 		retval,
 		"CREATE_WALLET_SET",

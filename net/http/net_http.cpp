@@ -141,7 +141,8 @@ static NET_HTTP_FILE_DRIVER_FUNCTION(remove_stale){
 			emptied = false;
 		}
 	}
-	if(serviced && emptied){
+	P_V(socket_ptr->get_const_ptr_send_buffer()->size(), P_WARN);
+	if(serviced && emptied && socket_ptr->get_const_ptr_send_buffer()->size() == 0){
 		print("removing a finished HTTP connection", P_WARN);
 		socket_ptr->disconnect();
 		ID_TIER_DESTROY(socket_ptr->id.get_id());
