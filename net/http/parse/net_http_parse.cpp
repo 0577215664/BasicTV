@@ -120,23 +120,36 @@ static std::vector<std::pair<std::string, std::string> > net_http_parse_urlencod
 	std::string str){
 	// truncation is handled in the caller
 	std::vector<std::pair<std::string, std::string> > retval;
-	while(str.size() != 0){
+	uint64_t old_size = 0;
+	while(str.size() != old_size){
+		old_size = str.size();
 		const std::string key_half =
 			str.substr(
 				0,
 				str.find_first_of('='));
 		str.erase(
+			0,
 			str.find_first_of('=')+1);
+		uint64_t end =
+			str.find_first_of('&');
+		if(end == std::string::npos){
+			end = str.size();
+		}else{
+			end++;
+		}
 		const std::string value_half =
 			str.substr(
 				0,
-				str.find_first_of('&'));
+				end);
+		P_V_S(key_half, P_VAR);
+		P_V_S(value_half, P_VAR);
 		retval.push_back(
 			std::make_pair(
 				key_half,
 				value_half));
 		str.erase(
-			str.find_first_of('&')+1);
+			0,
+			end);
 	}
 	return retval;
 }

@@ -34,6 +34,8 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(frontpage){
 	file_driver_state_ptr->set_medium(
 		NET_HTTP_FILE_DRIVER_MEDIUM_FRONTPAGE);
 
+	file_driver_state_ptr->request_payload =
+		request_payload;
 	file_driver_state_ptr->response_payload.set_direction(
 		NET_HTTP_PAYLOAD_OUT);
 	return file_driver_state_ptr;
