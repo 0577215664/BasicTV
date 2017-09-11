@@ -88,7 +88,10 @@ void input_close(){
 }
 
 input_dev_standard_t::input_dev_standard_t() : id(this, TYPE_INPUT_DEV_STANDARD_T){
-	id.add_data_one_byte_vector(&queue, INPUT_DEV_QUEUE_LENGTH);
+	id.add_data_one_byte_vector(
+		&queue,
+		INPUT_DEV_QUEUE_LENGTH,
+		private_ruleset);
 }
 
 input_dev_standard_t::~input_dev_standard_t(){

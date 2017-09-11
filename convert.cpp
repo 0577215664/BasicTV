@@ -292,8 +292,6 @@ uint8_t convert::type::to(std::string type){
 	CONV_CHECK_TYPE("net_proxy_t", TYPE_NET_PROXY_T);
 	CONV_CHECK_TYPE("tv_channel_t", TYPE_TV_CHANNEL_T);
 	CONV_CHECK_TYPE("tv_window_t", TYPE_TV_WINDOW_T);
-	CONV_CHECK_TYPE("tv_menu_entry_t", TYPE_TV_MENU_ENTRY_T);
-	CONV_CHECK_TYPE("tv_menu_t", TYPE_TV_MENU_T);
 	CONV_CHECK_TYPE("tv_dev_audio_t", TYPE_TV_DEV_AUDIO_T);
 	CONV_CHECK_TYPE("tv_dev_video_t", TYPE_TV_DEV_VIDEO_T);
 	CONV_CHECK_TYPE("tv_frame_audio_t", TYPE_TV_FRAME_AUDIO_T);
@@ -347,10 +345,6 @@ std::string convert::type::from(uint8_t type){
 		return "tv_channel_t";
 	case TYPE_TV_WINDOW_T:
 		return "tv_window_t";
-	case TYPE_TV_MENU_ENTRY_T:
-		return "tv_menu_entry_t";
-	case TYPE_TV_MENU_T:
-		return "tv_menu_t";
 	case TYPE_TV_DEV_AUDIO_T:
 		return "tv_dev_audio_t";
 	case TYPE_TV_DEV_VIDEO_T:
@@ -436,7 +430,7 @@ std::vector<std::string> convert::vector::vectorize_string_with_divider(
 			payload.substr(
 				0,
 				div_pos));
-		P_V_S(retval[retval.size()-1], P_VAR);
+		// P_V_S(retval[retval.size()-1], P_VAR);
 		payload.erase(
 			0,
 			div_pos+1);

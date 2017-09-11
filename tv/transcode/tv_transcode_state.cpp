@@ -11,13 +11,13 @@ std::vector<tv_transcode_decode_state_t> decode_state_vector;
 // Update instance of frame to be up to, but not including, the inclusion of
 // frame_id (not including allows for some optimizations later on).
 
-SEARCH_FOR_STATE(encode);
+SEARCH_FOR_STATE(audio, encode);
 
-SEARCH_FOR_STATE(decode);
+SEARCH_FOR_STATE(audio, decode);
 
-SEARCH_FOR_STATE_SIMPLE(encode);
+SEARCH_FOR_STATE_SIMPLE(audio, encode);
 
-SEARCH_FOR_STATE_SIMPLE(decode);
+SEARCH_FOR_STATE_SIMPLE(audio, decode);
 
 // TODO: should optimize this for searching for the previous
 // For example, possibly pass prev_frame_id to encode_search_for_state,

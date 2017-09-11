@@ -17,4 +17,6 @@ scripts/*wav
 scripts/finished
 scripts/TMP_OUT*
 
-personal*
+personal.cfg
+
+changelog.sh

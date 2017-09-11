@@ -1,7 +1,7 @@
 #include "../../net_http.h"
 #include "net_http_file_driver.h"
 #include "net_http_file_driver_atom.h"
-#include "../../net_http_parse.h"
+#include "../../parse/net_http_parse.h"
 
 #include "../../../../state.h"
 
@@ -100,20 +100,13 @@ NET_HTTP_FILE_DRIVER_MEDIUM_INIT(atom){
 		file_driver_state_ptr,
 		net_http_file_driver_atom_state_t,
 		atom_state_ptr);
-	// socket_id isn't used too much internally
 	file_driver_state_ptr->set_socket_id(
 		socket_id);
-	const std::vector<std::pair<std::string, std::string> > var_list =
-		http::header::get::var_list(
-			url);
-	file_driver_state_ptr->set_var_list(
-		var_list);
-	file_driver_state_ptr->set_service_id(
-		http::header::get::pull_id(
-			var_list,
-			"channel_id"));
 	file_driver_state_ptr->set_medium(
 		NET_HTTP_FILE_DRIVER_MEDIUM_ATOM);
+
+	file_driver_state_ptr->response_payload.set_direction(
+		NET_HTTP_PAYLOAD_OUT);
 	return file_driver_state_ptr;
 }
 
@@ -123,28 +116,28 @@ NET_HTTP_FILE_DRIVER_MEDIUM_CLOSE(atom){
 		net_http_file_driver_atom_state_t);
 }
 
-NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
+NET_HTTP_FILE_DRIVER_MEDIUM_LOOP(atom){
 	STD_STATE_GET_PTR(
 		file_driver_state_ptr,
 		net_http_file_driver_atom_state_t,
 		atom_state_ptr);
 	std::string retval_str;
 	try{
-		if(file_driver_state_ptr->get_service_id() != ID_BLANK_ID){
-			net_proto::request::add_type_hash_whitelist(
-				{TYPE_TV_ITEM_T},
-				get_id_hash(file_driver_state_ptr->get_service_id()));
+		const id_t_ service_id =
+			file_driver_state_ptr->request_payload.form_data.get_id("service_id");
+		if(service_id != ID_BLANK_ID){
+			// request data
 		}
 		std::vector<id_t_> item_vector =
 			ID_TIER_CACHE_GET(
 				TYPE_TV_ITEM_T);
 		retval_str +=
 			atom_tv_channel_to_prefix(
-				file_driver_state_ptr->get_service_id());
+				service_id);
 		for(uint64_t i = 0;i < item_vector.size();i++){
-			if(file_driver_state_ptr->get_service_id() != ID_BLANK_ID){
+			if(service_id != ID_BLANK_ID){
 				CONTINUE_IF_DIFF_OWNER(
-					file_driver_state_ptr->get_service_id(),
+					service_id,
 					item_vector[i]);
 			}
 			retval_str +=
@@ -158,10 +151,14 @@ NET_HTTP_FILE_DRIVER_MEDIUM_PULL(atom){
 	}
 	// TODO: if hanging was a lot less common, we can wait a second or
 	// two to update our list (probably not a good idea)
-	file_driver_state_ptr->set_payload_status(
-		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);
-	return std::make_pair(
+
+	net_http_chunk_t payload_chunk;
+	payload_chunk.set_payload(
 		convert::string::to_bytes(
-			retval_str),
-		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE);
+			retval_str));
+	file_driver_state_ptr->response_payload.set_finished(
+		true);
+	file_driver_state_ptr->response_payload.add_chunks(
+		payload_chunk);
+		
 }

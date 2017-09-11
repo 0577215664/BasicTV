@@ -126,7 +126,7 @@ static id_tier_state_t* bootstrap_id_tier_mem(){
 			 id_tier_state_t);
 	memory_ptr->set_tier_major(0);
 	memory_ptr->set_tier_minor(0);
-	memory_ptr->set_allowed_extra(
+	memory_ptr->storage.set_extras(
 		std::vector<uint8_t>({0}));
 	memory_ptr->set_medium(
 		ID_TIER_MEDIUM_MEM);
@@ -168,7 +168,7 @@ void init(){
 	settings::set_setting("run_tests", "false");
 	settings::set_setting("print_backtrace", "false");
 	settings::set_setting("print_color", "true");
-
+	
 	settings::set_setting("print_delay", "0");
 
 	settings::set_setting("test_catch_all", "false");

@@ -84,37 +84,41 @@ static std::string print_level_text(int level){
 
 std::string print_color_text(std::string data, int level){
 	std::string prefix;
-	if(settings::get_setting("print_color") != "true"){
-		return data;
-	}else{
-		switch(level){
-		case P_CRIT:
-			prefix = "\033[0;31m";
-			break;
-		case P_ERR:
-			prefix = "\033[1;31m";
-			break;
-		case P_WARN:
-			prefix = "\033[1;36m";
-			break;
-		case P_UNABLE:
-		case P_NOTE:
-			prefix = "";
-			break;
-		case P_DEBUG:
-			prefix = "\033[0;34m";
-			break;
-		case P_SPAM:
-			prefix = "\033[1;32m";
-			break;
-		case P_VAR:
-		default:
-			// not seen by most people, only really ran through 'diff', so
-			// looks don't matter
-			prefix = "";
-			break;
+	try{
+		if(settings::get_setting("print_color") != "true"){
+			return data;
+		}else{
+			switch(level){
+			case P_CRIT:
+				prefix = "\033[0;31m";
+				break;
+			case P_ERR:
+				prefix = "\033[1;31m";
+				break;
+			case P_WARN:
+				prefix = "\033[1;36m";
+				break;
+			case P_UNABLE:
+			case P_NOTE:
+				prefix = "";
+				break;
+			case P_DEBUG:
+				prefix = "\033[0;34m";
+				break;
+			case P_SPAM:
+				prefix = "\033[1;32m";
+				break;
+			case P_VAR:
+			default:
+				// not seen by most people, only really ran through 'diff', so
+				// looks don't matter
+				prefix = "";
+				break;
+			}
+			return prefix + data + "\033[0m";
 		}
-		return prefix + data + "\033[0m";
+	}catch(...){
+		return data;
 	}
 }
 
@@ -130,15 +134,23 @@ void update_print_level(){
 	print_delay_milli_s =
 		settings::get_setting_unsigned_def(
 			"print_delay", 0);
-	print_backtrace =
-		settings::get_setting(
-			   "print_backtrace") == "true";
-	print_soe =
-		settings::get_setting(
-			   "print_soe") == "true";
+	try{
+		print_backtrace =
+			settings::get_setting(
+				"print_backtrace") == "true";
+	}catch(...){}
+	try{
+		print_soe =
+			settings::get_setting(
+				"print_soe") == "true";
+	}catch(...){
+	}
 }
 
 void print_(std::string data, uint64_t level){
+	if(unlikely(level == P_VAR)){
+		update_print_level();
+	}
 	if(unlikely(level >= print_level)){
 		if(unlikely(print_delay_milli_s != 0)){
 			sleep_ms(print_delay_milli_s, true);
@@ -167,7 +179,7 @@ void print_(std::string data, uint64_t level){
 			std::cout << "Finished backtrace" << std::endl;
 		}
 	}
-	if(unlikely(level >= P_ERR && settings::get_setting("print_soe") == "true")){ // SIGINT-on-error, GDB
+	if(unlikely(level >= P_ERR && print_soe)){ // SIGINT-on-error, GDB
 		std::raise(SIGINT);
 	}
 	if(unlikely(level >= P_ERR || level == P_UNABLE)){

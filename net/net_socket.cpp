@@ -10,13 +10,7 @@ static void recv_to_buffer(
 	bool *recv_running,
 	net_socket_t *ptr){
 
-	ptr->thread_mutex.lock();
-	print("recv buffer has started", P_NOTE);
-	const bool recv_running_ =
-		*recv_running;
-	ptr->thread_mutex.unlock();
-	ASSERT(recv_running_ == true, P_ERR);
-	
+	print("recv buffer has started", P_NOTE);	
 	char recv_buffer[65536];
 	while(ptr != nullptr &&
 	      *recv_running){
@@ -61,12 +55,7 @@ static void send_from_buffer(
 	bool *send_running,
 	net_socket_t *ptr){
 
-	ptr->thread_mutex.lock();
 	print("send buffer has started", P_NOTE);
-	const bool send_running_ =
-		*send_running;
-	ptr->thread_mutex.unlock();
-	ASSERT(send_running_ == true, P_ERR);
 	
 	std::vector<uint8_t> send_buffer;
 	while(ptr != nullptr &&
@@ -100,10 +89,6 @@ static void send_from_buffer(
 }
 
 net_socket_t::net_socket_t() : id(this, TYPE_NET_SOCKET_T){
-	id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_NEVER,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_PEER_RULE_NEVER);
 }
 
 net_socket_t::~net_socket_t(){
@@ -325,16 +310,4 @@ bool net_socket_t::activity(){
 
 id_t_ net_socket_t::get_proxy_id(){
 	return proxy_id;
-}
-
-void net_socket_t::register_inbound_data(
-	uint32_t bytes,
-	uint64_t start_time_micro_s,
-	uint64_t end_time_micro_s){
-	net::stats::add_throughput_datum(
-		bytes,
-		start_time_micro_s,
-		end_time_micro_s,
-		id.get_id(),
-		proxy_id);
 }

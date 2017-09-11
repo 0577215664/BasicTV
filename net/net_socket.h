@@ -50,15 +50,6 @@ private:
 	void socket_check();
 	id_t_ proxy_id = ID_BLANK_ID;
 	
-	/*
-	  inbound is throughput
-	  outbound isn't going to be created, instead we are going to name that
-	  latency and use ping/pong system
-	*/
-	void register_inbound_data(
-		uint32_t bytes,
-		uint64_t start_time_micro_s,
-		uint64_t end_time_micro_s);
 	void update_socket_set();
 
 	void create_threads();

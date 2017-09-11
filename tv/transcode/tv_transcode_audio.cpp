@@ -99,7 +99,7 @@ static void audio_decode_post_check(
 	}
 }	
 
-tv_transcode_state_encode_codec_t encode_codec_lookup(uint8_t format){
+tv_transcode_state_encode_codec_t audio_encode_codec_lookup(uint8_t format){
 	for(uint64_t i = 0;i < CODEC_ENCODE_COUNT;i++){
 		if(encodes[i].get_format() == format){
 			return encodes[i];
@@ -111,7 +111,7 @@ tv_transcode_state_encode_codec_t encode_codec_lookup(uint8_t format){
 		0, nullptr, nullptr, nullptr);
 }
 
-tv_transcode_state_decode_codec_t decode_codec_lookup(uint8_t format){
+tv_transcode_state_decode_codec_t audio_decode_codec_lookup(uint8_t format){
 	for(uint64_t i = 0;i < CODEC_DECODE_COUNT;i++){
 		if(decodes[i].get_format() == format){
 			return decodes[i];
@@ -149,10 +149,10 @@ std::vector<std::vector<uint8_t> > transcode::audio::frames::to_codec(
 			frame_set[0]);
 	std::vector<std::vector<uint8_t> > retval;
 	tv_transcode_state_decode_codec_t decode_codec =
-		decode_codec_lookup(
+		audio_decode_codec_lookup(
 			input_audio_prop.get_format());
 	tv_transcode_state_encode_codec_t encode_codec =
-		encode_codec_lookup(
+		audio_encode_codec_lookup(
 			output_audio_prop->get_format());
 	tv_transcode_decode_state_t *decode_state =
 		nullptr;
@@ -164,7 +164,7 @@ std::vector<std::vector<uint8_t> > transcode::audio::frames::to_codec(
 			frame_set_start_ptr->get_linked_list();
 		if(linked_list.first.size() > 0){
 			decode_state =
-				decode_search_for_state_simple(
+				audio_decode_search_for_state_simple(
 					linked_list.first[linked_list.first.size()-1]);
 		}
 	}catch(...){}
@@ -300,10 +300,10 @@ std::vector<id_t_> transcode::audio::codec::to_frames(std::vector<std::vector<ui
 	}else{
 		print("can't simply repackage, decoding and encoding to proper frame size", P_NOTE);
 		tv_transcode_state_decode_codec_t decode_codec =
-			decode_codec_lookup(
+			audio_decode_codec_lookup(
 				input_audio_prop->get_format());
 		tv_transcode_state_encode_codec_t encode_codec =
-			encode_codec_lookup(
+			audio_encode_codec_lookup(
 				input_audio_prop->get_format());
 		bool fresh_decode_state = false;
 		bool fresh_encode_state = false;
@@ -353,7 +353,7 @@ std::vector<uint8_t> transcode::audio::codec::to_raw(std::vector<std::vector<uin
 	
 	audio_prop_sanity_check(*input_audio_prop);
 	tv_transcode_state_decode_codec_t decode_codec =
-		decode_codec_lookup(
+		audio_decode_codec_lookup(
 			input_audio_prop->get_format());
 	if(input_decode_state == nullptr){
 		/*
@@ -389,7 +389,7 @@ std::vector<std::vector<uint8_t> > transcode::audio::raw::to_codec(std::vector<u
 	assert_sane_audio_metadata(sampling_freq, bit_depth, channel_count);
 	audio_prop_sanity_check(*output_audio_prop);
 	tv_transcode_state_encode_codec_t encode_codec =
-		encode_codec_lookup(
+		audio_encode_codec_lookup(
 			output_audio_prop->get_format());
 	bool fresh_state = false;
 	audio_encode_pre_check(

@@ -11,13 +11,10 @@
 
 static uint64_t loop_number = 1;
 
+// types are created with their default exporting rules
 id_t_ test_create_generic_id(){
 	wallet_set_t *wallet_set_ptr =
 		new wallet_set_t;
-	wallet_set_ptr->id.set_lowest_global_flag_level(
-		ID_DATA_RULE_UNDEF,
-		ID_DATA_EXPORT_RULE_NEVER,
-		ID_DATA_RULE_UNDEF);
 	std::string totally_legit_bitcoin_wallet_please_give_me_money =
 		"13dfmkk84rXyHoiZQmuYfTxGYykug1mDEZ";
 	wallet_set_ptr->add_wallet(
@@ -56,7 +53,7 @@ id_t_ test_create_generic_id(){
 		P_V(id_tier::lookup::id_mod_inc::from_tier(		\
 			    all_tiers).size(), P_WARN);			\
 		P_V(old_id_count, P_WARN);				\
-	print("test " #x " is leaking possibly invalid data, fix this", P_CRIT); \
+	print("test " #x " is leaking possibly invalid data, fix this", P_WARN); \
 	}								\
 	P_V(elapsed_time_micro_s, P_SPAM);				\
 	print("test " #x " took " + std::to_string(((long double)(elapsed_time_micro_s))/1000000) + "s", P_NOTE); \
@@ -72,13 +69,9 @@ id_t_ test_create_generic_id(){
 void test_id_subsystem(){
 	RUN_TEST(test::id_system::linked_list);
 	RUN_TEST(test::id_system::id_set::proper);
+	RUN_TEST(test::id_system::transport::core_functions);
 	RUN_TEST(test::id_system::transport::proper);
 	// RUN_TEST(test::id_system::transport::import::random);
-}
-
-void test_net(){
-	RUN_TEST(test::net::socket::send_recv);
-	RUN_TEST(test::net::proto_socket::send_recv);
 }
 
 void test_escape(){
@@ -91,13 +84,18 @@ void test_audio(){
 	RUN_TEST(test::audio::opus);
 }
 
+void test_math(){
+	RUN_TEST(test::math::number::add);
+	RUN_TEST(test::math::number::sub);
+}
+
 void test_suite(){
 	loop_number =
 		settings::get_setting_unsigned_def(
 			"test_loop_count", 1);
 	print("set test loop number to " + std::to_string(loop_number), P_NOTE);
+	// test_math();
 	test_escape();
 	test_id_subsystem();
-	test_net();
 	test_audio();
 }

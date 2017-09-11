@@ -7,15 +7,7 @@
 #include "../../id/id_api.h"
 
 #include "net_proto.h"
-#include "net_proto_socket.h"
-#include "inbound/net_proto_inbound_connections.h"
-#include "inbound/net_proto_inbound_data.h"
-#include "outbound/net_proto_outbound_connections.h"
-#include "outbound/net_proto_outbound_data.h"
-#include "net_proto_connections.h"
-#include "net_proto_meta.h"
 #include "net_proto_api.h"
-#include "net_proto_request.h"
 
 
 /*
@@ -23,10 +15,6 @@
  */
 
 void net_proto_loop(){
-	net_proto_handle_inbound_data();
-	net_proto_handle_outbound_requests();
-	net_proto_connection_manager(); // in and out
-	net_proto_requests_loop();
 }
 
 /*
@@ -55,16 +43,16 @@ static id_t_ net_proto_init_new_peer(){
 	P_V_S(ip_addr, P_NOTE);
 	net_proto_peer_t *proto_peer_ptr =
 		new net_proto_peer_t;
-	proto_peer_ptr->id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_PUBLIC,
-		ID_DATA_EXPORT_RULE_ALWAYS,
-		ID_DATA_RULE_UNDEF);
+	proto_peer_ptr->id.set_most_liberal_rules(
+		data_id_transport_rules_t(
+			all_tiers,
+			all_intermediaries));
 	net_interface_ip_address_t *ip_address_ptr =
 		new net_interface_ip_address_t;
-	ip_address_ptr->id.set_lowest_global_flag_level(
-		ID_DATA_NETWORK_RULE_PUBLIC,
-		ID_DATA_EXPORT_RULE_ALWAYS,
-		ID_DATA_RULE_UNDEF);
+	ip_address_ptr->id.set_most_liberal_rules(
+		data_id_transport_rules_t(
+			all_tiers,
+			all_intermediaries));
 	ip_address_ptr->set_medium_modulation_encapsulation(
 		NET_INTERFACE_MEDIUM_IP,
 		NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP,
@@ -207,14 +195,14 @@ static void net_proto_verify_bootstrap_nodes(){
 			NET_INTERFACE_IP_ADDRESS_NAT_TYPE_NONE);
 		proto_peer_ptr->set_address_id(
 			ip_address_ptr->id.get_id());
-		proto_peer_ptr->id.set_lowest_global_flag_level(
-			ID_DATA_RULE_UNDEF,
-			ID_DATA_EXPORT_RULE_NEVER,
-			ID_DATA_RULE_UNDEF);
-		ip_address_ptr->id.set_lowest_global_flag_level(
-			ID_DATA_RULE_UNDEF,
-			ID_DATA_EXPORT_RULE_NEVER,
-			ID_DATA_RULE_UNDEF);
+		proto_peer_ptr->id.set_most_liberal_rules(
+			data_id_transport_rules_t(
+				all_mem_cache,
+				{0})); // either empty or zero
+		ip_address_ptr->id.set_most_liberal_rules(
+			data_id_transport_rules_t(
+				all_mem_cache,
+				{0})); // either empty or zero
 		// no harm in assuming port is open
 		// WRONG_KEY forces no encryption
 		print("created peer with IP " + nodes_to_connect[i].first +

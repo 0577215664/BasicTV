@@ -7,7 +7,7 @@
 
 #include "../../tv/audio/tv_audio.h"
 #include "../../tv/tv_frame_audio.h"
-#include "../../tv/tv_video.h"
+#include "../../tv/video/tv_video.h"
 #include "../../tv/tv_frame_video.h"
 
 #include "../../state.h"

@@ -20,27 +20,18 @@ namespace id_api{
 		};
 		int64_t pos_in_linked_list(id_t_ ref_id, id_t_ goal_id, uint64_t max_search_radius);
 	};
-	namespace sort{
-		std::vector<id_t_> fingerprint(std::vector<id_t_> tmp);
-		/*
-		  Perhaps sort by last access time (when that gets implemented)?
-		*/
-	};
-	// comment out import really soon
-	namespace import{
-		void load_all_of_type(std::string type, uint8_t flags);
-		// used for saving, not needed for network (too slow as well)
-		uint64_t ver_on_disk(id_t_);
-		// used internally, called by id_api::array::ptr_* and others
-		void load_from_net(id_t_);
-	};
 	namespace bulk_fetch{
 		std::vector<uint64_t> mod(std::vector<id_t_> vector);
+	};
+	namespace transport{
+		std::vector<std::pair<std::vector<uint8_t>, std::vector<id_t_> > > smart_id_export(
+			std::vector<id_t_> id_list);
+		std::vector<id_t_> smart_id_import(
+			std::vector<uint8_t> data);
 	};
 	std::vector<id_t_> get_all();
 	void free_mem();
 	void add_data(std::vector<uint8_t> data);
-	void destroy(id_t_ id);
 	void destroy_all_data();
 	void print_id_vector(std::vector<id_t_> vector, uint32_t p_l);
 	void assert_valid_id(id_t_ id);
@@ -57,15 +48,17 @@ namespace id_api{
 		type_t_ fetch_type(std::vector<uint8_t>);
 		mod_inc_t_ fetch_mod_inc(std::vector<uint8_t>);
 
+		std::vector<uint8_t> strip_to_transportable(
+			std::vector<uint8_t> data,
+			data_id_transport_rules_t rules);
+		
 		std::vector<uint8_t> force_to_extra(
 			std::vector<uint8_t> data,
 			uint8_t extra);
-	        
-		std::vector<uint8_t> strip_to_only_rules(
-			std::vector<uint8_t> data,
-			std::vector<uint8_t> network_rules,
-			std::vector<uint8_t> export_rules,
-			std::vector<uint8_t> peer_rules);
+	};
+	namespace human{
+		std::string smart_summary(
+			id_t_ tmp_id);
 	};
 };
 

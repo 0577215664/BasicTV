@@ -49,8 +49,8 @@ extern std::vector<tv_transcode_decode_state_t> decode_state_vector;
 // TODO: can optimize by checking size of first vector for a value
 // less than 16 (the current search limit)
 
-#define SEARCH_FOR_STATE(state_type)					\
-	tv_transcode_##state_type##_state_t* state_type##_search_for_state( \
+#define SEARCH_FOR_STATE(format, state_type)				\
+	tv_transcode_##state_type##_state_t* format##_##state_type##_search_for_state( \
 	        id_t_ frame_id){					\
 		for(uint64_t i = 0;i < state_type##_state_vector.size();i++){ \
 			std::vector<id_t_> backwards_linked_list =	\
@@ -74,8 +74,8 @@ extern std::vector<tv_transcode_decode_state_t> decode_state_vector;
 		return nullptr;						\
 	}								\
 
-#define SEARCH_FOR_STATE_SIMPLE(state_type)				\
-	tv_transcode_##state_type##_state_t* state_type##_search_for_state_simple( \
+#define SEARCH_FOR_STATE_SIMPLE(format, state_type)			\
+	tv_transcode_##state_type##_state_t* format##_##state_type##_search_for_state_simple( \
 		id_t_ frame_id){					\
 		for(uint64_t i = 0;i < state_type##_state_vector.size();i++){ \
 			if(state_type##_state_vector[i].get_last_frame_id() == frame_id){ \
@@ -86,11 +86,13 @@ extern std::vector<tv_transcode_decode_state_t> decode_state_vector;
 		return nullptr;						\
 	}								\
 	
-extern void tv_transcode_state_update_to_frame(id_t_ frame_id);
-extern tv_transcode_encode_state_t *encode_search_for_state(id_t_);
-extern tv_transcode_decode_state_t *decode_search_for_state(id_t_);
 
-extern tv_transcode_encode_state_t *encode_search_for_state_simple(id_t_);
-extern tv_transcode_decode_state_t *decode_search_for_state_simple(id_t_);
+// TODO: move this over to tv_transcode_audio and tv_transcode_video
+extern void tv_transcode_state_update_to_frame(id_t_ frame_id);
+extern tv_transcode_encode_state_t *audio_encode_search_for_state(id_t_);
+extern tv_transcode_decode_state_t *audio_decode_search_for_state(id_t_);
+
+extern tv_transcode_encode_state_t *audio_encode_search_for_state_simple(id_t_);
+extern tv_transcode_decode_state_t *audio_decode_search_for_state_simple(id_t_);
 
 #endif

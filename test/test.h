@@ -26,6 +26,7 @@ namespace test{
 		  "random" = failsafe implementation
 		 */
 		namespace transport{
+			void core_functions();
 			void proper();
 			namespace import{
 				void random();
@@ -35,14 +36,6 @@ namespace test{
 			void proper();
 		};
 		void linked_list();
-	};
-	namespace net{
-		namespace proto_socket{
-			void send_recv();
-		};
-		namespace socket{
-			void send_recv();
-		};
 	};
 	namespace math{ 
 		namespace number{

@@ -9,8 +9,9 @@ tv_meta_t::~tv_meta_t(){
 }
 
 void tv_meta_t::list_virtual_data(
-	data_id_t *id){
-	id->add_data_one_byte_vector(&vorbis_comment, ~0);
+	data_id_t *id_){
+	id = id_;
+	id->add_data_one_byte_vector(&vorbis_comment, ~0, public_ruleset);
 }
 
 std::vector<std::string> tv_meta_t::search_for_param(

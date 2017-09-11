@@ -1,5 +1,4 @@
 #include "tv.h"
-#include "tv_video.h"
 #include "sink/tv_sink.h"
 
 #include "tv_window.h"
@@ -118,8 +117,6 @@ static void tv_loop_sink_outward_flow(
 					ids_to_push.begin()+tv_forward_buffer,
 					ids_to_push.end());
 			}
-			net_proto::request::add_id(
-				ids_to_push);
 		}else{
 			ids_to_push =
 				std::vector<id_t_>({latest_id});

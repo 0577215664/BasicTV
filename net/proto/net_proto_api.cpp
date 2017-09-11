@@ -3,10 +3,7 @@
 #include "../../settings.h"
 #include "net_proto.h"
 #include "net_proto_api.h"
-#include "net_proto_socket.h"
 #include "net_proto_peer.h"
-#include "net_proto_request.h"
-#include "net_proto_con_req.h"
 
 static id_t_ self_peer_id = ID_BLANK_ID;
 
@@ -43,49 +40,6 @@ id_t_ net_proto::peer::get_self_as_peer(){
 	return self_peer_id;
 }
 
-std::vector<id_t_> net_proto::socket::all_proto_socket_of_peer(id_t_ peer_id){
-	std::vector<id_t_> retval;
-	std::vector<id_t_> proto_socket_vector =
-		ID_TIER_CACHE_GET(
-			"net_proto_socket_t");
-	for(uint64_t i = 0;i < proto_socket_vector.size();i++){
-		net_proto_socket_t *proto_socket =
-			PTR_DATA(proto_socket_vector[i],
-				 net_proto_socket_t);
-		if(proto_socket == nullptr){
-			continue;
-		}
-		if(unlikely(proto_socket->get_peer_id() == peer_id)){
-			retval.push_back(
-				proto_socket_vector[i]);
-		}
-	}
-	return retval;
-}
-
-id_t_ net_proto::socket::optimal_proto_socket_of_peer(id_t_ peer_id){
-	std::vector<id_t_> proto_socket_vector =
-		all_proto_socket_of_peer(
-			peer_id);
-	std::pair<id_t_, uint64_t> optimal_socket = {ID_BLANK_ID, 0};
-	for(uint64_t i = 0;i < proto_socket_vector.size();i++){
-		net_proto_socket_t *proto_socket =
-			PTR_DATA(proto_socket_vector[i],
-				 net_proto_socket_t);
-		if(proto_socket == nullptr){
-			continue;
-		}
-		if(optimal_socket.first == ID_BLANK_ID ||
-		   proto_socket->get_last_recv_micro_s() > optimal_socket.second){
-			optimal_socket =
-				std::make_pair(
-					proto_socket_vector[i],
-					proto_socket->get_last_recv_micro_s());
-		}
-	}
-	P_V_S(convert::array::id::to_hex(optimal_socket.first), P_VAR);
-	return optimal_socket.first;
-}
 
 id_t_ net_proto::peer::random_peer_id(){
 	std::vector<id_t_> proto_peer_vector =
@@ -102,77 +56,6 @@ id_t_ net_proto::peer::random_peer_id(){
 	}
 	print("no other peers detected, cannot return a valid peer id", P_WARN);
 	return ID_BLANK_ID;
-}
-
-id_t_ net_proto::peer::random_connected_peer_id(){
-	std::vector<id_t_> proto_socket_vector =
-		ID_TIER_CACHE_GET(
-			TYPE_NET_PROTO_SOCKET_T);
-	std::random_shuffle(
-		proto_socket_vector.begin(),
-		proto_socket_vector.end());
-	for(uint64_t i = 0;i < proto_socket_vector.size();i++){
-		net_proto_socket_t *proto_socket_ptr =
-			PTR_DATA(proto_socket_vector[i],
-				 net_proto_socket_t);
-		CONTINUE_IF_NULL(proto_socket_ptr, P_WARN);
-		net_socket_t *socket_ptr =
-			PTR_DATA(proto_socket_ptr->get_socket_id(),
-				 net_socket_t);
-		CONTINUE_IF_NULL(socket_ptr, P_WARN);
-		CONTINUE_IF_TRUE(socket_ptr->is_alive() == false);
-		return proto_socket_ptr->get_peer_id();
-	}
-	// print("no connected peers exist, returning a blank ID", P_WARN);
-	return ID_BLANK_ID;
-}
-
-/*
-  The holepunching stuff here should also be abstracted out as a requirement
-  for connection initiation, but it works fine for here for now
- */
-
-static id_t_ net_proto_generate_con_req(id_t_ peer_id){
-	net_proto_peer_t *proto_peer_ptr =
-		PTR_DATA(peer_id,
-			 net_proto_peer_t);
-	PRINT_IF_NULL(proto_peer_ptr, P_ERR);
-	// ASSERT(net_interface::medium::from_address(proto_peer_ptr->get_address_id()) == NET_INTERFACE_MEDIUM_IP, P_UNABLE);
-	net_proto_con_req_t *con_req_ptr =
-		new net_proto_con_req_t;
-	con_req_ptr->set(
-		net_proto::peer::get_self_as_peer(),
-		peer_id,
-		ID_BLANK_ID,
-		get_time_microseconds()+10000000);  // TODO: make 10s a settings
-	return con_req_ptr->id.get_id();
-}
-
-/*
-  TODO: should define hardware devices, software devices, and all that jazz
-  when that part of the program is developed enough
- */
-
-static uint64_t all_con_req_to_peer(id_t_ peer_id_){
-	uint64_t retval = 0;
-	std::vector<id_t_> con_req_vector =
-		ID_TIER_CACHE_GET(
-			TYPE_NET_PROTO_CON_REQ_T);
-	for(uint64_t i = 0;i < con_req_vector.size();i++){
-		net_proto_con_req_t *con_req_ptr =
-			PTR_DATA(con_req_vector[i],
-				 net_proto_con_req_t);
-		CONTINUE_IF_NULL(con_req_ptr, P_WARN);
-		id_t_ second_peer_id = ID_BLANK_ID;
-		con_req_ptr->get_peer_ids(
-			   nullptr, // from 
-			   &second_peer_id, // to
-			   nullptr);
-		if(second_peer_id == peer_id_){// intermediary if applicable
-			retval++;
-		}
-	}
-	return retval;
 }
 
 static bool net_proto_self_reference(
@@ -211,38 +94,6 @@ static bool net_proto_self_reference(
 	return false;
 }
 
-void net_proto::socket::connect(id_t_ peer_id_, uint32_t min){
-	std::vector<id_t_> retval;
-	net_proto_peer_t *proto_peer_ptr =
-		PTR_DATA(peer_id_,
-			 net_proto_peer_t);
-	PRINT_IF_NULL(proto_peer_ptr, P_UNABLE);
-	net_interface_ip_address_t *ip_address_ptr =
-		PTR_DATA(proto_peer_ptr->get_address_id(),
-			 net_interface_ip_address_t);
-	PRINT_IF_NULL(ip_address_ptr, P_UNABLE);
-	if(net_proto_self_reference(
-		   ip_address_ptr)){
-		print("not connecting to myself", P_NOTE);
-		return;
-	}
-	const uint64_t sockets_open =
-		all_proto_socket_of_peer(peer_id_).size();
-	const uint64_t pending_con_req =
-		all_con_req_to_peer(peer_id_);
-	const int64_t sockets_to_open =
-		min-sockets_open-pending_con_req;
-	for(int64_t i = 0;i < sockets_to_open;i++){
-		net_proto_generate_con_req(peer_id_);
-	}
-	if(sockets_to_open != 0){
-		// if we only need one socket open, an initial connection should
-		// make that work fine
-		print("created " + std::to_string(sockets_to_open) + " con req to a peer " + net_proto::peer::get_breakdown(peer_id_), P_DEBUG);
-	}
-}
-
-
 #pragma message("optimal_peer_for_id only searches for matching hash, this isn't sustainable for large-scale deployment")
 
 id_t_ net_proto::peer::optimal_peer_for_id(id_t_ id){
@@ -257,8 +108,8 @@ id_t_ net_proto::peer::optimal_peer_for_id(id_t_ id){
 			return proto_peer_vector[i];
 		}
 	}
-	print("no matching hash found on network, returning random connected", P_WARN);
-	return random_connected_peer_id();
+	print("no matching hash found on network, returning blank ID", P_WARN);
+	return ID_BLANK_ID;
 }
 
 /*

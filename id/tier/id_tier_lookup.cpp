@@ -5,14 +5,18 @@
 std::vector<std::pair<id_t_, mod_inc_t_> > id_tier::lookup::id_mod_inc::from_state(
 	id_tier_state_t *tier_state_ptr){
 	ASSERT(tier_state_ptr != nullptr, P_ERR);
-	const std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > *id_buffer =
-		tier_state_ptr->get_const_ptr_id_buffer();
+	const std::vector<id_t_> id_list =
+		tier_state_ptr->storage.get_ids();
+	const std::vector<mod_inc_t_> mod_inc_list =
+		tier_state_ptr->storage.get_mod_incs();
+	ASSERT(id_list.size() == mod_inc_list.size(), P_ERR);
 	std::vector<std::pair<id_t_, mod_inc_t_> > retval;
-	for(uint64_t i = 0;i < id_buffer->size();i++){
+	retval.reserve(id_list.size());
+	for(uint64_t i = 0;i < id_list.size();i++){
 		retval.push_back(
 			std::make_pair(
-				std::get<0>((*id_buffer)[i]),
-				std::get<1>((*id_buffer)[i])));
+				id_list[i],
+				mod_inc_list[i]));
 	}
 	return retval;
 }

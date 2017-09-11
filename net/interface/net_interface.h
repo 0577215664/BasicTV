@@ -43,11 +43,6 @@
   (via POSIX), packet radio might not have this sort of treatment
   (especially on Windows), so net_interface_software_dev_t might become
   a bit large with the addition of modems.
-
-  net_proto_socket_t contains net_interface_software_dev_t, and handles
-  loading chunks of information from net_interface_software_dev_t into memory,
-  that falls outside of the scope of this file (see net/proto/net_proto_socket.h
-  for information about that).
 */
 
 /*
@@ -83,11 +78,6 @@
   This is used more in FSK and multiple modulation schemes, which would
   be defined as one layer up in net_interface_software_dev_t. 
 */
-
-/*
-  
- */
-
 
 /*
   The mediums shouldn't include information about the encoding scheme at all,
@@ -176,7 +166,5 @@
 #define NET_INTERFACE_MEDIUM_PACKET_COUNT 1
 
 extern net_interface_medium_t interface_medium_lookup(uint8_t medium);
-
-#include "../net.h"
 #endif
 		

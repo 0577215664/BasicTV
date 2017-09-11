@@ -16,11 +16,10 @@
 #define NET_INTERFACE_IP_ADDRESS_NAT_TYPE_PORT_RESTRICTED_CONE 4
 #define NET_INTERFACE_IP_ADDRESS_NAT_TYPE_SYMMETRIC 5
 
-
 /*
   Remember that net_interface_address_t covers the mediums being used,
   modulation, and encapsulation scheme identifiers
- */
+*/
 
 struct net_interface_ip_address_t : public net_interface_address_t{
 private:

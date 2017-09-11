@@ -1,17 +1,20 @@
 #include "net_http.h"
 #include "file/driver/net_http_file_driver.h"
-#include "net_http_parse.h"
+#include "parse/net_http_parse.h"
 #include "../net.h"
+#include "../../settings.h"
+#include "../../util.h"
+
 #include <tuple>
 #include <algorithm>
-
-#include "../../settings.h"
-
-#include "../../util.h"
 
 #define NET_HTTP_FILE_DRIVER_FUNCTION(function) void net_http_##function(net_http_t *http_data_ptr, net_http_file_driver_state_t *file_driver_state_ptr, net_http_file_driver_medium_t file_driver_medium, net_socket_t *socket_ptr)
 
 // also here so i can cleanup the warnings
+
+/*
+  TODO: fix me
+ */
 
 #define NET_HTTP_FILE_DRIVER_SANE()				\
 	ASSERT(http_data_ptr != nullptr, P_ERR);		\
@@ -58,35 +61,29 @@ static void net_http_accept_conn(
 		new_net_socket->set_tcp_socket(
 			new_socket);
 		http_data_ptr->add_non_bound_sockets(
-			new_net_socket->id.get_id());
+			std::make_pair(
+				new_net_socket->id.get_id(),
+				net_http_payload_t()));
 	}
 }
 
 static void net_http_push_conn_to_file(
 	net_http_t *http_data_ptr){
-	std::vector<id_t_> non_bound_sockets =
+	std::vector<std::pair<id_t_, net_http_payload_t> > non_bound_sockets =
 		http_data_ptr->get_non_bound_sockets();
 	std::vector<id_t_> http_file_driver_vector =
 		ID_TIER_CACHE_GET(
 			TYPE_NET_HTTP_FILE_DRIVER_STATE_T);
 	for(uint64_t c = 0;c < non_bound_sockets.size();c++){
 		try{
-			net_socket_t *socket_ptr =
-				PTR_DATA(non_bound_sockets[c],
-					 net_socket_t);
-			CONTINUE_IF_NULL(socket_ptr, P_WARN);
-			std::vector<std::vector<std::string> > header =
-					http::header::pull_from_socket(
-						socket_ptr);
-			if(header.size() == 0){
+			http::socket::payload::read(
+				&(std::get<1>(non_bound_sockets[c])),
+				std::get<0>(non_bound_sockets[c]));
+			if(std::get<1>(non_bound_sockets[c]).get_size_chunks() == 0){
 				continue;
 			}
-			// std::raise(SIGINT);
 			std::string url =
-				http::header::pull_value(
-					header,
-					"GET",
-					1); // first entry after "GET"
+				std::get<1>(non_bound_sockets[c]).get_chunks()[0].get_header().fetch_line_from_start("GET").at(1);
 			if(url.size() > 0){
 				if(url[0] == '/'){
 					url.erase(
@@ -98,8 +95,8 @@ static void net_http_push_conn_to_file(
 					url);
 			net_http_file_driver_state_t *file_driver_state_ptr =
 				file_driver_medium.init(
-					url,
-					non_bound_sockets[c]);
+					std::get<1>(non_bound_sockets[c]),
+					std::get<0>(non_bound_sockets[c]));
 			http_data_ptr->add_bound_file_driver_states(
 				file_driver_state_ptr->id.get_id());
 		}catch(...){
@@ -115,39 +112,37 @@ static void net_http_push_conn_to_file(
 
 static NET_HTTP_FILE_DRIVER_FUNCTION(packetize_file_to_conn){
 	NET_HTTP_FILE_DRIVER_SANE();
-	if(file_driver_state_ptr->get_payload_status() == NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE){
-		return;
-	}
-	std::pair<std::vector<uint8_t>, uint8_t> pull_data =
-		file_driver_medium.pull(
+	try{
+		file_driver_medium.loop(
 			file_driver_state_ptr);
-	if(pull_data.first.size() == 0){
-		return;
+	}catch(...){}
+	if(file_driver_state_ptr->response_payload.get_size_chunks() == 0){
+		print("no data to service", P_WARN);
+		return; // no dta
 	}
-	ASSERT(file_driver_state_ptr->get_payload_status() == NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE, P_CRIT);
 	print("dishing out file driver data " + convert::array::id::to_hex(file_driver_state_ptr->id.get_id()), P_DEBUG);
-	std::vector<uint8_t> http_packet =
-		convert::string::to_bytes(
-			http::header::make_header(
-				file_driver_state_ptr->get_mime_type(),
-				pull_data.second,
-				pull_data.first.size()));
-	http_packet.insert(
-		http_packet.end(),
-		pull_data.first.begin(),
-		pull_data.first.end());
-	socket_ptr->send(
-		http_packet);
+	http::socket::payload::write(
+		&(file_driver_state_ptr->response_payload),
+		socket_ptr->id.get_id());
 }
 
 static NET_HTTP_FILE_DRIVER_FUNCTION(remove_stale){
 	NET_HTTP_FILE_DRIVER_SANE();
 	const bool serviced =
-		file_driver_state_ptr->get_payload_status() ==
-		NET_HTTP_FILE_DRIVER_PAYLOAD_COMPLETE;
-	const bool emptied =
-		socket_ptr->get_const_ptr_send_buffer()->size() == 0;	
-	if(serviced && emptied){
+		file_driver_state_ptr->response_payload.get_finished();
+	bool emptied =
+		true;
+	const std::vector<net_http_chunk_t> *chunks =
+		file_driver_state_ptr->response_payload.get_const_ptr_chunks();
+	P_V(serviced, P_VAR);
+	for(uint64_t i = 0;i < chunks->size();i++){
+		P_V((*chunks)[i].get_sent(), P_VAR);
+		if((*chunks)[i].get_sent() == false){
+			emptied = false;
+		}
+	}
+	P_V(socket_ptr->get_const_ptr_send_buffer()->size(), P_WARN);
+	if(serviced && emptied && socket_ptr->get_const_ptr_send_buffer()->size() == 0){
 		print("removing a finished HTTP connection", P_WARN);
 		socket_ptr->disconnect();
 		ID_TIER_DESTROY(socket_ptr->id.get_id());

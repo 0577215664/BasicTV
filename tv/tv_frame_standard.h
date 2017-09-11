@@ -32,15 +32,17 @@ private:
 	uint64_t frame_entry = 0;
 	uint64_t codec_state_ref = 0;
 	uint64_t flags = 0;
+
+	data_id_t *id = nullptr;
 public:
 	tv_frame_standard_t();
 	~tv_frame_standard_t();
-	GET_SET_S(codec_state_ref, uint64_t);
-	GET_SET_S(flags, uint64_t);
-	GET_SET_S(start_time_micro_s, uint64_t);
-	GET_SET_S(ttl_micro_s, uint32_t);
-	GET_SET_S(frame_entry, uint64_t);
-	void list_virtual_data(data_id_t *id);
+	GET_SET_V(codec_state_ref, uint64_t);
+	GET_SET_V(flags, uint64_t);
+	GET_SET_V(start_time_micro_s, uint64_t);
+	GET_SET_V(ttl_micro_s, uint32_t);
+	GET_SET_V(frame_entry, uint64_t);
+	void list_virtual_data(data_id_t *id_);
 	void set_standard(uint64_t start_time_micro_s_,
 			  uint32_t ttl_micro_s_,
 			  uint64_t frame_entry_);
@@ -112,9 +114,6 @@ id_t_ tv_frame_scroll_to_time(T data, uint64_t play_time){
 			data = nullptr;
 		}
 	}
-	// only out that isn't valid is data = PTR_ID...
-	net_proto::request::add_id(
-		request_vector);
 	if(data != nullptr){
 		return data->id.get_id();
 	}

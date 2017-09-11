@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <title>BasicTV</title>
+  </head>
+  <body>
+    <p>
+      1. Items are bound to channels.
+      2. Any wallet set bound to a channel is bound to all items by default, unless an item has a specific wallet set bound to it.
+    </p>
+ 
+    <p>
+      <h1>Create Wallet Set</h1>
+      <form action="/" method="get">
+	<input type="text" name="create_wallet_set_submit">Create</input>
+      </form>
+      <!-- 	
+	Technically an address set, since there is no advanced HD or
+	private key component given
+	-->
+      <h1>Add Wallet to Set</h1>
+      Trading Code? (BTC/USD/ETH/etc): <input type="text" name="add_wallet_to_set_code"><br />
+      Address: <input type="text" name="add_wallet_to_set_address"><br />
+      Second Half (Payment ID): <input type="text" name="add_wallet_to_set_second_half"><br />
+    </p>
+    
+    <p>
+      <h1>Create TV Channel</h1>
+      <form action="/" method="get">
+	Title: <input type="text" name"create_channel_title"><br />
+	Desc: <input type="text" name"create_channel_desc"><br />
+	Bound Wallet ID: <input type="text" name="create_channel_wallet_id"><br />
+      </form>
+    </p>
+
+    <p>
+      <h1>Upload TV Item to Network</h1>
+      <form action="/" method="get">
+	Path: <input type="file" name="upload_item_data" size="40"><br />
+	Title: <input type="text" name="upload_item_title"><br />
+	Desc: <input type="text" name="upload_item_desc"><br /><br />
+	Bound Channel ID: <input type="text" name="upload_tv_channel_id"><br />
+	Bound Wallet ID: <input type="text" name="upload_tv_wallet_id"><br />
+      </form>
+    </p>
+
+    <p>
+      <h1>Bind TV Sink to Item</h1>
+    </p>
+    
+    <p>
+      <h1>Play Loaded TV Item</h1>
+    </p>
+    
+  </body>
+</html>

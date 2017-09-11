@@ -1,28 +1,7 @@
 #ifndef MATH_H
 #define MATH_H
-/*
-  Fancy math things I need that aren't provided by the C++ standard (in a
-  friendly way) can be handled through this API. Some examples include:
-  Regressions
-  Hypothesis testing
-  Large data collecting
-  Variable precision numbers exporting to string (tv_frame_numbers)
-  Generic device unit conversions
-  - Pressure to altitude above sea level
-  - Wattage from amperage and voltage
-  - Imperial units from metric units
-  - (Possible) conversions to and from log scales
- */
-#endif
 #include "stats/math_stats.h"
 #include "numbers/math_numbers.h"
-
-/*
-  A few of these are only vectors for uniformity across calls,
-  and it might make more sense to redefine it as just two
-  numbers (number and base, probably uint64_t if we want to
-  get more sane)
- */
 
 #define MATH_ADD(x, y) math::number::calc::add({x, y})
 #define MATH_SUB(x, y) math::number::calc::sub({x, y})
@@ -40,23 +19,15 @@ namespace math{
 			std::vector<std::vector<uint8_t> > data,
 			id_t_ math_number_set_id);
 		namespace get{
-			/*
-			  PLEASE NOTE:
-			  having the number be exportable to long double
-			  doesn't define the upper internal limit as that
-			  of a long double, but just as a simple way of 
-			  exporting and representing it.
-
-			  There really is no defined upper limit of
-			  these numbers, at least not in terms of defined
-			  bit lengths
-			 */
 			long double number(std::vector<uint8_t> data);
 			uint64_t unit(std::vector<uint8_t> data);
 			std::pair<std::vector<uint8_t>,
 				  std::vector<uint8_t> > raw_species(
 					  std::vector<uint8_t> data);
 		}
+		std::vector<uint8_t> create(std::vector<uint8_t> raw_number_data_major,
+					    std::vector<uint8_t> raw_number_data_minor,
+					    uint64_t number);
 		std::vector<uint8_t> create(long double number,
 					    uint64_t unit);
 		std::vector<uint8_t> create(uint64_t number,
@@ -111,12 +82,6 @@ namespace math{
 		 */
 	};
 	namespace functions{
-		std::vector<uint8_t> sum_inclusive(
-			id_t_ math_number_set_id,
-			uint64_t interval_dim,
-			uint64_t sum_dim,
-			std::vector<uint8_t> start_sum,
-			std::vector<uint8_t> end_sum);
 	};
 	/*
 	  math_stat_pval_t (uint32_t) is a measure of P-value, on a scale of 0-1
@@ -128,10 +93,7 @@ namespace math{
 			  BasicTV can be referenced in this sort of way
 			 */
 			namespace add{
-				void throughput_number_set(
-					id_t_ set_id,
-					uint64_t volume,
-					uint64_t timestamp_micro_s);
+				// probably reimplement this
 			};
 			namespace reduce{
 				
@@ -234,3 +196,5 @@ namespace math{
 		};
 	};
 };
+
+#endif

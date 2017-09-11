@@ -1,22 +1,16 @@
 #include "id.h"
 #include "id_api.h"
+#include "id_transport.h"
 
-#include "../tv/tv_dev_audio.h"
-#include "../tv/tv_dev_video.h"
 #include "../tv/tv_frame_audio.h"
 #include "../tv/tv_frame_video.h"
 #include "../tv/tv_frame_caption.h"
 #include "../tv/tv_channel.h"
 #include "../tv/tv_window.h"
-#include "../tv/tv_menu.h"
 #include "../tv/tv_item.h"
-#include "../net/proto/inbound/net_proto_inbound_data.h"
-#include "../net/proto/outbound/net_proto_outbound_data.h"
-#include "../net/proto/net_proto_con_req.h"
+
 #include "../net/proto/net_proto_peer.h"
-#include "../net/proto/net_proto_con_req.h"
 #include "../net/proto/net_proto.h"
-#include "../net/proto/net_proto_socket.h"
 #include "../net/net_cache.h"
 #include "../net/net.h"
 #include "../input/input.h"
@@ -56,13 +50,9 @@ std::vector<type_t_> mem_only_types = {
 	TYPE_TV_SINK_STATE_T,
 	TYPE_NET_HTTP_FILE_DRIVER_STATE_T,
 	TYPE_NET_SOCKET_T,
-	TYPE_NET_PROTO_SOCKET_T
+	TYPE_NET_PROTO_SOCKET_T,
+	TYPE_CONSOLE_T
 };
-
-std::vector<id_t_> id_api::sort::fingerprint(std::vector<id_t_> tmp){
-	// TODO: actually get the finerprints
-	return tmp;
-}
 
 void id_api::linked_list::link_vector(
 	std::vector<id_t_> vector,
@@ -496,93 +486,127 @@ bool encrypt_blacklist_type(type_t_ type_){
 		type_) != encrypt_blacklist.end();
 }
 
-#define ID_SHIFT(x) vector_pos += sizeof(x)
-#define ID_IMPORT(x) memcpy(&x, data.data()+vector_pos, sizeof(x));vector_pos += sizeof(x)
-
-#pragma message("strip_to_only_rules removed a lot of sanity checks for clarity, should REALLY re-add")
-#pragma message("strip_to_only_rules just does a pass through, OK for now if we delete from all tiers for everything")
-
-std::vector<uint8_t> id_api::raw::strip_to_only_rules(
-	std::vector<uint8_t> data,
-	std::vector<uint8_t> network_rules,
-	std::vector<uint8_t> export_rules,
-	std::vector<uint8_t> peer_rules){
-
-	if(network_rules.size() > 0 ||
-	   export_rules.size() > 0 ||
-	   peer_rules.size() > 0){
-		print("strip_to_only_rules can't actually operate, so returning invalid data", P_WARN);
+static std::vector<std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> > import_to_vectorized(
+	std::vector<uint8_t> *vector){
+	std::vector<std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> > retval;
+	while(vector->size() > 0){
+		std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> tmp =
+			{{}, 0, data_id_transport_rules_t({}, {})};
+		IMPORT_STATIC(
+			*vector,
+			std::get<1>(tmp));
+		std::get<2>(tmp) =
+			unstringify_rules(
+				vector);
+		const uint64_t vector_length =
+			import_gen_dynamic_size(
+				vector);
+		for(uint64_t i = 0;i < vector_length;i++){
+			const transport_i_t vector_trans_i =
+				import_gen_dynamic_size(
+					vector);
+			nether_add_at_pos(
+				&(std::get<0>(tmp)),
+				import_dynamic_size_payload(
+					vector),
+				vector_trans_i);
+		}
+		retval.push_back(
+			tmp);
 	}
-	
-	return data;
-	// uint32_t vector_pos = 0;
-	// id_t_ trans_id = ID_BLANK_ID;
-	// uint8_t extra =
-	// 	data[0];
-	// ASSERT((0b11111100 & extra) == 0, P_ERR);
-	// if(extra & ID_EXTRA_ENCRYPT){
-	// 	print("try and optimize code so strip_to_rules doesn't have to handle encryption", P_WARN);
-	// 	data = id_api::raw::decrypt(data);
-	// }
-	// if(extra & ID_EXTRA_COMPRESS){
-	// 	print("try and optimize code so strip_to_rules doesn't have to handle encryption", P_WARN);
-	// 	data = id_api::raw::decompress(data);
-	// }
-	// mod_inc_t_ modification_incrementor = 0;
-	// ID_SHIFT(extra); // just to remove it
-	// ID_SHIFT(trans_id);
-	// ID_SHIFT(modification_incrementor);
+	return retval;
+}
 
-	// transport_i_t trans_i = 0;
-	// transport_size_t trans_size = 0;
-	// uint8_t network_rules_tmp = 0;
-	// uint8_t export_rules_tmp = 0;
-	// uint8_t peer_rules_tmp = 0;
-	// const uint64_t metadata_size =
-	// 	sizeof(trans_i)+(sizeof(uint8_t)*3)+sizeof(transport_size_t);
-	// uint32_t remaining_count = 0;
-	// while(data.size()-vector_pos > metadata_size){
-	// 	ID_SHIFT(trans_i);
-	// 	ID_IMPORT(network_rules_tmp);
-	// 	ID_IMPORT(export_rules_tmp);
-	// 	ID_IMPORT(peer_rules_tmp);
-	// 	ID_IMPORT(trans_size);
-	// 	trans_size =
-	// 		NBO_32(trans_size);
-	// 	ASSERT((network_rules_tmp & 0b11111000) == 0, P_ERR);
-	// 	ASSERT((export_rules_tmp & 0b11111000) == 0, P_ERR);
-	// 	ASSERT((peer_rules_tmp & 0b11111000) == 0, P_ERR);
-	// 	ASSERT(trans_size+vector_pos <= data.size(), P_ERR);
-	// 	const bool network_allows =
-	// 		std::find(network_rules.begin(),
-	// 			  network_rules.end(),
-	// 			  network_rules_tmp) != network_rules.end();
-	// 	const bool export_allows =
-	// 		std::find(export_rules.begin(),
-	// 			  export_rules.end(),
-	// 			  export_rules_tmp) != export_rules.end();
-	// 	const bool peer_allows =
-	// 		std::find(peer_rules.begin(),
-	// 			  peer_rules.end(),
-	// 			  peer_rules_tmp) != peer_rules.end();
-	// 	if(!(network_allows &&
-	// 	     export_allows &&
-	// 	     peer_allows)){
-	// 		vector_pos -= metadata_size;
-	// 		data.erase(
-	// 			data.begin()+vector_pos,
-	// 			data.begin()+vector_pos+trans_size+metadata_size);
-	// 	}else{
-	// 		remaining_count++;
-	// 	}
-	// }
-	// if(remaining_count == 0){
-	// 	// no sense in exporting just the packet metadata
-	// 	return std::vector<uint8_t>({});
-	// }else{
-	// 	return data;
-	// }
-	return data;
+static void export_to_vectorized(
+	std::vector<uint8_t> *vector,
+	std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> data){
+	EXPORT_STATIC(
+		*vector,
+		std::get<1>(data));
+	stringify_rules(
+		vector,
+		std::get<2>(data));
+	const std::vector<uint8_t> vector_length =
+		export_gen_dynamic_size(
+			std::get<0>(data).size());
+	vector->insert(
+		vector->end(),
+		vector_length.begin(),
+		vector_length.end());
+	for(uint64_t i = 0;i < std::get<0>(data).size();i++){
+		// we use nether for this, so don't worry about finding the pos
+		const std::vector<uint8_t> vector_iter =
+			export_gen_dynamic_size(
+				i);
+		vector->insert(
+			vector->end(),
+			vector_iter.begin(),
+			vector_iter.end());
+		export_dynamic_size_payload(
+			vector,
+			std::get<0>(data)[i]);
+	}
+}
+
+#pragma message("strip_to_transportable doesn't work properly")
+
+std::vector<uint8_t> id_api::raw::strip_to_transportable(
+	std::vector<uint8_t> data,
+	data_id_transport_rules_t rules){
+	ASSERT(rules.tier.size() <= 1, P_ERR);
+	ASSERT(rules.intermediary.size() <= 1, P_ERR);
+	data = force_to_extra(data, 0);
+	extra_t_ extra;
+	id_t_ id;
+	mod_inc_t_ mod_inc;
+	IMPORT_STATIC(
+		data,
+		extra);
+	ASSERT(extra == 0, P_ERR);
+	IMPORT_STATIC(
+		data,
+		id);
+	IMPORT_STATIC(
+		data,
+		mod_inc);
+	std::vector<uint8_t> retval;
+	EXPORT_STATIC(
+		retval,
+		extra);
+	EXPORT_STATIC(
+		retval,
+		id);
+	EXPORT_STATIC(
+		retval,
+		mod_inc);
+
+	const std::vector<std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> > all_import =
+		import_to_vectorized(
+			&data);
+	for(uint64_t i = 0;i < all_import.size();i++){
+		bool good_tier = rules.tier.size() == 0;
+		for(uint64_t c = 0;c < std::get<2>(all_import[i]).tier.size();c++){
+			good_tier |=
+				std::find(
+					rules.tier.begin(),
+					rules.tier.end(),
+					std::get<2>(all_import[i]).tier[c]) != rules.tier.end();
+		}
+		bool good_intermediary = rules.intermediary.size() == 0;
+		for(uint64_t c = 0;c < std::get<2>(all_import[i]).intermediary.size();c++){
+			good_intermediary |=
+				std::find(
+					rules.intermediary.begin(),
+					rules.intermediary.end(),
+					std::get<2>(all_import[i]).intermediary[c]) != rules.intermediary.end();
+		}
+		if(good_tier && good_intermediary){
+			export_to_vectorized(
+				&retval,
+				all_import[i]);
+		}
+	}
+	return retval;
 }
 
 std::vector<uint8_t> id_api::raw::force_to_extra(
@@ -636,11 +660,21 @@ void id_api::assert_valid_id(id_t_ id){
 	}
 	ASSERT(type <= TYPE_COUNT, P_ERR);
 	ASSERT(uuid != 0, P_ERR);
-	ASSERT(hash != blank_hash, P_ERR);
+	// ASSERT(hash != blank_hash, P_ERR);
 }
 
 void id_api::assert_valid_id(std::vector<id_t_> id){
 	for(uint64_t i = 0;i < id.size();i++){
 		assert_valid_id(id[i]);
+	}
+}
+
+std::string id_api::human::smart_summary(
+	id_t_ tmp_id){
+	switch(get_id_type(tmp_id)){
+	case TYPE_TV_ITEM_T:
+		// add this stuff later
+	default:
+		return id_breakdown(tmp_id);
 	}
 }

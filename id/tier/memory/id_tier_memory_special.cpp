@@ -21,17 +21,8 @@ void id_tier_mem_update_state_cache(
 	id_tier_state_t *tier_state_ptr){
 	// Probably could use some pointer magic
 	ASSERT(tier_state_ptr != nullptr, P_ERR);
-	std::vector<std::tuple<id_t_, mod_inc_t_, uint64_t> > new_buffer;
-	new_buffer.reserve((sizeof(id_t_)+sizeof(mod_inc_t_)+8)*id_buffer.size());
-	for(uint64_t i = 0;i < id_buffer.size();i++){
-		new_buffer.push_back(
-			std::make_tuple(
-				std::get<0>(id_buffer[i]),
-				std::get<1>(id_buffer[i]),
-				0));
-	}
-	tier_state_ptr->set_id_buffer(
-		new_buffer);
+	tier_state_ptr->storage.set_id_buffer(
+		id_buffer);
 }
 
 /*
@@ -48,10 +39,15 @@ void mem_add_id(data_id_t *ptr){
 			ptr->get_id(),
 			ptr->get_mod_inc()));
 	id_tier_mem_regen_state_cache();
-	id_tier_mem_update_state_cache(
+	std::vector<id_tier_state_t*> tier_state_vector =
 		mem_helper::lookup::tier_state(
 			std::vector<std::pair<uint8_t, uint8_t> >({
-					std::make_pair(0, 0)})).at(0));
+					std::make_pair(0, 0)}));
+	if(tier_state_vector.size() != 0){
+		ASSERT(tier_state_vector.size() == 1, P_ERR);
+		id_tier_mem_update_state_cache(
+			tier_state_vector[0]);
+	}
 }
 
 void mem_del_id(data_id_t *ptr){

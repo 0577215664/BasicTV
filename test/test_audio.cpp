@@ -75,7 +75,7 @@ void test::audio::opus(){
 		print("different number of samples", P_WARN);
 	}
 	tv_transcode_state_encode_codec_t encode_codec =
-		encode_codec_lookup(
+		audio_encode_codec_lookup(
 			TV_AUDIO_FORMAT_WAV);
 	tv_audio_prop_t wave_file_audio_prop;
 	wave_file_audio_prop.set_format(
@@ -200,7 +200,7 @@ void test::audio::wav(){
 		print("different number of samples", P_WARN);
 	}
 	tv_transcode_state_encode_codec_t encode_codec =
-		encode_codec_lookup(
+		audio_encode_codec_lookup(
 			TV_AUDIO_FORMAT_WAV);
 	tv_audio_prop_t wave_file_audio_prop;
 	wave_file_audio_prop.set_format(
