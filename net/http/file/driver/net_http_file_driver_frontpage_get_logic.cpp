@@ -1,5 +1,6 @@
 #include "net_http_file_driver_frontpage_get_logic.h"
 #include "net_http_file_driver_frontpage.h"
+#include "html/net_http_file_driver_html_templates.h"
 #include "../../net_http.h"
 #include "../../parse/net_http_parse.h"
 
@@ -13,11 +14,6 @@
 #include "../../../../tv/tv_frame_numerical.h"
 #include "../../../../tv/tv_frame_video.h"
 #include "../../../../tv/tv_meta.h"
-
-
-#define GET_LOGIC_VAR_RUN(x_) if(get_payload[i].first == #x_ "_submit"){return net_http_file_driver_frontpage_##x_(file_driver_state_ptr);}
-
-#define GET_STR(name) std::string name = file_driver_state_ptr->request_payload.form_data.get_str(#name);;
 
 static std::string net_http_file_driver_frontpage_create_wallet_set(
 	net_http_file_driver_state_t *file_driver_state_ptr){
@@ -74,34 +70,6 @@ static std::string net_http_file_driver_frontpage_create_tv_channel(
 	return "Created TV Channel " + convert::array::id::to_hex(channel_ptr->id.get_id());
 }
 
-static std::string net_http_file_driver_frontpage_create_tv_item_plain(
-	net_http_file_driver_state_t *file_driver_state_ptr){
-	tv_item_t *tv_item_ptr =
-		new tv_item_t;
-	std::string error_str;
-	const GET_STR(create_tv_item_plain_title);
-	const GET_STR(create_tv_item_plain_desc);
-	const GET_STR(create_tv_item_plain_wallet_id);
-	tv_item_ptr->add_param(
-		VORBIS_COMMENT_PARAM_TITLE,
-		create_tv_item_plain_title,
-		true);
-	tv_item_ptr->add_param(
-		VORBIS_COMMENT_PARAM_DESCRIPTION,
-		create_tv_item_plain_desc,
-		true);
-	if(create_tv_item_plain_wallet_id != ""){
-		try{
-			tv_item_ptr->set_wallet_set_id(
-				convert::array::id::from_hex(
-					create_tv_item_plain_wallet_id));
-		}catch(...){
-			error_str = "Couldn't bind Wallet ID";
-		}
-	}
-	return error_str + "<br />Created TV Item " + convert::array::id::to_hex(tv_item_ptr->id.get_id());
-}
-
 // tv_item_t isn't bound to the window, this function just creates a
 // seed frame type from the tv_sink_state_t's frame_type, and adds
 // a binding between the sink state and the seed frame to the tv_window_t,
@@ -125,7 +93,7 @@ static std::string net_http_file_driver_frontpage_bind_tv_sink_item_window(
 	tv_sink_state_t *sink_state_ptr =
 		PTR_DATA(convert::array::id::from_hex(
 				 bind_tv_sink_item_window_sink_id),
-			tv_sink_state_t);
+			 tv_sink_state_t);
 	if(sink_state_ptr == nullptr){
 		return "TV Sink is NULL";
 	}
@@ -187,22 +155,4 @@ static std::string net_http_file_driver_frontpage_unbind_tv_sink_item_window(
 	// for(uint64_t i = 0;i < active_streams.size();i++){
 	// 	if(std::get<0>(active_streams[i]) == 
 	// }
-}
-
-std::string net_http_file_driver_frontpage_get_logic(
-	net_http_file_driver_state_t *file_driver_state_ptr){
-	const std::vector<std::pair<std::string, std::string> > get_payload =
-		file_driver_state_ptr->request_payload.form_data.get_table();
-
-	for(uint64_t i = 0;i < get_payload.size();i++){
-		GET_LOGIC_VAR_RUN(create_wallet_set);
-		GET_LOGIC_VAR_RUN(add_wallet_to_set);
-		GET_LOGIC_VAR_RUN(create_tv_channel);
-		GET_LOGIC_VAR_RUN(create_tv_item_plain);
-		// GET_LOGIC_VAR_RUN(create_tv_item_upload);
-		// hold off on uploads until we have good HTTP upload handling
-		GET_LOGIC_VAR_RUN(bind_tv_sink_item_window);
-		// GET_LOGIC_VAR_RUN(unbind_tv_sink_item);
-	}
-	return ""; // TODO: actually make a proper response
 }

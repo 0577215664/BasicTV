@@ -668,3 +668,13 @@ void id_api::assert_valid_id(std::vector<id_t_> id){
 		assert_valid_id(id[i]);
 	}
 }
+
+std::string id_api::human::smart_summary(
+	id_t_ tmp_id){
+	switch(get_id_type(tmp_id)){
+	case TYPE_TV_ITEM_T:
+		// add this stuff later
+	default:
+		return id_breakdown(tmp_id);
+	}
+}

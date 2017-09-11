@@ -134,8 +134,6 @@ static std::vector<std::pair<std::string, std::string> > net_http_parse_urlencod
 			str.find_first_of('&');
 		if(end == std::string::npos){
 			end = str.size();
-		}else{
-			end++;
 		}
 		const std::string value_half =
 			str.substr(
@@ -149,7 +147,7 @@ static std::vector<std::pair<std::string, std::string> > net_http_parse_urlencod
 				value_half));
 		str.erase(
 			0,
-			end);
+			end+1);
 	}
 	return retval;
 }
@@ -300,4 +298,17 @@ void http::socket::payload::write(
 
 	socket_ptr->send(
 		payload->pull());
+}
+
+std::string http::tags::html_table(
+	std::vector<std::vector<std::string> > table){
+	std::string retval;
+	for(uint64_t a = 0;a < table.size();a++){
+		for(uint64_t b = 0;b < table[a].size();b++){
+			retval += "<th>" + table[a][b] + "<//th>";
+		}
+		retval = "<tr>" + retval + "<//tr>";
+	}
+	retval += "<table>" + retval + "<//table>";
+	return retval;
 }

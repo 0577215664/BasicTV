@@ -36,6 +36,10 @@ namespace http{
 				id_t_ socket_id);
 		};
 	};
+	namespace tags{
+		std::string html_table(
+			std::vector<std::vector<std::string> > table);
+	};
 };
 
 const net_http_chunk_header_t standard_header =

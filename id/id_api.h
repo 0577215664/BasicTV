@@ -32,7 +32,6 @@ namespace id_api{
 	std::vector<id_t_> get_all();
 	void free_mem();
 	void add_data(std::vector<uint8_t> data);
-	void destroy(id_t_ id);
 	void destroy_all_data();
 	void print_id_vector(std::vector<id_t_> vector, uint32_t p_l);
 	void assert_valid_id(id_t_ id);
@@ -56,6 +55,10 @@ namespace id_api{
 		std::vector<uint8_t> force_to_extra(
 			std::vector<uint8_t> data,
 			uint8_t extra);
+	};
+	namespace human{
+		std::string smart_summary(
+			id_t_ tmp_id);
 	};
 };
 
