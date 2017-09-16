@@ -6,9 +6,12 @@
 
 extern HTML_TEMP(create_tv_item_plain);
 extern HTML_TEMP(create_tv_item_upload);
-
 extern HTML_TEMP(list_tv_item);
 extern HTML_TEMP(destroy_tv_item);
 
+extern HTML_LOGIC(create_tv_item_plain);
+extern HTML_LOGIC(create_tv_item_upload);
+extern HTML_LOGIC(list_tv_item);
+extern HTML_LOGIC(destroy_tv_item);
 
-#endif
+#endif 

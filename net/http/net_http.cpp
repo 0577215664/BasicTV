@@ -8,13 +8,12 @@
 #include <tuple>
 #include <algorithm>
 
-#define NET_HTTP_FILE_DRIVER_FUNCTION(function) void net_http_##function(net_http_t *http_data_ptr, net_http_file_driver_state_t *file_driver_state_ptr, net_http_file_driver_medium_t file_driver_medium, net_socket_t *socket_ptr)
-
-// also here so i can cleanup the warnings
-
 /*
-  TODO: fix me
+  TODO: convert all code over to net_interface_software_Dev_t and hardware
+  devices for TCP/IP.
  */
+
+#define NET_HTTP_FILE_DRIVER_FUNCTION(function) void net_http_##function(net_http_t *http_data_ptr, net_http_file_driver_state_t *file_driver_state_ptr, net_http_file_driver_medium_t file_driver_medium, net_socket_t *socket_ptr)
 
 #define NET_HTTP_FILE_DRIVER_SANE()				\
 	ASSERT(http_data_ptr != nullptr, P_ERR);		\

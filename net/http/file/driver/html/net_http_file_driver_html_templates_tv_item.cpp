@@ -30,4 +30,3 @@ std::string net_http_file_driver_frontpage_create_tv_item_plain(
 	}
 	return error_str + "<br />Created TV Item " + convert::array::id::to_hex(tv_item_ptr->id.get_id());
 }
-

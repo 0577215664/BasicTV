@@ -16,7 +16,6 @@ static std::string comma_vorbis_comments(
 }
 
 HTML_TEMP(create_tv_channel){
-	
 }
 
 HTML_TEMP(list_tv_channel){
