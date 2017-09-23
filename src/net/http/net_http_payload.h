@@ -111,14 +111,15 @@ public:
 	std::vector<uint8_t> assemble();
 };
 
-typedef std::vector<std::pair<std::string, std::string> > net_http_form_data_table_t;
+typedef std::pair<std::string, std::string> net_http_form_data_entry_t;
 
 struct net_http_form_data_t{
 private:
 	std::vector<std::pair<std::string, std::string> > table;
 public:
-	GET_SET_S(table, net_http_form_data_table_t);
-
+	GET_SET_S(table, std::vector<net_http_form_data_entry_t>);
+	ADD_DEL_VECTOR_S(table, net_http_form_data_entry_t);
+	
 	// useful getters
 	std::string get_str(std::string key);
 	id_t_ get_id(std::string key);

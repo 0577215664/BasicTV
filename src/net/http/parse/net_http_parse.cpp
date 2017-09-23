@@ -302,13 +302,14 @@ void http::socket::payload::read(
 	chunk_vector[chunk_vector.size()-1].header.set_payload(tmp_header);
 	chunk_vector[chunk_vector.size()-1].header.set_major_divider("\r\n"); // standard
 	chunk_vector[chunk_vector.size()-1].header.set_minor_divider(" ");
+
 	// TODO: to allow for files, I need to allow a hot-add
 	payload->set_chunks(chunk_vector);
-	payload->form_data = form_data;
+	payload->form_data.append_table(
+		form_data.get_table());
 	
 	// just keep adding to the payload until the socket closes, then
 	// mark it as finished I guess
-	
 }
 
 void http::socket::payload::write(
