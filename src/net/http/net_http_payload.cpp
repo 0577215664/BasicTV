@@ -23,9 +23,9 @@ std::string net_http_chunk_header_t::assemble(){
 	}
 
 	std::string retval;
-	for(uint64_t a = 0;a < payload.size();a++){
-		for(uint64_t b = 0;b < payload[a].size();b++){
-			retval += payload[a][b];
+	for(uint64_t a = 0;a < tmp.size();a++){
+		for(uint64_t b = 0;b < tmp[a].size();b++){
+			retval += tmp[a][b];
 			retval += minor_divider;
 		}
 		retval += major_divider;
