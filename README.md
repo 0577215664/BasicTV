@@ -68,6 +68,7 @@ This means, as long as the ID is known to exist, it can be downloaded. You can a
 
 
 ## Dependencies
+Required/Recommended
 * SDL2
 * SDL2_net
 * PortAudio
@@ -76,3 +77,6 @@ This means, as long as the ID is known to exist, it can be downloaded. You can a
 * libopus and libopusfile
 * libzstd
 * libcrypto
+
+Optional
+* toxcore, toxdns, toxav, toxencryptsave
