@@ -1,1 +1,1 @@
-gdb --args ./basictv --print_level 0
+gdb --args ./build/basictv --print_level 0
