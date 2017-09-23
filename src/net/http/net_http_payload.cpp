@@ -80,10 +80,6 @@ std::vector<uint8_t> net_http_chunk_t::assemble(){
 		assembled_header.data(),
 		assembled_header.data()+
 		assembled_header.size());
-	// retval.push_back('\r');
-	// retval.push_back('\n');
-	// retval.push_back('\r');
-	// retval.push_back('\n');
 	retval.insert(
 		retval.end(),
 		http_header_divider.begin(),
