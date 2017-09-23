@@ -250,12 +250,29 @@ static net_http_form_data_t net_http_form_data_from_header(
 		P_V_S(form_table_raw[i].first, P_VAR);
 		P_V_S(form_table_raw[i].second, P_VAR);
 	}
-	
+
+
 	net_http_form_data_t retval;
 	retval.set_table(
 		form_table_raw);
 	return retval;
 }
+
+#pragma message("http::socket::payload::read doesn't support files yet")
+
+/*
+  NOTE: probably wasn't a good idea to put boundary inside of net_http_payload_t,
+  but there is no good reason to allow more than one file at a time right now.
+
+  How files are going to work:
+  'Content-Type: multipart/form-data; boundary=[BOUNDARY]' or whatever is
+  read directly into the net_http_payload_t
+
+  Individual chunk headers contain the Content-Disposition, Content-Type, etc,
+  and are escaped like a normal HTTP header.
+
+  When the file has been read in, it'll be inside the form_data table
+ */
 
 void http::socket::payload::read(
 	net_http_payload_t *payload,
@@ -265,7 +282,10 @@ void http::socket::payload::read(
 			 net_socket_t);
 	PRINT_IF_NULL(socket_ptr, P_ERR);
 
-	if(payload->get_size_chunks() == 0){
+	const bool started =
+		payload->get_size_chunks() != 0;
+
+	if(started == false){
 		const std::vector<std::vector<std::string> > tmp_header =
 			net_http_parse_pull_header_from_socket(
 				socket_ptr);
