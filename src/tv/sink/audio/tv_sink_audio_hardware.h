@@ -1,5 +1,6 @@
 #ifndef TV_SINK_AUDIO_HARDWARE_H
 #define TV_SINK_AUDIO_HARDWARE_H
+
 #include "../tv_sink.h"
 #include <portaudio.h>
 

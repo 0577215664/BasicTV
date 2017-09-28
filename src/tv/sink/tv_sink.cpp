@@ -2,6 +2,7 @@
 #include "tv_sink.h"
 
 #include "audio/tv_sink_audio_hardware.h"
+#include "audio/tv_sink_audio_tox.h"
 #include "numerical/tcp/tv_sink_numerical_tcp_accept.h"
 
 std::vector<tv_sink_medium_t> sink_medium_vector =
@@ -17,7 +18,13 @@ std::vector<tv_sink_medium_t> sink_medium_vector =
 			 tv_sink_tcp_accept_init,
 			 tv_sink_tcp_accept_close,
 			 tv_sink_tcp_accept_pull,
-			 tv_sink_tcp_accept_push)
+			 tv_sink_tcp_accept_push),
+	tv_sink_medium_t(TV_SINK_MEDIUM_FLOW_DIRECTION_BOTH,
+			 TV_SINK_MEDIUM_AUDIO_TOX,
+			 tv_sink_audio_tox_init,
+			 tv_sink_audio_tox_close,
+			 tv_sink_audio_tox_pull,
+			 tv_sink_audio_tox_push)
 };
 
 tv_sink_medium_t tv_sink_get_medium(uint8_t medium){

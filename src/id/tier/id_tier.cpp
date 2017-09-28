@@ -45,7 +45,8 @@ std::vector<id_tier_medium_t> id_tier_medium = {
 id_tier_medium_t id_tier::get_medium(uint8_t medium_type){
 	ASSERT(medium_type == ID_TIER_MEDIUM_MEM ||
 	       medium_type == ID_TIER_MEDIUM_CACHE ||
-	       medium_type == ID_TIER_MEDIUM_DISK, P_ERR);
+	       medium_type == ID_TIER_MEDIUM_DISK ||
+	       medium_type == ID_TIER_MEDIUM_NETWORK, P_ERR);
 	       
 	return id_tier_medium.at(medium_type-1); // 0 is undefined
 }

@@ -49,8 +49,12 @@ public:
 	std::vector<id_tier_network_ledger_entry_t> outbound_ledger;
 	std::vector<id_tier_network_ledger_entry_t> inbound_ledger;
 
+
+	GET_SET_ID_S(address_id);
+	GET_SET_ID_S(software_dev_id);
 };
 
+typedef id_tier_network_t id_tier_network_state_t; // just for clarity
 
 extern ID_TIER_INIT_STATE(network);
 extern ID_TIER_DEL_STATE(network);
