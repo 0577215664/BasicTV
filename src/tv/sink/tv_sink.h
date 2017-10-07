@@ -106,12 +106,4 @@ public:
 
 tv_sink_medium_t tv_sink_get_medium(uint8_t medium);
 
-namespace tv_sink{
-	namespace stream{
-		namespace ogg_bitstream{
-			
-		};
-	};
-};
-
 #endif

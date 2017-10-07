@@ -17,8 +17,8 @@ public:
 struct id_tier_state_storage_cache_t{
 private:
 	std::vector<std::pair<std::vector<uint8_t>, id_tier_state_storage_entry_meta_t> > cache;
-	
 public:
+	freq_t update_freq;
 	std::vector<uint8_t> search_cache_for_id(
 		id_t_ id_);
 };

@@ -23,10 +23,10 @@ std::string net_http_file_driver_frontpage_get_logic(
 		// GET_LOGIC_VAR_RUN(add_wallet_to_set);
 		// GET_LOGIC_VAR_RUN(create_tv_channel);
 		// GET_LOGIC_VAR_RUN(create_tv_item_plain);
-		// // GET_LOGIC_VAR_RUN(create_tv_item_upload);
-		// // hold off on uploads until we have good HTTP upload handling
+		// GET_LOGIC_VAR_RUN(create_tv_item_upload);
+		// hold off on uploads until we have good HTTP upload handling
 		// GET_LOGIC_VAR_RUN(bind_tv_sink_item_window);
-		// // GET_LOGIC_VAR_RUN(unbind_tv_sink_item);
+	        // GET_LOGIC_VAR_RUN(unbind_tv_sink_item);
 	}
 	return ""; // TODO: actually make a proper response
 }

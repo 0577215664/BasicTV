@@ -12,7 +12,7 @@
 #include "../../../net/proto/net_proto.h"
 
 #include "../../../escape.h"
-
+#include "../../../settings.h"
 /*
   All peer to peer ID networking is defined in ID tiers, each instance
   of the network tier is one peer on the network. Peers with identical
@@ -63,6 +63,10 @@ ID_TIER_INIT_STATE(network){
 	tier_state_ptr->set_tier_major(
 		ID_TIER_MAJOR_NETWORK);
 	tier_state_ptr->set_tier_minor(
+		0);
+	tier_state_ptr->storage.cache.update_freq.init(
+		settings::get_setting_unsigned_def(
+			"id_tier_network_cache_refresh_interval", 10*1000*1000),
 		0);
 	return tier_state_ptr->id.get_id();
 }
@@ -274,7 +278,6 @@ ID_TIER_LOOP(network){
 		PTR_DATA(state_id,
 			 id_tier_state_t);
 	PRINT_IF_NULL(tier_state_ptr, P_ERR);
-	
 	ID_TIER_LOOP_STANDARD(
 		id_tier_network_add_data,
 		id_tier_network_get_id);

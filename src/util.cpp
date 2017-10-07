@@ -384,3 +384,17 @@ std::string get_readable_time(uint64_t time_micro_s){
 		std::to_string(milliseconds) + ":" +
 		std::to_string(microseconds);
 }
+
+void freq_t::init(uint64_t wait_micro_s_, uint64_t last_run_micro_s_){
+	wait_micro_s = wait_micro_s_;
+	last_run_micro_s = last_run_micro_s_;
+}
+
+bool freq_t::due(){
+	return get_time_microseconds()-last_run_micro_s > wait_micro_s;
+}
+
+void freq_t::reset(){
+	ASSERT(due(), P_ERR);
+	last_run_micro_s = get_time_microseconds();
+}

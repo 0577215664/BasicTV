@@ -57,6 +57,8 @@ ID_TIER_INIT_STATE(mem){
 		0);
 	tier_state_ptr->set_payload(
 		nullptr); // id_tier_memory_t isn't used
+	tier_state_ptr->storage.cache.update_freq.init(
+		~0, 0);
 	id_tier_mem_update_state_cache(
 		tier_state_ptr);
 	return tier_state_ptr->id.get_id();

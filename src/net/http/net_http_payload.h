@@ -87,6 +87,10 @@ public:
 struct net_http_chunk_t{
 private:
 	std::vector<uint8_t> payload;
+	std::string boundary;
+	// technically these can be nested per HTTP, but it's not a big deal
+	// if it doesn't here, since only one file in one form enables this
+	// at a time
 	bool sent = false;
 
 public:
@@ -116,6 +120,7 @@ typedef std::pair<std::string, std::string> net_http_form_data_entry_t;
 struct net_http_form_data_t{
 private:
 	std::vector<std::pair<std::string, std::string> > table;
+
 public:
 	GET_SET_S(table, std::vector<net_http_form_data_entry_t>);
 	ADD_DEL_VECTOR_S(table, net_http_form_data_entry_t);
@@ -130,10 +135,6 @@ struct net_http_payload_t{
 private:
 	uint8_t direction = NET_HTTP_PAYLOAD_UNDEFINED;
 	std::vector<net_http_chunk_t> chunks;
-	
-	// boundary in plaintext, only generated if first chunk's content
-	// type is multipart
-	std::string boundary;
 
 	bool finished = false;
 public:
@@ -151,7 +152,6 @@ public:
 	bool operator==(const net_http_payload_t &rhs) const {
 		return direction == rhs.direction &&
 		chunks == rhs.chunks &&
-		boundary == rhs.boundary &&
 		finished == rhs.finished;
 	}
 

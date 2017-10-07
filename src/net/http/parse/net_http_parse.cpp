@@ -218,9 +218,15 @@ static net_http_form_data_t net_http_form_data_from_header(
 					get_start+1,
 					url.size());
 			P_V_S(url_substr, P_VAR);
-			const std::vector<std::pair<std::string, std::string> > tmp_form_data =
+			std::vector<std::pair<std::string, std::string> > tmp_form_data =
 				net_http_parse_urlencoded(
 					url_substr);
+			for(uint64_t i = 0;i < tmp_form_data.size();i++){
+				if(tmp_form_data[i].second[tmp_form_data[i].second.size()-1] == '\r'){
+					tmp_form_data[i].second.erase(
+						tmp_form_data[i].second.size()-1);
+				}
+			}
 			form_table_raw.insert(
 				form_table_raw.end(),
 				tmp_form_data.begin(),
@@ -260,20 +266,6 @@ static net_http_form_data_t net_http_form_data_from_header(
 
 #pragma message("http::socket::payload::read doesn't support files yet")
 
-/*
-  NOTE: probably wasn't a good idea to put boundary inside of net_http_payload_t,
-  but there is no good reason to allow more than one file at a time right now.
-
-  How files are going to work:
-  'Content-Type: multipart/form-data; boundary=[BOUNDARY]' or whatever is
-  read directly into the net_http_payload_t
-
-  Individual chunk headers contain the Content-Disposition, Content-Type, etc,
-  and are escaped like a normal HTTP header.
-
-  When the file has been read in, it'll be inside the form_data table
- */
-
 void http::socket::payload::read(
 	net_http_payload_t *payload,
 	id_t_ socket_id){
@@ -282,6 +274,10 @@ void http::socket::payload::read(
 			 net_socket_t);
 	PRINT_IF_NULL(socket_ptr, P_ERR);
 
+	// if(socket_ptr->get_const_ptr_recv_buffer()->size() != 0){
+	// 	std::raise(SIGINT);
+	// }
+	
 	std::vector<net_http_chunk_t> chunk_vector =
 		payload->get_chunks();
 
@@ -298,12 +294,13 @@ void http::socket::payload::read(
 	const net_http_form_data_t form_data =
 		net_http_form_data_from_header(
 			tmp_header);
-	
+
+	// std::raise(SIGINT);
 	chunk_vector[chunk_vector.size()-1].header.set_payload(tmp_header);
 	chunk_vector[chunk_vector.size()-1].header.set_major_divider("\r\n"); // standard
 	chunk_vector[chunk_vector.size()-1].header.set_minor_divider(" ");
 
-	// TODO: to allow for files, I need to allow a hot-add
+ 	// TODO: to allow for files, I need to allow a hot-add
 	payload->set_chunks(chunk_vector);
 	payload->form_data.append_table(
 		form_data.get_table());

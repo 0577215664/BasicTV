@@ -24,7 +24,7 @@ namespace http{
 		std::string get_item_from_line(
 			std::vector<std::vector<std::string> > payload,
 			std::string search,
-			uint8_t offste_from_first);
+			uint8_t offset_from_first);
 	};
 	namespace socket{
 		namespace payload{

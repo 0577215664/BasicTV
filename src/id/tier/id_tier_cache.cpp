@@ -17,6 +17,8 @@ ID_TIER_INIT_STATE(cache){
 		ID_TIER_MAJOR_CACHE);
 	tier_state_ptr->set_payload(
 		cache_state_ptr);
+	tier_state_ptr->storage.cache.update_freq.init(
+		~0, 0);
 	return tier_state_ptr->id.get_id();
 }
 

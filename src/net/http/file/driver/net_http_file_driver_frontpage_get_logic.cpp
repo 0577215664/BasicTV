@@ -22,7 +22,7 @@ static std::string net_http_file_driver_frontpage_create_wallet_set(
 	wallet_set_t *wallet_set_ptr =
 		new wallet_set_t;
 	retval += convert::array::id::to_hex(wallet_set_ptr->id.get_id());
-	return retval ;
+	return retval;
 }
 
 static std::string net_http_file_driver_frontpage_add_wallet_to_set(

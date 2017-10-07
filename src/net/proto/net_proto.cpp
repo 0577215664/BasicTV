@@ -288,7 +288,10 @@ static std::vector<id_t_> net_proto_loop_peers_from_tiers(){
   really interesting)
  */
 
-void net_proto_loop(){
+// bind all network peers to a ID network tier state
+// request the 
+
+static void net_proto_loop_bind_peers(){
 	std::vector<id_t_> old_peer_ids =
 		net_proto_loop_peers_from_tiers();
 	std::vector<id_t_> all_peer_ids =
@@ -296,7 +299,8 @@ void net_proto_loop(){
 			TYPE_NET_PROTO_PEER_T);
 	for(uint64_t a = 0;a < all_peer_ids.size();a++){
 		for(uint64_t b = 0;b < old_peer_ids.size();b++){
-			if(old_peer_ids[b] == all_peer_ids[a]){
+			if(all_peer_ids[b] == old_peer_ids[a] ||
+			   all_peer_ids[a] == net_proto::peer::get_self_as_peer()){
 				all_peer_ids.erase(
 					all_peer_ids.begin()+a);
 				a--;
@@ -330,4 +334,9 @@ void net_proto_loop(){
 		tier_state_ptr->storage.set_extras(
 			{ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS});
 	}
+}
+
+void net_proto_loop(){
+	net_proto_loop_bind_peers();
+	//net_proto_loop_routine_requests();
 }
