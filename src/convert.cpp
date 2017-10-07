@@ -301,6 +301,8 @@ uint8_t convert::type::to(std::string type){
 	CONV_CHECK_TYPE("math_number_set_t", TYPE_MATH_NUMBER_SET_T);
 	CONV_CHECK_TYPE("tv_item_t", TYPE_TV_ITEM_T);
 	CONV_CHECK_TYPE("net_interface_ip_address_t", TYPE_NET_INTERFACE_IP_ADDRESS_T);
+	CONV_CHECK_TYPE("net_interface_software_dev_t", TYPE_NET_INTERFACE_SOFTWARE_DEV_T);
+	CONV_CHECK_TYPE("net_interface_hardware_dev_t", TYPE_NET_INTERFACE_HARDWARE_DEV_T);
 	CONV_CHECK_TYPE("id_tier_state_t", TYPE_ID_TIER_STATE_T);
 	CONV_CHECK_TYPE("tv_sink_state_t", TYPE_TV_SINK_STATE_T);
 	CONV_CHECK_TYPE("tv_sink_metadata_state_t", TYPE_TV_SINK_METADATA_STATE_T);
@@ -377,6 +379,10 @@ std::string convert::type::from(uint8_t type){
 		return "tv_frame_numerical_t";
 	case TYPE_NET_HTTP_FILE_DRIVER_STATE_T:
 		return "net_http_file_driver_state_t";
+	case TYPE_NET_INTERFACE_SOFTWARE_DEV_T:
+		return "net_interface_software_dev_t";
+	case TYPE_NET_INTERFACE_HARDWARE_DEV_T:
+		return "net_interface_hardware_dev_t";
 	case 0:
 		print("zero type, something went wrong earlier", P_WARN);
 		return "NOTYPE";
