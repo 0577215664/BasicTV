@@ -45,7 +45,8 @@ std::vector<id_tier_medium_t> id_tier_medium = {
 id_tier_medium_t id_tier::get_medium(uint8_t medium_type){
 	ASSERT(medium_type == ID_TIER_MEDIUM_MEM ||
 	       medium_type == ID_TIER_MEDIUM_CACHE ||
-	       medium_type == ID_TIER_MEDIUM_DISK, P_ERR);
+	       medium_type == ID_TIER_MEDIUM_DISK ||
+	       medium_type == ID_TIER_MEDIUM_NETWORK, P_ERR);
 	       
 	return id_tier_medium.at(medium_type-1); // 0 is undefined
 }
@@ -520,10 +521,12 @@ void id_tier_loop(){
 				}
 				std::vector<id_t_> shift_operation(
 					{std::get<0>(move_logic[a])});
-				id_tier::operation::shift_data_to_state(
-					from_id,
-					to_id,
-					&shift_operation);
+				try{
+					id_tier::operation::shift_data_to_state(
+						from_id,
+						to_id,
+						&shift_operation);
+				}catch(...){}
 				if(shift_operation.size() == 1){
 					// completely normal behavior, since we
 					// let shift_data_to_state handle a lot
@@ -557,8 +560,14 @@ void id_tier_loop(){
 		id_tier_medium_t medium =
 			id_tier::get_medium(
 				tier_state_ptr->get_medium());
-		medium.loop(
-			tier_state_ptr->id.get_id());
+		try{
+			medium.loop(
+				tier_state_ptr->id.get_id());
+		}catch(...){}
+		if(tier_state_ptr->storage.cache.update_freq.due()){
+			tier_state_ptr->control.flags |= ID_TIER_CONTROL_FLAG_UPDATE_CACHE;
+			tier_state_ptr->storage.cache.update_freq.reset();
+		}
 		if(tier_state_ptr->control.flags & ID_TIER_CONTROL_FLAG_UPDATE_CACHE){
 			medium.update_cache(
 				tier_state_ptr->id.get_id());

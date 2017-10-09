@@ -12,7 +12,7 @@
 #include "../../../net/proto/net_proto.h"
 
 #include "../../../escape.h"
-
+#include "../../../settings.h"
 /*
   All peer to peer ID networking is defined in ID tiers, each instance
   of the network tier is one peer on the network. Peers with identical
@@ -33,23 +33,25 @@
   peer indexes survive reboots.
 */
 
-#define TIER_GET_STATE_PTR()			\
-	id_tier_state_t *tier_state_ptr =	\
-		PTR_DATA(state_id,		\
-			 id_tier_state_t);	\
-	PRINT_IF_NULL(tier_state_ptr, P_ERR);	\
+#define TIER_GET_STATE_PTR()				\
+	id_tier_state_t *tier_state_ptr =		\
+		PTR_DATA(state_id,			\
+			 id_tier_state_t);		\
+	PRINT_IF_NULL(tier_state_ptr, P_UNABLE);	\
 
 #define TIER_GET_NETWORK_PTR()				\
 	id_tier_network_t *network_state_ptr =		\
 		reinterpret_cast<id_tier_network_t*>(	\
 			tier_state_ptr->get_payload());	\
-	PRINT_IF_NULL(network_state_ptr, P_ERR);	\
+	PRINT_IF_NULL(network_state_ptr, P_UNABLE);	\
 	
 #define TIER_GET_NETWORK_SOFTDEV_PTR()				\
 	net_interface_software_dev_t *software_dev_ptr =	\
-		PTR_DATA(network_state_ptr->address_id,		\
+		PTR_DATA(network_state_ptr->software_dev_id,	\
 			 net_interface_software_dev_t);		\
-	PRINT_IF_NULL(software_dev_ptr, P_ERR);
+	PRINT_IF_NULL(software_dev_ptr, P_UNABLE);
+
+#pragma warning("attempt to bind address, software dev, etc together")
 
 ID_TIER_INIT_STATE(network){
 	id_tier_state_t *tier_state_ptr =
@@ -63,6 +65,16 @@ ID_TIER_INIT_STATE(network){
 	tier_state_ptr->set_tier_major(
 		ID_TIER_MAJOR_NETWORK);
 	tier_state_ptr->set_tier_minor(
+		0);
+
+	const id_t_ address_id =
+		(new net_interface_ip_address_t)->id.get_id();
+	const id_t_ software_dev_id =
+		(new net_interface_software_dev_t)->id.get_id();
+
+	tier_state_ptr->storage.cache.update_freq.init(
+		settings::get_setting_unsigned_def(
+			"id_tier_network_cache_refresh_interval", 10*1000*1000),
 		0);
 	return tier_state_ptr->id.get_id();
 }
@@ -274,7 +286,6 @@ ID_TIER_LOOP(network){
 		PTR_DATA(state_id,
 			 id_tier_state_t);
 	PRINT_IF_NULL(tier_state_ptr, P_ERR);
-	
 	ID_TIER_LOOP_STANDARD(
 		id_tier_network_add_data,
 		id_tier_network_get_id);

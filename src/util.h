@@ -164,5 +164,17 @@ std::string get_readable_time(uint64_t time_micro_s);
 
 extern void update_print_level();
 
+struct freq_t{
+private:
+	uint64_t wait_micro_s = 0;
+	uint64_t last_run_micro_s = 0;
+public:
+	void init(uint64_t wait_micro_s_, uint64_t last_run_micro_s_);
+	uint64_t get_wait_micro_s(){return wait_micro_s;}
+	uint64_t get_last_run_micro_s(){return last_run_micro_s;}
+	bool due();
+	void reset();
+};
+
 #endif
 #include "convert.h"

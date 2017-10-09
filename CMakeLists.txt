@@ -16,7 +16,6 @@ pkg_check_modules(TOXLIBS toxcore toxencryptsave toxdns toxav)
 
 target_link_libraries(basictv ${LIBS_LIBRARIES} ${TOXLIBS_LIBRARIES})
 target_include_directories(basictv PUBLIC ${LIBS_INCLUDE_DIRS} ${TOXLIBS_INCLUDE_DIRS})
-target_compile_options(basictv PUBLIC ${LIBS_CFLAGS_OTHER} ${TOXLIBS_CFLAGS_OTHER})
-
+target_compile_options(basictv PUBLIC ${LIBS_CFLAGS_OTHER} ${TOXLIBS_CFLAGS_OTHER} -O0 -g -Wall -Wextra)
 
 target_link_libraries(basictv ${LIBS})

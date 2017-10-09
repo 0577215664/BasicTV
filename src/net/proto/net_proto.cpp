@@ -6,16 +6,10 @@
 #include "../net_socket.h"
 #include "../../id/id_api.h"
 
+#include "../../id/tier/network/id_tier_network.h" 
+
 #include "net_proto.h"
 #include "net_proto_api.h"
-
-
-/*
-  Goes through and cleans out network requests that are irrelevant.
- */
-
-void net_proto_loop(){
-}
 
 /*
   NEW IDEA:
@@ -255,4 +249,94 @@ void net_proto_init(){
 void net_proto_close(){
 	// doesn't do anything, GC takes care of all data types
 	// All data types should destroy any internal data
+}
+
+/*
+  Right now it just binds all new net_proto_peer_t's to an ID tier instance,
+  since ID tier states aren't networkable because of instance-specific state
+  pointers
+ */
+
+static std::vector<id_t_> net_proto_loop_peers_from_tiers(){
+	std::vector<id_t_> retval;
+	std::vector<id_t_> tier_vector =
+		ID_TIER_CACHE_GET(
+			TYPE_ID_TIER_STATE_T);
+	// Whenever we do lookups for a certain ID state type, always check the
+	// medium, and don't rely on the tier major/minor matching with the
+	// medium we want (could leave out a lot)
+	for(uint64_t i = 0;i < tier_vector.size();i++){
+		id_tier_state_t *tier_state_ptr =
+			PTR_DATA(tier_vector[i],
+				 id_tier_state_t);
+		CONTINUE_IF_NULL(tier_state_ptr, P_WARN);
+		if(tier_state_ptr->get_medium() != ID_TIER_MEDIUM_NETWORK){
+			continue;
+		}
+		id_tier_network_state_t *network_state_ptr =
+			reinterpret_cast<id_tier_network_state_t*>(
+				tier_state_ptr->get_payload());
+		CONTINUE_IF_NULL(network_state_ptr, P_WARN);
+		retval.push_back(
+			network_state_ptr->get_address_id());
+	}
+	return retval;
+}
+
+/*
+  TODO: define the network protocol used as a tier state (this is gonna get
+  really interesting)
+ */
+
+// bind all network peers to a ID network tier state
+// request the 
+
+static void net_proto_loop_bind_peers(){
+	std::vector<id_t_> old_peer_ids =
+		net_proto_loop_peers_from_tiers();
+	std::vector<id_t_> all_peer_ids =
+		ID_TIER_CACHE_GET(
+			TYPE_NET_PROTO_PEER_T);
+	for(uint64_t a = 0;a < all_peer_ids.size();a++){
+		for(uint64_t b = 0;b < old_peer_ids.size();b++){
+			if(all_peer_ids[b] == old_peer_ids[a] ||
+			   all_peer_ids[a] == net_proto::peer::get_self_as_peer()){
+				all_peer_ids.erase(
+					all_peer_ids.begin()+a);
+				a--;
+				continue;
+			}
+		}
+	}
+	id_tier_medium_t network_medium =
+		id_tier::get_medium(
+			ID_TIER_MEDIUM_NETWORK);
+	for(uint64_t i = 0;i < all_peer_ids.size();i++){
+		id_tier_state_t *tier_state_ptr =
+			PTR_DATA(network_medium.init_state(),
+				 id_tier_state_t);
+		tier_state_ptr->set_medium(
+			ID_TIER_MEDIUM_NETWORK);
+		tier_state_ptr->set_tier_major(
+			ID_TIER_MAJOR_NETWORK);
+		tier_state_ptr->set_tier_minor(
+			0);
+		id_tier_network_state_t *network_state_ptr =
+			reinterpret_cast<id_tier_network_state_t*>(
+				tier_state_ptr->get_payload());
+		PRINT_IF_NULL(network_state_ptr, P_ERR);
+		network_state_ptr->set_address_id(
+			all_peer_ids[i]);
+		// TODO: perhaps create optimized paths by creating whitelists of
+		// net_proto_peer_ts (they don't have the computing power to
+		// handle decryption, or don't bother since it is trusted and
+		// isn't able to relay any information)
+		tier_state_ptr->storage.set_extras(
+			{ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS});
+	}
+}
+
+void net_proto_loop(){
+	net_proto_loop_bind_peers();
+	//net_proto_loop_routine_requests();
 }

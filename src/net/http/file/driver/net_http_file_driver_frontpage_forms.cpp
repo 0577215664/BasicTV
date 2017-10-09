@@ -1,16 +1,7 @@
 #include "net_http_file_driver_frontpage_forms.h"
 #include "net_http_file_driver_frontpage.h"
 
-#define FORM_START "<form action=\"/\" method=\"get\">"
-#define FORM_END "</form>"
-
-#define H1(var) "<b>" var "</b>"
-#define FORM(hr, var, type) "<input type=" #type " name=" #var " placeholder=\'" hr "\' /><br />"
-
-#define FORM_TEXT(hr, var) FORM(hr, var, text)
-#define FORM_SUBMIT(hr, var) FORM(hr, var, submit)
-#define FORM_TEXTAREA(hr, var, row, col) "<textarea rows=" #row " col=" #col " /><br />"
-#define FORM_UPLOAD(hr, var) "<input type=\"file\" name=" #var " id=" #var " /><br />"
+#include "html/net_http_file_driver_html_templates.h"
 
 std::string net_http_file_driver_frontpage_form_create_wallet_set(){
 	return H1("Create Wallet Set")
@@ -55,7 +46,8 @@ std::string net_http_file_driver_frontpage_form_create_tv_item_upload(){
 		FORM_TEXT("Title", create_tv_item_upload_title)
 		FORM_TEXT("Description", create_tv_item_upload_desc)
 		FORM_TEXT("Wallet ID", create_tv_item_upload_wallet_id)
-		FORM_UPLOAD("File", create_tv_item_upload_data)
+		// TODO: discriminate based on MIME type here (?)
+		FORM_FILE("File", create_tv_item_upload_data)
 		FORM_SUBMIT("Create TV Item", create_tv_item_upload_submit)
 		FORM_END;
 }
@@ -83,3 +75,6 @@ std::string net_http_file_driver_frontpage_form_unbind_tv_sink_item_window(){
 std::string net_http_file_driver_frontpage_form_control_window(){
 	return H1("TV Window Controls (TODO: Get better HTML input macros)");
 }
+
+
+

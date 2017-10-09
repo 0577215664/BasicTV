@@ -52,6 +52,12 @@ static void net_http_accept_conn(
 	}
 	TCPsocket conn_socket =
 		socket_ptr->get_tcp_socket();
+	// PRINT_IF_NULL(conn_socket, P_ERR);
+	if(conn_socket == nullptr){
+		print("conn_socket is a nullptr, reconnecting and returning", P_WARN);
+		socket_ptr->connect();
+		return;
+	}
 	TCPsocket new_socket =
 		nullptr;
 	while((new_socket = SDLNet_TCP_Accept(conn_socket)) != nullptr){

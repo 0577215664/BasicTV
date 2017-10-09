@@ -51,6 +51,7 @@ public:
 
 #define TV_SINK_MEDIUM_AUDIO_HARDWARE 1
 #define TV_SINK_MEDIUM_NUMERICAL_TCP_ACCEPT 2
+#define TV_SINK_MEDIUM_AUDIO_TOX 3
 
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_IN 1
 #define TV_SINK_MEDIUM_FLOW_DIRECTION_OUT 2
@@ -104,13 +105,5 @@ public:
 };
 
 tv_sink_medium_t tv_sink_get_medium(uint8_t medium);
-
-namespace tv_sink{
-	namespace stream{
-		namespace ogg_bitstream{
-			
-		};
-	};
-};
 
 #endif

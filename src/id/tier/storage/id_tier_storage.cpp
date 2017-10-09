@@ -74,3 +74,33 @@ std::vector<id_t_> id_tier_state_storage_t::get_ids(){
 void id_tier_state_storage_t::set_ids(std::vector<id_t_> ids_){
 	ids = compact_id_set(ids_, true);
 }
+
+id_tier_state_storage_entry_meta_t id_tier_state_storage_t::get_entry_meta(
+	id_t_ id_){
+	const std::vector<id_t_> id_vector =
+		get_ids();
+	ASSERT(id_vector.size() == mod_incs.size() &&
+	       id_vector.size() == extras.size(), P_ERR);
+	for(uint64_t i = 0;i < id_vector.size();i++){
+		if(unlikely(id_vector[i] == id_)){
+			id_tier_state_storage_entry_meta_t meta_entry;
+			meta_entry.set_id(id_vector[i]);
+			meta_entry.set_mod_inc(mod_incs[i]);
+			meta_entry.set_extra(extras[i]);
+			return meta_entry;
+		}
+	}
+	print("can't find the ID in the tier state vector", P_ERR);
+	return id_tier_state_storage_entry_meta_t();
+}
+
+std::vector<uint8_t> id_tier_state_storage_cache_t::search_cache_for_id(
+	id_t_ id_){
+	for(uint64_t i = 0;i < cache.size();i++){
+		if(unlikely(cache[i].second.get_id() == id_)){
+			return cache[i].first;
+		}
+	}
+	print("ID not found in tier cache", P_ERR);
+	return {};
+}

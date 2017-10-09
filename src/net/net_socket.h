@@ -78,7 +78,6 @@ public:
 	// TODO: allow for mutex locking through ADD_DEL_VECTOR
 	ADD_DEL_VECTOR(recv_buffer, uint8_t);
 	GET_CONST_PTR(recv_buffer, std::vector<uint8_t>);
-
 	GET_CONST_PTR(send_buffer, std::vector<uint8_t>);
 	
 	void set_proxy_id(id_t_ proxy_id_);

@@ -22,6 +22,19 @@
 
 #define GET_STR(name) std::string name = file_driver_state_ptr->request_payload.form_data.get_str(#name);;
 
+
+#define FORM_START "<form action=\"/\" method=\"get\">"
+#define FORM_END "</form>"
+
+#define H1(var) "<b>" var "</b>"
+#define FORM(hr, var, type) "<input type=" #type " name=" #var " placeholder=\'" hr "\' /><br />"
+
+#define FORM_TEXT(hr, var) FORM(hr, var, text)
+#define FORM_SUBMIT(hr, var) FORM(hr, var, submit)
+#define FORM_FILE(hr, var) "<input type=file name=" #var " placeholder=\'" hr "\' enctype=\"multipart/form-data\"/><br />"
+#define FORM_TEXTAREA(hr, var, row, col) "<textarea rows=" #row " col=" #col " /><br />"
+
+
 extern std::string net_http_file_driver_html_template_logic(
 	net_http_file_driver_state_t *file_driver_state_ptr);
 

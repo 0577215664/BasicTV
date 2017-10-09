@@ -7,6 +7,7 @@
 
 #include "../../../file.h"
 #include "../../../system.h"
+#include "../../../settings.h"
 
 /*
   Since the type exists through the ID, we just save everything to 
@@ -84,6 +85,10 @@ ID_TIER_INIT_STATE(disk){
 	tier_state_ptr->set_tier_major(
 		ID_TIER_MAJOR_DISK);
 	tier_state_ptr->set_tier_minor(
+		0);
+	tier_state_ptr->storage.cache.update_freq.init(
+		settings::get_setting_unsigned_def(
+			"id_tier_disk_cache_refresh_interval", 10*1000*1000),
 		0);
 	return tier_state_ptr->id.get_id();
 }

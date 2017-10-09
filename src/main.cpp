@@ -51,12 +51,12 @@ int main(int argc_, char **argv_){
 			settings::get_setting_unsigned_def(
 				"test_run_count", 1);
 		for(uint64_t i = 0;i < test_run_count;i++){
+			/*
+			  Useful for random() or any situation where
+			  memory errors only show up after a long time
+			*/
 			if(settings::get_setting(
 				   "test_catch_all") == "true"){
-				/*
-				  Useful for random() or any situation where
-				  memory errors only show up after a long time
-				 */
 				try{
 					test_suite();
 				}catch(...){}

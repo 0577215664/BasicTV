@@ -127,8 +127,7 @@ public:
 	std::vector<id_tier_transport_entry_t> inbound_transport;
 	std::vector<id_tier_transport_entry_t> outbound_transport;
 
-	std::vector<id_tier_operation_entry_t> operations;
-	
+	std::vector<id_tier_operation_entry_t> operations;	
 	
 	id_tier_state_t();
 	~id_tier_state_t();
