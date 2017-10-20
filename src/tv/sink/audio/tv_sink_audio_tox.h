@@ -1,20 +1,22 @@
 #ifndef TV_SINK_AUDIO_TOX_H
 #define TV_SINK_AUDIO_TOX_H
 
-#ifdef TOXLIBS_FOUND
+/* #ifdef TOXLIBS_FOUND */
+#if 1
 
 #pragma message("compiling with the Tox input audio ink")
 
 #include "../tv_sink.h"
 
-
 #include <tox/tox.h>
 #include <tox/toxav.h>
+#include <tox/toxencryptsave.h>
 
 struct tv_sink_audio_tox_state_t{
         Tox *tox = nullptr;
-	Group_Chats *group_chat = nullptr;
+	ToxAV *tox_av = nullptr;
 	
+	uint32_t group_id = 0;
         uint64_t last_iter_time = 0;
 	std::vector<uint8_t> tox_profile;
 
