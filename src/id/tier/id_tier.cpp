@@ -566,9 +566,9 @@ void id_tier_loop(){
 		}catch(...){}
 		if(tier_state_ptr->storage.cache.update_freq.due()){
 			tier_state_ptr->control.flags |= ID_TIER_CONTROL_FLAG_UPDATE_CACHE;
-			tier_state_ptr->storage.cache.update_freq.reset();
 		}
 		if(tier_state_ptr->control.flags & ID_TIER_CONTROL_FLAG_UPDATE_CACHE){
+			tier_state_ptr->storage.cache.update_freq.reset();
 			medium.update_cache(
 				tier_state_ptr->id.get_id());
 			tier_state_ptr->control.flags &=

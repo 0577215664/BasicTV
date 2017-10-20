@@ -134,6 +134,7 @@ ID_TIER_ADD_DATA(mem){
 	CHECK_TYPE(net_interface_ip_address_t);
 	if(loaded == false){
 		print("can't add a type we don't have a macro creator for: " + convert::type::from(type), P_ERR);
+		while(true){continue;}
 	}
 }
 

@@ -13,6 +13,8 @@
 
 struct tv_sink_audio_tox_state_t{
         Tox *tox = nullptr;
+	Group_Chats *group_chat = nullptr;
+	
         uint64_t last_iter_time = 0;
 	std::vector<uint8_t> tox_profile;
 

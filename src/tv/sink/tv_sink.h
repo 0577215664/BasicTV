@@ -30,6 +30,8 @@ private:
 	void *state_ptr = nullptr;
 
 	uint8_t flow_direction = 0;
+
+	uint64_t current_frame_entry = 0;
 public:
 	data_id_t id;
 	tv_sink_state_t();
@@ -47,6 +49,7 @@ public:
 	GET_SET(state_ptr, void*);
 
 	GET_SET(flow_direction, uint8_t);
+	GET_SET(current_frame_entry, uint64_t);
 };
 
 #define TV_SINK_MEDIUM_AUDIO_HARDWARE 1

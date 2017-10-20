@@ -337,6 +337,6 @@ static void net_proto_loop_bind_peers(){
 }
 
 void net_proto_loop(){
-	net_proto_loop_bind_peers();
+	//net_proto_loop_bind_peers();
 	//net_proto_loop_routine_requests();
 }
