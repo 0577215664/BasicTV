@@ -72,6 +72,40 @@ static void tv_sink_audio_tox_audio_callback(
 	
 }
 
+static void tv_sink_audio_tox_group_invite_callback(
+	Tox *tox,
+	uint32_t friend_number,
+	TOX_CONFERENCE_TYPE type,
+	const uint8_t *group_pub_key,
+	size_t length,
+	void *user_data){
+
+	ASSERT(type == TOX_CONFERENCE_TYPE_AV, P_ERR);
+	
+	std::array<uint8_t, 256> tox_name;
+	TOX_ERR_FRIEND_QUERY err_friend_query;
+	const size_t nick_len =
+		tox_friend_get_name_size(
+			tox,
+			friend_number,
+			&err_friend_query);
+	ASSERT(err_friend_query == TOX_ERR_FRIEND_QUERY_OK, P_ERR);
+
+	ASSERT(tox_friend_get_name(tox, friend_number, tox_name.data(), nullptr), P_ERR);
+
+	tox_name[nick_len] = '\0';
+	print("received group invite from " + (std::string)(reinterpret_cast<char*>(&(tox_name[0]))) + ", autojoining", P_NOTE);
+
+	TOX_ERR_CONFERENCE_JOIN err_group_join;
+	tox_conference_join(
+		tox,
+		friend_number,
+		group_pub_key,
+		length,
+		&err_group_join);
+	ASSERT(err_group_join == TOX_ERR_CONFERENCE_JOIN_OK, P_ERR);
+}
+
 // "Simple" pull just creates a 1D vector based on the collapsed PCM data of
 // everything, where the "Complex" actually creates multiple streams and
 // maintains a 1:1 mapping between the offset in the list and the pub key (so
@@ -94,10 +128,8 @@ static std::vector<id_t_> tv_sink_audio_tox_simple_pull(
 	/*
 	  Terrible for caching, but it shouldn't slow things down enough to
 	  interfere with Tox, and that's all that matters right now
-
-	  Also this can generate arbitrarially small frames at the end, which
-	  isn't optimized, but should playback relatively fine.
 	 */
+
 	bool generating = true;
 	uint64_t samples_from_start = 0;
 
@@ -109,7 +141,6 @@ static std::vector<id_t_> tv_sink_audio_tox_simple_pull(
 		int16_t sample = 0;
 		uint64_t number_past = 0;
 		for(uint64_t i = 0;i < tox_audio_data.size();i += 2){ // bit depth
-			
 			const uint64_t effective_time =
 				first_time_micro_s*samples_from_start*sampling_freq*channel_count;
 			if(tox_audio_data[i].start_time_micro_s < effective_time){
@@ -285,17 +316,26 @@ TV_SINK_MEDIUM_INIT(audio_tox){
 
 	// Create the group chat
 
-	TOX_ERR_CONFERENCE_NEW err_conference;
-	audio_tox_state_ptr->group_id =
-		tox_conference_new(
-			audio_tox_state_ptr->tox,
-			&err_conference);
-	ASSERT(err_conference == TOX_ERR_CONFERENCE_NEW_OK, P_ERR);
+	if(settings::get_seetting("tv_sink_audio_tox_create_group") == "true"){
+		print("creating a new conference, all friends will be auto invited", P_NOTE);
+		TOX_ERR_CONFERENCE_NEW err_conference;
+		audio_tox_state_ptr->group_id =
+			tox_conference_new(
+				audio_tox_state_ptr->tox,
+				&err_conference);
+		ASSERT(err_conference == TOX_ERR_CONFERENCE_NEW_OK, P_ERR);
+	}else{
+		print("not creating a new conference, will auto accept all group invitations", P_NOTE);
+		
+	}
 
 	toxav_callback_audio_receive_frame(
 		audio_tox_state_ptr->tox_av,
 		tv_sink_audio_tox_audio_callback,
 		nullptr);
+	tox_callback_conference_invite(
+		audio_tox_state_ptr->tox,
+		tv_sink_audio_tox_group_invite_callback);
 }
 
 #pragma message("tox doesn't save public key bindings, should do that soon")
