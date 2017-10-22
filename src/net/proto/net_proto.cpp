@@ -298,16 +298,20 @@ static void net_proto_loop_bind_peers(){
 		ID_TIER_CACHE_GET(
 			TYPE_NET_PROTO_PEER_T);
 	for(uint64_t a = 0;a < all_peer_ids.size();a++){
+		if(all_peer_ids[a] == net_proto::peer::get_self_as_peer()){
+			all_peer_ids.erase(
+				all_peer_ids.begin()+a);
+		}
 		for(uint64_t b = 0;b < old_peer_ids.size();b++){
-			if(all_peer_ids[b] == old_peer_ids[a] ||
-			   all_peer_ids[a] == net_proto::peer::get_self_as_peer()){
+			if(all_peer_ids[a] == old_peer_ids[b]){
 				all_peer_ids.erase(
 					all_peer_ids.begin()+a);
 				a--;
-				continue;
+				break;
 			}
 		}
 	}
+	std::raise(SIGINT);
 	id_tier_medium_t network_medium =
 		id_tier::get_medium(
 			ID_TIER_MEDIUM_NETWORK);
@@ -337,6 +341,6 @@ static void net_proto_loop_bind_peers(){
 }
 
 void net_proto_loop(){
-	//net_proto_loop_bind_peers();
-	//net_proto_loop_routine_requests();
+	net_proto_loop_bind_peers();
+	// net_proto_loop_routine_requests();
 }
