@@ -487,7 +487,7 @@ static void id_tier_init_cache(){
 
 void id_tier_init(){
 	// memory is handled in-line in init() for private key loading
-	id_tier_init_cache();
+	// id_tier_init_cache();
 	id_tier_init_disk();
 }
 
@@ -551,6 +551,7 @@ void id_tier_loop(){
 						std::to_string(to_state_ptr->get_tier_minor());
 					print("shifted data " + id_breakdown(std::get<0>(move_logic[a])) + " from tier " + from_tier + " to tier " + to_tier, P_SPAM);
 				}
+				// Latencies are pretty darn high, breaking now
 			}
 		}
 		id_tier_state_t *tier_state_ptr =
@@ -566,9 +567,9 @@ void id_tier_loop(){
 		}catch(...){}
 		if(tier_state_ptr->storage.cache.update_freq.due()){
 			tier_state_ptr->control.flags |= ID_TIER_CONTROL_FLAG_UPDATE_CACHE;
-			tier_state_ptr->storage.cache.update_freq.reset();
 		}
 		if(tier_state_ptr->control.flags & ID_TIER_CONTROL_FLAG_UPDATE_CACHE){
+			tier_state_ptr->storage.cache.update_freq.reset();
 			medium.update_cache(
 				tier_state_ptr->id.get_id());
 			tier_state_ptr->control.flags &=

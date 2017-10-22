@@ -11,7 +11,7 @@
   now.
 */
 
-void convert::nbo::to(uint8_t *data, uint64_t size){
+void convert::nbo::to(uint8_t *data, uint32_t size){
 #ifdef IS_LITTLE_ENDIAN
 	// switch(size){
 	// case 2:
@@ -24,18 +24,18 @@ void convert::nbo::to(uint8_t *data, uint64_t size){
 	// 	*data = NBO_64(*data);
 	// 	return;
 	// }
-	if(size == 1){
-		return;
-	}
-	for(uint64_t i = 0;i < size/2;i++){
-		const uint64_t first = i;
-		const uint64_t second = size-i-1;
-		std::swap(data[first], data[second]);
+	const uint32_t len = size/2;
+	for(uint32_t i = 0;i < len;i++){
+		const uint32_t first = i;
+		const uint32_t second = size-i-1;
+		data[first] ^= data[second];
+		data[second] ^= data[first];
+		data[first] ^= data[second];
 	}
 #endif
 }
 
-void convert::nbo::from(uint8_t *data, uint64_t size){
+void convert::nbo::from(uint8_t *data, uint32_t size){
 	to(data, size);
 }
 
