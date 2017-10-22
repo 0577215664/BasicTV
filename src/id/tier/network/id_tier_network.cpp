@@ -13,6 +13,7 @@
 
 #include "../../../escape.h"
 #include "../../../settings.h"
+
 /*
   All peer to peer ID networking is defined in ID tiers, each instance
   of the network tier is one peer on the network. Peers with identical
@@ -165,7 +166,7 @@ static std::vector<uint8_t> id_tier_network_write_interface_packet(
 	meta.macros = 0;
 	meta.unused = 0;
 	std::vector<uint8_t> retval =
-		id_tier_network_meta_write(
+ 		id_tier_network_meta_write(
 			meta);
 	for(uint64_t i = 0;i < data.size();i++){
 		export_dynamic_size_payload(

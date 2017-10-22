@@ -26,7 +26,7 @@ std::vector<id_t_> expand_id_set_copy(
 		(id_t_*)&(id_set[0]),
 		(id_t_*)&(id_set[id_set.size()]));
 	for(uint64_t i = 0;i < retval.size();i++){
-		convert::nbo::from(
+		fast_nbo<uint_fast8_t>(
 			retval[i].data(),
 			retval[i].size());
 	}

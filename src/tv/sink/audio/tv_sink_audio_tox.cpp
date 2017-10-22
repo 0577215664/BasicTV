@@ -316,7 +316,7 @@ TV_SINK_MEDIUM_INIT(audio_tox){
 
 	// Create the group chat
 
-	if(settings::get_seetting("tv_sink_audio_tox_create_group") == "true"){
+	if(settings::get_setting("tv_sink_audio_tox_create_group") == "true"){
 		print("creating a new conference, all friends will be auto invited", P_NOTE);
 		TOX_ERR_CONFERENCE_NEW err_conference;
 		audio_tox_state_ptr->group_id =
@@ -326,7 +326,6 @@ TV_SINK_MEDIUM_INIT(audio_tox){
 		ASSERT(err_conference == TOX_ERR_CONFERENCE_NEW_OK, P_ERR);
 	}else{
 		print("not creating a new conference, will auto accept all group invitations", P_NOTE);
-		
 	}
 
 	toxav_callback_audio_receive_frame(
