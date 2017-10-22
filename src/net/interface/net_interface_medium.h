@@ -14,6 +14,8 @@
 #define INTERFACE_SEND(interface) void net_interface_##interface##_send(id_t_ hardware_dev_id, id_t_ software_dev_id, std::vector<uint8_t> *payload)
 #define INTERFACE_RECV_ALL(interface) void net_interface_##interface##_recv_all(id_t_ hardware_dev_id, id_t_ software_dev_id)
 
+#define INTERFACE_ACCEPT(interface) id_t_ net_interface_##interface##_accept(id_t_ hardware_dev_id, id_t_ software_dev_id)
+
 #include "../../util.h"
 #include "../../id/id_api.h"
 
@@ -68,6 +70,9 @@ public:
 	void (*recv_all)(
 		id_t_ hardware_dev_id,
 		id_t_ software_dev_id) = nullptr;
+
+	id_t_ (*accept)(id_t_ hardware_dev_id,
+			id_t_ software_dev_id) = nullptr;
 	
 	net_interface_medium_t(
 		uint8_t (*add_address_cost_)(id_t_ hardware_dev_id, id_t_ address_id),
@@ -75,7 +80,8 @@ public:
 		std::vector<id_t_> (*calculate_most_efficient_drop_)(id_t_ hardware_dev_id, id_t_ address_id),
 		std::vector<std::pair<id_t_, id_t_> > (*calculate_most_efficient_transfer_)(id_t_ hardware_dev_id, id_t_ address_id),
 		void (*send_)(id_t_, id_t_, std::vector<uint8_t> *payload),
-		void (*recv_all_)(id_t_ hardware_dev_id, id_t_ software_dev_id)){
+		void (*recv_all_)(id_t_ hardware_dev_id, id_t_ software_dev_id),
+		id_t_ (*accept_)(id_t_ hardware_dev_id, id_t_ software_dev_id)){
 
 		add_address_cost = add_address_cost_;
 		add_address = add_address_;
@@ -83,6 +89,7 @@ public:
 		calculate_most_efficient_transfer = calculate_most_efficient_transfer_;
 		send = send_;
 		recv_all = recv_all_;
+		accept = accept_;
 	}
 };
 

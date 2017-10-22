@@ -79,6 +79,14 @@
   be defined as one layer up in net_interface_software_dev_t. 
 */
 
+#define NET_INTERFACE_TRANSPORT_UNDEFINED 0
+#define NET_INTERFACE_TRANSPORT_ENABLED 1
+#define NET_INTERFACE_TRANSPORT_DISABLED 2
+
+#define NET_INTERFACE_SWITCH_UNDEFINED 0
+#define NET_INTERFACE_SWITCH_FREE 1
+#define NET_INTERFACE_SWITCH_OVERHEAD 2
+
 /*
   The mediums shouldn't include information about the encoding scheme at all,
   since we are on a lower level here

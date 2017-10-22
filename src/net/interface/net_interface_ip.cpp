@@ -37,7 +37,7 @@ static void hardware_software_address_sanity_check(
 /*
   The likelihoop that we need to formally call the drop function in IP is
   pretty low, so we just go through and drop the software devices with the
-  oldest latest activit
+  oldest latest activity
  */
 
 INTERFACE_CALCULATE_MOST_EFFICIENT_DROP(ip){
@@ -47,7 +47,7 @@ INTERFACE_CALCULATE_MOST_EFFICIENT_DROP(ip){
 		hardware_dev_ptr,
 		nullptr,
 		ip_address_ptr);
-uint64_t soft_dev_to_remove = 0;
+	uint64_t soft_dev_to_remove = 0;
 	if(hardware_dev_ptr->get_max_soft_dev() ==
 	   hardware_dev_ptr->get_size_soft_dev_list()){
 		print("sitting at max_soft_dev limit", P_NOTE);
@@ -229,5 +229,33 @@ INTERFACE_ADD_ADDRESS(ip){
 	working_state->socket_set =
 		SDLNet_AllocSocketSet(1);
 	ASSERT(working_state->socket_set != nullptr, P_ERR);
+
+	software_dev_ptr->set_state_ptr(
+		working_state);
 	return software_dev_ptr->id.get_id();
+}
+
+INTERFACE_ACCEPT(ip){
+	INTERFACE_SET_HW_PTR(hardware_dev_id);
+	INTERFACE_SET_SW_PTR(software_dev_id);
+
+	net_interface_medium_ip_ptr_t *working_state =
+		reinterpret_cast<net_interface_medium_ip_ptr_t*>(
+			software_dev_ptr->get_state_ptr());
+	PRINT_IF_NULL(working_state, P_ERR);
+	
+	id_t_ retval = ID_BLANK_ID;
+	TCPsocket new_socket = SDLNet_TCP_Accept(working_state->tcp_socket);
+	if(new_socket != nullptr){
+		net_interface_software_dev_t *software_dev_ptr =
+			new net_interface_software_dev_t;
+		net_interface_medium_ip_ptr_t *working_state_new =
+			new net_interface_medium_ip_ptr_t;
+		working_state_new->tcp_socket = new_socket;
+		working_state_new->socket_set = SDLNet_AllocSocketSet(1);
+		software_dev_ptr->set_state_ptr(working_state_new);
+		print("send packet metadata over socket to ensure we have the proper addressing information", P_CRIT);
+		return software_dev_ptr->id.get_id();
+	}
+	return ID_BLANK_ID;
 }
