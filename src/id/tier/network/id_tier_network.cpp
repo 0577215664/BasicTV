@@ -67,16 +67,18 @@ ID_TIER_INIT_STATE(network){
 		ID_TIER_MAJOR_NETWORK);
 	tier_state_ptr->set_tier_minor(
 		0);
+	tier_state_ptr->storage.cache.update_freq.init(
+		settings::get_setting_unsigned_def(
+			"id_tier_network_cache_refresh_interval", 10*1000*1000),
+		0);
 
 	const id_t_ address_id =
 		(new net_interface_ip_address_t)->id.get_id();
 	const id_t_ software_dev_id =
 		(new net_interface_software_dev_t)->id.get_id();
+	network_state_ptr->set_software_dev_id(
+		software_dev_id);
 
-	tier_state_ptr->storage.cache.update_freq.init(
-		settings::get_setting_unsigned_def(
-			"id_tier_network_cache_refresh_interval", 10*1000*1000),
-		0);
 	return tier_state_ptr->id.get_id();
 }
 
@@ -115,12 +117,18 @@ ID_TIER_DEL_STATE(network){
   decipher
 
   DEL_ID doesn't do anything
+  
+  Not all data going through here is ID data, so don't pull IDs
  */
 
 ID_TIER_ADD_DATA(network){
 	TIER_GET_STATE_PTR();
 	TIER_GET_NETWORK_PTR();
 	TIER_GET_NETWORK_SOFTDEV_PTR();
+	data.insert(
+		data.begin(),
+		ID_TIER_NETWORK_TYPE_ID);
+	print("adding " + id_breakdown(id_api::raw::fetch_id(data)) + " to network queue", P_NOTE);
 	software_dev_ptr->add_outbound_data(
 		data);
 }
@@ -229,8 +237,9 @@ static std::vector<std::vector<uint8_t> > id_tier_network_read_interface_packet(
 	}
 	return retval;
 }
-		
+
 ID_TIER_GET_ID(network){
+	print("requesting " + id_breakdown(id) + " from network tier", P_NOTE);
 	id_tier_state_t *tier_state_ptr =
 		PTR_DATA(state_id,
 			 id_tier_state_t);
@@ -272,12 +281,16 @@ ID_TIER_GET_ID(network){
 }
 
 // meta doesn't need any payload associated with it
+
 ID_TIER_UPDATE_CACHE(network){
+	TIER_GET_STATE_PTR();
+	TIER_GET_NETWORK_PTR();
+	TIER_GET_NETWORK_SOFTDEV_PTR();
+	
 	id_tier_network_meta_t meta =
 		id_tier_network_meta_gen_standard();
 	meta.macros |= ID_TIER_NETWORK_META_SEND_CACHE;
-	id_tier_network_add_data(
-		state_id,
+	software_dev_ptr->add_outbound_data(
 		id_tier_network_meta_write(
 			meta));
 }

@@ -10,6 +10,7 @@
 std::vector<uint8_t> id_tier_network_meta_write(
         id_tier_network_meta_t data){
 	std::vector<uint8_t> retval;
+	retval.push_back(ID_TIER_NETWORK_TYPE_META);
 	convert::nbo::to(
 		data.peer_id.data(), data.peer_id.size());
 	retval.insert(

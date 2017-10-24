@@ -19,6 +19,9 @@ net_interface_software_dev_t::net_interface_software_dev_t() : id(this, TYPE_NET
 	id.add_data_id(&hardware_dev_id, 1, mem_ruleset);
 	id.add_data_id(&reliability_number_set_id, 1, mem_ruleset);
 	id.add_data_id(&address_id, 1, mem_ruleset);
+
+	id.set_most_liberal_rules(
+		mem_ruleset);
 }
 
 net_interface_software_dev_t::~net_interface_software_dev_t(){

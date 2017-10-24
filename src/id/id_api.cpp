@@ -556,6 +556,9 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	ASSERT(rules.tier.size() <= 1, P_ERR);
 	ASSERT(rules.intermediary.size() <= 1, P_ERR);
 	data = force_to_extra(data, 0);
+
+	const std::vector<uint8_t> old_data = data;
+	
 	extra_t_ extra;
 	id_t_ id;
 	mod_inc_t_ mod_inc;
@@ -579,7 +582,6 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 	EXPORT_STATIC(
 		retval,
 		mod_inc);
-
 	const std::vector<std::tuple<std::vector<std::vector<uint8_t> >, transport_i_t, data_id_transport_rules_t> > all_import =
 		import_to_vectorized(
 			&data);
@@ -605,6 +607,9 @@ std::vector<uint8_t> id_api::raw::strip_to_transportable(
 				&retval,
 				all_import[i]);
 		}
+	}
+	if(retval.size() <= sizeof(extra_t_) + sizeof(id_t_) + sizeof(mod_inc_t_)){
+		return {};
 	}
 	return retval;
 }

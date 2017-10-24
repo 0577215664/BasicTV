@@ -16,7 +16,6 @@ static std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_standard_move
 		id_tier::lookup::id_mod_inc::from_state(
 			second_state_ptr);
 
-	
 	for(uint64_t a = 0;a < first_id_buffer.size();a++){
 		bool found = false;
 		const id_t_ a_id = std::get<0>(first_id_buffer[a]);
@@ -38,6 +37,7 @@ static std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_standard_move
 				// we assume its in memory currently	
 				continue;
 			}
+			
 			if(std::get<0>(second_id_buffer[b]) == a_id){
 				const mod_inc_t_ a_mod_inc =
 					std::get<1>(first_id_buffer[a]);
@@ -110,6 +110,9 @@ std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
 	}
 	if(retval.size() != 0){
 		print("computed " + std::to_string(retval.size()) + " shift operations", P_NOTE);
+		if(retval.size() == 3){
+			std::raise(SIGINT);
+		}
 	}
 	return retval;
 }

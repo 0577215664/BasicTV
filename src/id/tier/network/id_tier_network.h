@@ -5,6 +5,10 @@
 #include "id_tier_network_meta.h"
 #include "id_tier_network_request.h"
 
+#define ID_TIER_NETWORK_TYPE_UNDEFINED 0
+#define ID_TIER_NETWORK_TYPE_META 1
+#define ID_TIER_NETWORK_TYPE_ID 2
+
 struct id_tier_network_ledger_entry_t{
 public:
 	id_t_ simple_request_id = ID_BLANK_ID;

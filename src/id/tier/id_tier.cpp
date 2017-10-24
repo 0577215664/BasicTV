@@ -531,7 +531,7 @@ void id_tier_loop(){
 					// completely normal behavior, since we
 					// let shift_data_to_state handle a lot
 					// of the rules
-					print("couldn't shift data over", P_SPAM);
+					// print("couldn't shift data over", P_SPAM);
 				}else{
 					// update this if we have bulk transfers
 					// refer to tiers as tier major and tier minor
@@ -551,7 +551,6 @@ void id_tier_loop(){
 						std::to_string(to_state_ptr->get_tier_minor());
 					print("shifted data " + id_breakdown(std::get<0>(move_logic[a])) + " from tier " + from_tier + " to tier " + to_tier, P_SPAM);
 				}
-				// Latencies are pretty darn high, breaking now
 			}
 		}
 		id_tier_state_t *tier_state_ptr =
@@ -567,9 +566,9 @@ void id_tier_loop(){
 		}catch(...){}
 		if(tier_state_ptr->storage.cache.update_freq.due()){
 			tier_state_ptr->control.flags |= ID_TIER_CONTROL_FLAG_UPDATE_CACHE;
+			tier_state_ptr->storage.cache.update_freq.reset();
 		}
 		if(tier_state_ptr->control.flags & ID_TIER_CONTROL_FLAG_UPDATE_CACHE){
-			tier_state_ptr->storage.cache.update_freq.reset();
 			medium.update_cache(
 				tier_state_ptr->id.get_id());
 			tier_state_ptr->control.flags &=

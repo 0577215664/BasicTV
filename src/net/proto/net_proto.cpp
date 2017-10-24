@@ -311,7 +311,6 @@ static void net_proto_loop_bind_peers(){
 			}
 		}
 	}
-	std::raise(SIGINT);
 	id_tier_medium_t network_medium =
 		id_tier::get_medium(
 			ID_TIER_MEDIUM_NETWORK);

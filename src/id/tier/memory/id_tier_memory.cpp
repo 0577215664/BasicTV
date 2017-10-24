@@ -280,6 +280,8 @@ data_id_t *id_tier::mem::get_id_ptr(
 					{std::make_pair(0, 0)})).at(0);
 		ASSERT(mem_state_ptr != nullptr, P_ERR);
 		std::vector<id_t_> shift_payload({id});
+		// TODO: move to a statistics based approach
+
 		for(uint64_t i = 0;i < tier_state_vector.size() && shift_payload.size() != 0;i++){
 			if(tier_state_vector[i]->get_tier_major() == 0){
 				continue;
