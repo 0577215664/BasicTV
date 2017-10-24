@@ -72,13 +72,7 @@ ID_TIER_INIT_STATE(network){
 			"id_tier_network_cache_refresh_interval", 10*1000*1000),
 		0);
 
-	const id_t_ address_id =
-		(new net_interface_ip_address_t)->id.get_id();
-	const id_t_ software_dev_id =
-		(new net_interface_software_dev_t)->id.get_id();
-	network_state_ptr->set_software_dev_id(
-		software_dev_id);
-
+	// offload all network config to caller
 	return tier_state_ptr->id.get_id();
 }
 
@@ -248,9 +242,14 @@ ID_TIER_GET_ID(network){
 		reinterpret_cast<id_tier_network_t*>(
 			tier_state_ptr->get_payload());
 	PRINT_IF_NULL(network_state_ptr, P_ERR);
-		
+
+	net_proto_peer_t *proto_peer_ptr =
+		PTR_DATA(network_state_ptr->get_proto_peer_id(),
+			 net_proto_peer_t);
+	PRINT_IF_NULL(proto_peer_ptr, P_ERR);
+	
 	net_interface_address_t *address_ptr =
-		PTR_DATA(network_state_ptr->address_id,
+		PTR_DATA(proto_peer_ptr->get_address_id(),
 			 net_interface_address_t);
 	PRINT_IF_NULL(address_ptr, P_ERR);
 	net_interface_software_dev_t *software_dev_ptr =
@@ -286,13 +285,22 @@ ID_TIER_UPDATE_CACHE(network){
 	TIER_GET_STATE_PTR();
 	TIER_GET_NETWORK_PTR();
 	TIER_GET_NETWORK_SOFTDEV_PTR();
-	
-	id_tier_network_meta_t meta =
-		id_tier_network_meta_gen_standard();
-	meta.macros |= ID_TIER_NETWORK_META_SEND_CACHE;
-	software_dev_ptr->add_outbound_data(
-		id_tier_network_meta_write(
-			meta));
+	try{
+		id_tier_network_meta_t meta =
+			id_tier_network_meta_gen_standard();
+		meta.macros |= ID_TIER_NETWORK_META_SEND_CACHE;
+		const net_interface_medium_t medium =
+			interface_medium_lookup(
+				net_interface::medium::from_address(
+					software_dev_ptr->get_address_id()));
+		std::vector<uint8_t> out_data =
+			id_tier_network_meta_write(
+				meta);
+		medium.send(
+			software_dev_ptr->get_hardware_dev_id(),
+			software_dev_ptr->id.get_id(),
+			&out_data);
+	}catch(...){}
 }
 
 ID_TIER_LOOP(network){

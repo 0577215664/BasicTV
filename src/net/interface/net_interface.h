@@ -174,5 +174,10 @@
 #define NET_INTERFACE_MEDIUM_PACKET_COUNT 1
 
 extern net_interface_medium_t interface_medium_lookup(uint8_t medium);
+
+extern void net_interface_init();
+extern void net_interface_loop();
+extern void net_interface_close();
+
 #endif
 		

@@ -11,6 +11,11 @@
 #include "net_proto.h"
 #include "net_proto_api.h"
 
+#include "../interface/net_interface.h"
+#include "../interface/net_interface_software.h"
+#include "../interface/net_interface_hardware.h"
+#include "../interface/net_interface_address.h"
+
 /*
   NEW IDEA:
   We can mark all of our own net_proto_peer_ts as non-exportable
@@ -187,6 +192,9 @@ static void net_proto_verify_bootstrap_nodes(){
 			nodes_to_connect[i].first,
 			nodes_to_connect[i].second,
 			NET_INTERFACE_IP_ADDRESS_NAT_TYPE_NONE);
+		ip_address_ptr->set_required_intermediary(
+			NET_INTERFACE_INTERMEDIARY_NONE);
+		
 		proto_peer_ptr->set_address_id(
 			ip_address_ptr->id.get_id());
 		proto_peer_ptr->id.set_most_liberal_rules(
@@ -278,7 +286,7 @@ static std::vector<id_t_> net_proto_loop_peers_from_tiers(){
 				tier_state_ptr->get_payload());
 		CONTINUE_IF_NULL(network_state_ptr, P_WARN);
 		retval.push_back(
-			network_state_ptr->get_address_id());
+			network_state_ptr->get_proto_peer_id());
 	}
 	return retval;
 }
@@ -290,6 +298,21 @@ static std::vector<id_t_> net_proto_loop_peers_from_tiers(){
 
 // bind all network peers to a ID network tier state
 // request the 
+
+static id_t_ net_proto_loop_pull_hardware_id(){
+	const std::vector<id_t_> hardware_ids =
+		ID_TIER_CACHE_GET(
+			TYPE_NET_INTERFACE_HARDWARE_DEV_T);
+	for(uint64_t i = 0;i < hardware_ids.size();i++){
+		net_interface_hardware_dev_t *hardware_dev_ptr =
+			PTR_DATA(hardware_ids[i],
+				 net_interface_hardware_dev_t);
+		CONTINUE_IF_NULL(hardware_dev_ptr, P_WARN);
+		return hardware_ids[i];
+	}
+	print("no valid hardware device to bind to, can't actually network", P_ERR);
+	return ID_BLANK_ID;
+}
 
 static void net_proto_loop_bind_peers(){
 	std::vector<id_t_> old_peer_ids =
@@ -314,7 +337,15 @@ static void net_proto_loop_bind_peers(){
 	id_tier_medium_t network_medium =
 		id_tier::get_medium(
 			ID_TIER_MEDIUM_NETWORK);
+	const id_t_ hardware_dev_id =
+		net_proto_loop_pull_hardware_id();
+	
 	for(uint64_t i = 0;i < all_peer_ids.size();i++){
+		net_proto_peer_t *proto_peer_ptr =
+			PTR_DATA(all_peer_ids[i],
+				 net_proto_peer_t);
+		CONTINUE_IF_NULL(proto_peer_ptr, P_WARN);
+		
 		id_tier_state_t *tier_state_ptr =
 			PTR_DATA(network_medium.init_state(),
 				 id_tier_state_t);
@@ -328,8 +359,14 @@ static void net_proto_loop_bind_peers(){
 			reinterpret_cast<id_tier_network_state_t*>(
 				tier_state_ptr->get_payload());
 		PRINT_IF_NULL(network_state_ptr, P_ERR);
-		network_state_ptr->set_address_id(
-			all_peer_ids[i]);
+		network_state_ptr->set_proto_peer_id(
+			proto_peer_ptr->id.get_id());
+
+		network_state_ptr->set_software_dev_id(
+			net_interface::bind::address_to_hardware(
+				proto_peer_ptr->get_address_id(),
+				hardware_dev_id));
+
 		// TODO: perhaps create optimized paths by creating whitelists of
 		// net_proto_peer_ts (they don't have the computing power to
 		// handle decryption, or don't bother since it is trusted and

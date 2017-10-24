@@ -96,6 +96,13 @@ INTERFACE_CALCULATE_MOST_EFFICIENT_TRANSFER(ip){
 
 #pragma message("no attempt at UDP support whatever right now")
 
+/*
+  Empty outbound_buffer first, then send the parameter information
+
+  TODO: should probably move to a buffer and loop system to fit in
+  with the rest of the program (TCP blocking send)
+ */
+
 INTERFACE_SEND(ip){
 	INTERFACE_SET_HW_PTR(hardware_dev_id);
 	INTERFACE_SET_SW_PTR(software_dev_id);
@@ -114,12 +121,33 @@ INTERFACE_SEND(ip){
 			software_dev_ptr->get_medium(),
 			software_dev_ptr->get_packet_modulation(),
 			software_dev_ptr->get_packet_encapsulation());
+
+	std::vector<std::vector<uint8_t> > outbound_data =
+		software_dev_ptr->get_outbound_data();
 	
-	std::vector<std::vector<uint8_t> > packetized =
-		medium_packet.packetize(
-			hardware_dev_id,
-			software_dev_id,
-			payload);
+	outbound_data.push_back(
+		*payload);
+	payload->clear();
+	std::vector<std::vector<uint8_t> > packetized;
+	for(uint64_t i = 0;i < outbound_data.size();i++){
+		const std::vector<std::vector<uint8_t> > packets =
+			medium_packet.packetize(
+				hardware_dev_id,
+				software_dev_id,
+				&(outbound_data[i]));
+		if(outbound_data[i].size() > 0){
+			// shouldn't trip
+			print("outbound_data[i].size() > 0, can't pakcetize all data", P_WARN);
+		}
+		packetized.insert(
+			packetized.end(),
+			packets.begin(),
+			packets.end());
+	}
+	software_dev_ptr->set_outbound_data(
+		outbound_data);
+	// TODO: should step through individually, check for errors, and
+	// actually preserve the state of the outbound_data buffer on error
 	for(uint64_t i = 0;i < packetized.size();i++){
 		switch(software_dev_ptr->get_packet_modulation()){
 		case NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP:
@@ -206,7 +234,7 @@ INTERFACE_RECV_ALL(ip){
 INTERFACE_ADD_ADDRESS_COST(ip){
 	INTERFACE_SET_HW_PTR(hardware_dev_id);
 	INTERFACE_SET_ADDR_PTR(address_id);
-	if(hardware_dev_ptr->get_max_soft_dev() < hardware_dev_ptr->get_size_soft_dev_list()){
+	if(hardware_dev_ptr->get_max_soft_dev() > hardware_dev_ptr->get_size_soft_dev_list()){
 		return NET_INTERFACE_HARDWARE_ADD_ADDRESS_FREE;
 	}else{
 		return NET_INTERFACE_HARDWARE_ADD_ADDRESS_DROP;
@@ -222,6 +250,7 @@ INTERFACE_ADD_ADDRESS(ip){
 		address_id);
 	software_dev_ptr->set_hardware_dev_id(
 		hardware_dev_id);
+	
 	hardware_dev_ptr->add_soft_dev_list(
 		software_dev_ptr->id.get_id());
 	net_interface_medium_ip_ptr_t *working_state =

@@ -32,16 +32,13 @@ id_t_ net_interface::bind::address_to_hardware(
 		P_V(cost_of_addition, P_NOTE);
 		print("address addition comes at a cost to the chosen hardware device, remove old connections first", P_ERR);
 	}
-	
-	net_interface_software_dev_t *software_dev_ptr =
-		new net_interface_software_dev_t;
-	software_dev_ptr->set_address_id(
-		address_id);
-	software_dev_ptr->set_hardware_dev_id(
-		hardware_dev_ptr->id.get_id());
-	hardware_dev_ptr->add_soft_dev_list(
-		software_dev_ptr->id.get_id());
-	return software_dev_ptr->id.get_id();
+
+	const id_t_ software_dev_id =
+		medium.add_address(hardware_dev_id, address_id);
+	if(software_dev_id == ID_BLANK_ID){
+		print("couldn't bind address to software device", P_ERR);
+	}
+	return software_dev_id;
 }
 
 void net_interface::unbind::software_to_hardware(

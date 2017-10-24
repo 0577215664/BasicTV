@@ -26,6 +26,8 @@
 #include "id/set/id_set.h"
 #include "id/id_api.h"
 
+#include "net/interface/net_interface.h"
+
 #include "test/test.h" // includes benchmarking code too
 #include "init.h"
 #include "loop.h"
@@ -82,6 +84,7 @@ int main(int argc_, char **argv_){
 			net_loop();
 			console_loop();
 			id_tier_loop();
+			net_interface_loop();
 		}catch(...){}
 
 		// main loop specific stuff

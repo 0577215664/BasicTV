@@ -17,7 +17,7 @@ net_interface_medium_t medium_array[NET_INTERFACE_MEDIUM_COUNT] =
 };
 
 net_interface_medium_t interface_medium_lookup(uint8_t medium){
-	ASSERT(medium == NET_INTERFACE_MEDIUM_UNDEFINED, P_ERR);
+	ASSERT(medium != NET_INTERFACE_MEDIUM_UNDEFINED, P_ERR);
 	return medium_array[medium-1];
 }
 
@@ -34,6 +34,7 @@ void net_interface_init(){
 }
 
 void net_interface_loop(){
+
 }
 
 void net_interface_close(){

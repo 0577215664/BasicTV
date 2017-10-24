@@ -108,11 +108,5 @@ std::vector<std::tuple<id_t_, id_t_, id_t_, uint8_t> > tier_move_logic(
 				first_state_ptr,
 				second_state_ptr);
 	}
-	if(retval.size() != 0){
-		print("computed " + std::to_string(retval.size()) + " shift operations", P_NOTE);
-		if(retval.size() == 3){
-			std::raise(SIGINT);
-		}
-	}
 	return retval;
 }

@@ -42,7 +42,7 @@ void net_interface_software_dev_t::set_intermediary_id(id_t_ intermediary_id_){
 void net_interface_software_dev_t::set_address_id(id_t_ address_id_){
 	INTERFACE_SET_ADDR_PTR(address_id_);
 	ASSERT(ip_address_ptr->get_required_intermediary() != NET_INTERFACE_INTERMEDIARY_UNDEFINED, P_ERR);
-	intermediary = NET_INTERFACE_INTERMEDIARY_UNDEFINED;
+	intermediary = ip_address_ptr->get_required_intermediary();
 	if(ip_address_ptr->get_required_intermediary() != NET_INTERFACE_INTERMEDIARY_NONE){
 		std::vector<id_t_> intermediary_vector =
 			ID_TIER_CACHE_GET(
@@ -69,5 +69,8 @@ void net_interface_software_dev_t::set_address_id(id_t_ address_id_){
 		P_V(ip_address_ptr->get_required_intermediary(), P_WARN);
 		print("attempted to connect to a client whose address requires an intermediary I don't have", P_ERR);
 	}
+	packet_modulation = ip_address_ptr->get_packet_modulation();
+	packet_encapsulation = ip_address_ptr->get_packet_encapsulation();
+	medium = ip_address_ptr->get_medium();
 	address_id = address_id_;
 }

@@ -37,7 +37,7 @@ public:
 
 struct id_tier_network_t{
 public:
-	id_t_ address_id = ID_BLANK_ID;
+	id_t_ proto_peer_id = ID_BLANK_ID;
 	id_t_ software_dev_id = ID_BLANK_ID;
 	
 	// request ID and response ID
@@ -54,7 +54,7 @@ public:
 	std::vector<id_tier_network_ledger_entry_t> inbound_ledger;
 
 
-	GET_SET_ID_S(address_id);
+	GET_SET_ID_S(proto_peer_id);
 	GET_SET_ID_S(software_dev_id);
 };
 
