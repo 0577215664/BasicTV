@@ -7,6 +7,8 @@
 #include "net_interface_medium.h"
 #include "net_interface_ip_address.h"
 
+#include "net_interface_api.h"
+
 #include "net_interface_helper.h"
 
 // state, so allocated in ADD_ADDRESS
@@ -255,12 +257,45 @@ INTERFACE_ADD_ADDRESS(ip){
 		software_dev_ptr->id.get_id());
 	net_interface_medium_ip_ptr_t *working_state =
 		new net_interface_medium_ip_ptr_t;
-	working_state->socket_set =
-		SDLNet_AllocSocketSet(1);
-	ASSERT(working_state->socket_set != nullptr, P_ERR);
-
+	switch(software_dev_ptr->get_packet_modulation()){
+	case NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP:
+		if(true){
+			IPaddress ipaddr;
+			const std::pair<std::vector<uint8_t>, uint8_t> address =
+				ip_address_ptr->get_address();
+			const uint16_t port =
+				ip_address_ptr->get_port();
+			
+			switch(address.second){
+			case NET_INTERFACE_IP_ADDRESS_TYPE_IPV4:
+				print("connecting to " + net_interface::ip::raw::to_readable(address), P_NOTE);
+				ASSERT(address.first.size() == 4, P_ERR);
+				ipaddr.host = NBO_32(*reinterpret_cast<const uint32_t*>(address.first.data()));
+				ipaddr.port = port;
+				break;
+			case NET_INTERFACE_IP_ADDRESS_TYPE_DOMAIN:
+				SDLNet_ResolveHost(&ipaddr, convert::string::from_bytes(address.first).data(), port);
+				break;
+			case NET_INTERFACE_IP_ADDRESS_TYPE_IPV6:
+				print("IPv6 is not supported yet", P_ERR);
+				break;
+			default:
+				print("undefined IP address type", P_ERR);
+			}
+			working_state->tcp_socket =
+				SDLNet_TCP_Open(&ipaddr);
+			if(working_state->tcp_socket == nullptr){
+				print("cannot connect to peer: " + SDL_GetError(), P_ERR);
+			}
+		}
+		break;
+	default:
+		print("undefined or unsupported modulation scheme", P_ERR);
+	}
+	
 	software_dev_ptr->set_state_ptr(
 		working_state);
+	std::raise(SIGINT);
 	return software_dev_ptr->id.get_id();
 }
 
@@ -273,7 +308,6 @@ INTERFACE_ACCEPT(ip){
 			software_dev_ptr->get_state_ptr());
 	PRINT_IF_NULL(working_state, P_ERR);
 	
-	id_t_ retval = ID_BLANK_ID;
 	TCPsocket new_socket = SDLNet_TCP_Accept(working_state->tcp_socket);
 	if(new_socket != nullptr){
 		net_interface_software_dev_t *software_dev_ptr =

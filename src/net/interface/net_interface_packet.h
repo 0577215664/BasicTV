@@ -50,6 +50,9 @@ public:
 		std::vector<std::vector<uint8_t> > *packet);
 
 	net_interface_medium_packet_t(
+		uint8_t medium_,
+		uint8_t packet_modulation_,
+		uint8_t packet_encapsulation_,
 		std::vector<std::vector<uint8_t> > (*packetize_)(
 			id_t_ hardware_dev_id,
 			id_t_ software_dev_id,
@@ -59,6 +62,10 @@ public:
 			id_t_ software_dev_id,
 			std::vector<std::vector<uint8_t> > *packet),
 		uint32_t mtu_){
+		medium = medium_;
+		packet_modulation = packet_modulation_;
+		packet_encapsulation = packet_encapsulation_;
+		
 		packetize = packetize_;
 		depacketize = depacketize_;
 		mtu = mtu_;

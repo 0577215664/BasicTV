@@ -339,6 +339,9 @@ static void net_proto_loop_bind_peers(){
 			ID_TIER_MEDIUM_NETWORK);
 	const id_t_ hardware_dev_id =
 		net_proto_loop_pull_hardware_id();
+	net_interface_hardware_dev_t *hardware_dev_ptr =
+		PTR_DATA(hardware_dev_id,
+			 net_interface_hardware_dev_t);
 	
 	for(uint64_t i = 0;i < all_peer_ids.size();i++){
 		net_proto_peer_t *proto_peer_ptr =
@@ -349,6 +352,7 @@ static void net_proto_loop_bind_peers(){
 		id_tier_state_t *tier_state_ptr =
 			PTR_DATA(network_medium.init_state(),
 				 id_tier_state_t);
+
 		tier_state_ptr->set_medium(
 			ID_TIER_MEDIUM_NETWORK);
 		tier_state_ptr->set_tier_major(
@@ -359,13 +363,18 @@ static void net_proto_loop_bind_peers(){
 			reinterpret_cast<id_tier_network_state_t*>(
 				tier_state_ptr->get_payload());
 		PRINT_IF_NULL(network_state_ptr, P_ERR);
+
 		network_state_ptr->set_proto_peer_id(
 			proto_peer_ptr->id.get_id());
-
+		net_interface_software_dev_t *software_dev_ptr =
+			PTR_DATA(net_interface::bind::address_to_hardware(
+					 proto_peer_ptr->get_address_id(),
+					 hardware_dev_id),
+				 net_interface_software_dev_t);
+		PRINT_IF_NULL(software_dev_ptr, P_ERR);
+		
 		network_state_ptr->set_software_dev_id(
-			net_interface::bind::address_to_hardware(
-				proto_peer_ptr->get_address_id(),
-				hardware_dev_id));
+			software_dev_ptr->id.get_id());
 
 		// TODO: perhaps create optimized paths by creating whitelists of
 		// net_proto_peer_ts (they don't have the computing power to

@@ -6,6 +6,9 @@
 net_interface_medium_packet_t medium_packet_array[NET_INTERFACE_MEDIUM_PACKET_COUNT] =
 {
 	net_interface_medium_packet_t(
+		NET_INTERFACE_MEDIUM_IP,
+		NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP,
+		NET_INTERFACE_MEDIUM_PACKET_ENCAPSULATION_TCP,
 		net_interface_ip_tcp_packetize,
 		net_interface_ip_tcp_depacketize,
 		~0) // MTU here means we don't need to set a max size per vector
@@ -38,5 +41,5 @@ net_interface_medium_packet_t medium_packet_lookup(
 	}
 	print("no valid packet function set found", P_ERR);
 	return net_interface_medium_packet_t(
-		nullptr, nullptr, 0);
+		0, 0, 0, nullptr, nullptr, 0);
 }
