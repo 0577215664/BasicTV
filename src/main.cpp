@@ -84,7 +84,6 @@ int main(int argc_, char **argv_){
 			net_loop();
 			console_loop();
 			id_tier_loop();
-			net_interface_loop();
 		}catch(...){}
 
 		// main loop specific stuff

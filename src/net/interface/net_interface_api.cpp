@@ -14,7 +14,9 @@
 
 id_t_ net_interface::bind::address_to_hardware(
 	id_t_ address_id,
-	id_t_ hardware_dev_id){
+	id_t_ hardware_dev_id,
+	uint8_t inbound_transport_rules,
+	uint8_t outbound_transport_rules){
 
 	net_interface_hardware_dev_t *hardware_dev_ptr =
 		PTR_DATA(hardware_dev_id,
@@ -34,7 +36,11 @@ id_t_ net_interface::bind::address_to_hardware(
 	}
 
 	const id_t_ software_dev_id =
-		medium.add_address(hardware_dev_id, address_id);
+		medium.add_address(
+			hardware_dev_id,
+			address_id,
+			inbound_transport_rules,
+			outbound_transport_rules);
 	if(software_dev_id == ID_BLANK_ID){
 		print("couldn't bind address to software device", P_ERR);
 	}

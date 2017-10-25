@@ -26,6 +26,11 @@ private:
 	// intermediary uint8_t is set on changes to intermediary_id
 	id_t_ intermediary_id = ID_BLANK_ID;
 	uint8_t intermediary = 0;
+
+	// For IP addresses, no outbound data creates a server socket
+	// Doesn't have to match hardware, but cannot be more lenient
+	uint8_t inbound_transport_type = 0;
+	uint8_t outbound_transport_type = 0;
 public:
 	data_id_t id;
 	net_interface_software_dev_t();
@@ -55,6 +60,9 @@ public:
 	ADD_DEL_VECTOR(inbound_data, std::vector<uint8_t>);
 	GET_SET(outbound_data, std::vector<std::vector<uint8_t> >);
 	ADD_DEL_VECTOR(outbound_data, std::vector<uint8_t>);
+
+	GET_SET(inbound_transport_type, uint8_t);
+	GET_SET(outbound_transport_type, uint8_t);
 };
 
 #endif

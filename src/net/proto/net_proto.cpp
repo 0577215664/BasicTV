@@ -25,6 +25,24 @@
   they are reset).
  */
 
+// bind all network peers to a ID network tier state
+// request the 
+
+static id_t_ net_proto_loop_pull_hardware_id(){
+	const std::vector<id_t_> hardware_ids =
+		ID_TIER_CACHE_GET(
+			TYPE_NET_INTERFACE_HARDWARE_DEV_T);
+	for(uint64_t i = 0;i < hardware_ids.size();i++){
+		net_interface_hardware_dev_t *hardware_dev_ptr =
+			PTR_DATA(hardware_ids[i],
+				 net_interface_hardware_dev_t);
+		CONTINUE_IF_NULL(hardware_dev_ptr, P_WARN);
+		return hardware_ids[i];
+	}
+	print("no valid hardware device to bind to, can't actually network", P_ERR);
+	return ID_BLANK_ID;
+}
+
 static id_t_ net_proto_init_new_peer(){
 	const uint16_t tmp_port =
 		settings::get_setting_unsigned_def(
@@ -248,10 +266,31 @@ static void net_proto_init_proxy(){
 	}
 }
 
+static void net_proto_init_server_socket(){
+	net_interface_ip_address_t *ip_address_ptr =
+		new net_interface_ip_address_t;
+	ip_address_ptr->set_address_data(
+		"",
+		58486,
+		NET_INTERFACE_IP_ADDRESS_NAT_TYPE_FULL_CONE); // NAT type isn't used
+	ip_address_ptr->set_required_intermediary(
+		NET_INTERFACE_INTERMEDIARY_NONE);
+	const id_t_ software_dev_id =
+		net_interface::bind::address_to_hardware(
+			ip_address_ptr->id.get_id(),
+			net_proto_loop_pull_hardware_id(),
+			NET_INTERFACE_TRANSPORT_ENABLED | NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS,
+			NET_INTERFACE_TRANSPORT_DISABLED);
+		
+	ASSERT(software_dev_id != ID_BLANK_ID, P_ERR);
+	std::raise(SIGINT);
+}
+
 void net_proto_init(){
 	net_proto_init_self_peer();	
 	net_proto_init_proxy();
 	net_proto_verify_bootstrap_nodes();
+	net_proto_init_server_socket();
 }
 
 void net_proto_close(){
@@ -295,24 +334,6 @@ static std::vector<id_t_> net_proto_loop_peers_from_tiers(){
   TODO: define the network protocol used as a tier state (this is gonna get
   really interesting)
  */
-
-// bind all network peers to a ID network tier state
-// request the 
-
-static id_t_ net_proto_loop_pull_hardware_id(){
-	const std::vector<id_t_> hardware_ids =
-		ID_TIER_CACHE_GET(
-			TYPE_NET_INTERFACE_HARDWARE_DEV_T);
-	for(uint64_t i = 0;i < hardware_ids.size();i++){
-		net_interface_hardware_dev_t *hardware_dev_ptr =
-			PTR_DATA(hardware_ids[i],
-				 net_interface_hardware_dev_t);
-		CONTINUE_IF_NULL(hardware_dev_ptr, P_WARN);
-		return hardware_ids[i];
-	}
-	print("no valid hardware device to bind to, can't actually network", P_ERR);
-	return ID_BLANK_ID;
-}
 
 static void net_proto_loop_bind_peers(){
 	std::vector<id_t_> old_peer_ids =
@@ -369,7 +390,9 @@ static void net_proto_loop_bind_peers(){
 		net_interface_software_dev_t *software_dev_ptr =
 			PTR_DATA(net_interface::bind::address_to_hardware(
 					 proto_peer_ptr->get_address_id(),
-					 hardware_dev_id),
+					 hardware_dev_id,
+					 NET_INTERFACE_TRANSPORT_ENABLED | NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS,
+					 NET_INTERFACE_TRANSPORT_ENABLED | NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS),
 				 net_interface_software_dev_t);
 		PRINT_IF_NULL(software_dev_ptr, P_ERR);
 		

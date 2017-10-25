@@ -6,6 +6,7 @@
 #include "net_interface_medium.h"
 #include "net_interface_packet.h"
 
+#include "net_interface.h"
 #define NET_INTERFACE_HARDWARE_ADD_ADDRESS_UNDEFINED 0
 /*
   If we add an address to a hardware device, there is no cost associated with
@@ -17,11 +18,6 @@
   need to be dropped for it to work
 */
 #define NET_INTERFACE_HARDWARE_ADD_ADDRESS_DROP 2
-
-#define NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS (1 << 0)
-#define NET_INTERFACE_TRANSPORT_FLAG_LOSSY (1 << 1)
-#define NET_INTERFACE_TRANSPORT_FLAG_GUARANTEED (1 << 3)
-
 
 struct net_interface_hardware_dev_t{
 private:

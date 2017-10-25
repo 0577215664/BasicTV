@@ -205,6 +205,5 @@ void init(){
 	input_init();
 	net_init();
 	console_init();
-	net_interface_init();
 }
 

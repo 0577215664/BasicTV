@@ -243,20 +243,11 @@ INTERFACE_ADD_ADDRESS_COST(ip){
 	}
 }
 
-INTERFACE_ADD_ADDRESS(ip){
-	INTERFACE_SET_HW_PTR(hardware_dev_id);
-	INTERFACE_SET_ADDR_PTR(address_id);
-	net_interface_software_dev_t *software_dev_ptr =
-		new net_interface_software_dev_t;
-	software_dev_ptr->set_address_id(
-		address_id);
-	software_dev_ptr->set_hardware_dev_id(
-		hardware_dev_id);
-	
-	hardware_dev_ptr->add_soft_dev_list(
-		software_dev_ptr->id.get_id());
-	net_interface_medium_ip_ptr_t *working_state =
-		new net_interface_medium_ip_ptr_t;
+static void create_client_socket(
+	net_interface_hardware_dev_t *hardware_dev_ptr,
+	net_interface_ip_address_t *ip_address_ptr,
+	net_interface_software_dev_t *software_dev_ptr,
+	net_interface_medium_ip_ptr_t *working_state){
 	switch(software_dev_ptr->get_packet_modulation()){
 	case NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP:
 		if(true){
@@ -292,7 +283,54 @@ INTERFACE_ADD_ADDRESS(ip){
 	default:
 		print("undefined or unsupported modulation scheme", P_ERR);
 	}
+}
+
+static void create_server_socket(
+	net_interface_hardware_dev_t *hardware_dev_ptr,
+	net_interface_ip_address_t *ip_address_ptr,
+	net_interface_software_dev_t *software_dev_ptr,
+	net_interface_medium_ip_ptr_t *working_state){
+}
+
+INTERFACE_ADD_ADDRESS(ip){
+	INTERFACE_SET_HW_PTR(hardware_dev_id);
+	INTERFACE_SET_ADDR_PTR(address_id);
+	net_interface_software_dev_t *software_dev_ptr =
+		new net_interface_software_dev_t;
+	software_dev_ptr->set_address_id(
+		address_id);
+	software_dev_ptr->set_hardware_dev_id(
+		hardware_dev_id);
+	software_dev_ptr->set_inbound_transport_type(
+		inbound_transport_rules);
+	software_dev_ptr->set_outbound_transport_type(
+		outbound_transport_rules);
 	
+	hardware_dev_ptr->add_soft_dev_list(
+		software_dev_ptr->id.get_id());
+
+	net_interface_medium_ip_ptr_t *working_state =
+		new net_interface_medium_ip_ptr_t;
+	const bool inbound_enabled =
+		(software_dev_ptr->get_inbound_transport_type() & 0x01) == NET_INTERFACE_TRANSPORT_ENABLED;
+	const bool outbound_enabled =
+		(software_dev_ptr->get_outbound_transport_type() & 0x01) == NET_INTERFACE_TRANSPORT_ENABLED;
+	if(inbound_enabled == true && outbound_enabled == true){
+		create_client_socket(
+			hardware_dev_ptr,
+			ip_address_ptr,
+			software_dev_ptr,
+			working_state);
+	}else if(inbound_enabled == true && outbound_enabled == false){
+		create_server_socket(
+			hardware_dev_ptr,
+			ip_address_ptr,
+			software_dev_ptr,
+			working_state);
+	}else{
+		// only using vanilla IP, so this is pretty weird
+		print("this configuration for IP transports makes no sense", P_ERR);
+	}
 	software_dev_ptr->set_state_ptr(
 		working_state);
 	std::raise(SIGINT);
