@@ -271,7 +271,8 @@ static void net_proto_init_server_socket(){
 		new net_interface_ip_address_t;
 	ip_address_ptr->set_address_data(
 		"",
-		58486,
+		settings::get_setting_unsigned_def(
+			"net_interface_ip_tcp_port", 58486),
 		NET_INTERFACE_IP_ADDRESS_NAT_TYPE_FULL_CONE); // NAT type isn't used
 	ip_address_ptr->set_required_intermediary(
 		NET_INTERFACE_INTERMEDIARY_NONE);
@@ -283,7 +284,6 @@ static void net_proto_init_server_socket(){
 			NET_INTERFACE_TRANSPORT_DISABLED);
 		
 	ASSERT(software_dev_id != ID_BLANK_ID, P_ERR);
-	std::raise(SIGINT);
 }
 
 void net_proto_init(){

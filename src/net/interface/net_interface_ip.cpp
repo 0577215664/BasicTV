@@ -262,7 +262,7 @@ static void create_client_socket(
 				print("connecting to " + net_interface::ip::raw::to_readable(address), P_NOTE);
 				ASSERT(address.first.size() == 4, P_ERR);
 				ipaddr.host = NBO_32(*reinterpret_cast<const uint32_t*>(address.first.data()));
-				ipaddr.port = port;
+				ipaddr.port = NBO_16(port);
 				break;
 			case NET_INTERFACE_IP_ADDRESS_TYPE_DOMAIN:
 				SDLNet_ResolveHost(&ipaddr, convert::string::from_bytes(address.first).data(), port);
@@ -290,22 +290,36 @@ static void create_server_socket(
 	net_interface_ip_address_t *ip_address_ptr,
 	net_interface_software_dev_t *software_dev_ptr,
 	net_interface_medium_ip_ptr_t *working_state){
+	IPaddress ipaddr;
+	if(SDLNet_ResolveHost(&ipaddr, nullptr, ip_address_ptr->get_port()) == -1){
+		print("couldn't resolve host: " + SDL_GetError(), P_ERR);
+	}
+	if((working_state->tcp_socket = SDLNet_TCP_Open(&ipaddr)) == nullptr){
+		print("couldn't open server socket: " + SDL_GetError(), P_ERR);
+	}
 }
 
 INTERFACE_ADD_ADDRESS(ip){
 	INTERFACE_SET_HW_PTR(hardware_dev_id);
 	INTERFACE_SET_ADDR_PTR(address_id);
+	
 	net_interface_software_dev_t *software_dev_ptr =
 		new net_interface_software_dev_t;
 	software_dev_ptr->set_address_id(
 		address_id);
 	software_dev_ptr->set_hardware_dev_id(
 		hardware_dev_id);
+	software_dev_ptr->set_packet_modulation(
+		NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP);
+	software_dev_ptr->set_packet_encapsulation(
+		NET_INTERFACE_MEDIUM_PACKET_ENCAPSULATION_TCP);
+	
 	software_dev_ptr->set_inbound_transport_type(
 		inbound_transport_rules);
 	software_dev_ptr->set_outbound_transport_type(
 		outbound_transport_rules);
-	
+	software_dev_ptr->set_medium(
+		NET_INTERFACE_MEDIUM_IP);
 	hardware_dev_ptr->add_soft_dev_list(
 		software_dev_ptr->id.get_id());
 
@@ -331,9 +345,9 @@ INTERFACE_ADD_ADDRESS(ip){
 		// only using vanilla IP, so this is pretty weird
 		print("this configuration for IP transports makes no sense", P_ERR);
 	}
+	ASSERT(working_state->tcp_socket != nullptr, P_ERR);
 	software_dev_ptr->set_state_ptr(
 		working_state);
-	std::raise(SIGINT);
 	return software_dev_ptr->id.get_id();
 }
 
@@ -341,22 +355,38 @@ INTERFACE_ACCEPT(ip){
 	INTERFACE_SET_HW_PTR(hardware_dev_id);
 	INTERFACE_SET_SW_PTR(software_dev_id);
 
+	if((software_dev_ptr->get_outbound_transport_type() & 0x01) == NET_INTERFACE_TRANSPORT_ENABLED){
+		return ID_BLANK_ID;
+	}
+	
 	net_interface_medium_ip_ptr_t *working_state =
 		reinterpret_cast<net_interface_medium_ip_ptr_t*>(
 			software_dev_ptr->get_state_ptr());
 	PRINT_IF_NULL(working_state, P_ERR);
-	
+
 	TCPsocket new_socket = SDLNet_TCP_Accept(working_state->tcp_socket);
 	if(new_socket != nullptr){
-		net_interface_software_dev_t *software_dev_ptr =
+		net_interface_software_dev_t *new_software_dev_ptr =
 			new net_interface_software_dev_t;
 		net_interface_medium_ip_ptr_t *working_state_new =
 			new net_interface_medium_ip_ptr_t;
 		working_state_new->tcp_socket = new_socket;
 		working_state_new->socket_set = SDLNet_AllocSocketSet(1);
-		software_dev_ptr->set_state_ptr(working_state_new);
-		print("send packet metadata over socket to ensure we have the proper addressing information", P_CRIT);
-		return software_dev_ptr->id.get_id();
+
+		new_software_dev_ptr->set_hardware_dev_id(
+			hardware_dev_id);
+		new_software_dev_ptr->set_inbound_transport_type(
+			NET_INTERFACE_TRANSPORT_ENABLED | NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS);
+		new_software_dev_ptr->set_outbound_transport_type(
+			NET_INTERFACE_TRANSPORT_ENABLED | NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS);
+		new_software_dev_ptr->set_medium(
+			NET_INTERFACE_MEDIUM_IP);
+
+		hardware_dev_ptr->add_soft_dev_list(
+			new_software_dev_ptr->id.get_id());
+		
+		new_software_dev_ptr->set_state_ptr(working_state_new);
+		return new_software_dev_ptr->id.get_id();
 	}
 	return ID_BLANK_ID;
 }

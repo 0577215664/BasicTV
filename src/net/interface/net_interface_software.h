@@ -4,8 +4,19 @@
 #include "net_interface_medium.h"
 #include "net_interface_packet.h"
 
+#include "mutex"
+#include "thread"
+
 struct net_interface_software_dev_t{
 private:
+	std::vector<uint8_t> raw_inbound_buffer;
+	std::mutex raw_inbound_mutex;
+	std::thread raw_inbound_thread;
+	
+	std::vector<uint8_t> raw_outbound_buffer;
+	std::mutex raw_outbound_mutex;
+	std::thread raw_outbound_thread;
+	
 	std::vector<std::vector<uint8_t> > inbound_data;
 	uint64_t last_good_inbound_micro_s = 0;
 	std::vector<std::vector<uint8_t> > outbound_data;
@@ -45,14 +56,14 @@ public:
 
 	void set_address_id(id_t_ address_id_);
 	GET_ID(address_id);
-	GET(packet_modulation, uint8_t);
-	GET(packet_encapsulation, uint8_t);
+	GET_SET(packet_modulation, uint8_t);
+	GET_SET(packet_encapsulation, uint8_t);
 
 	void set_intermediary_id(id_t_ intermediary_id_);
 	GET_ID(intermediary_id);
 	GET(intermediary, uint8_t);
 
-	GET(medium, uint8_t);
+	GET_SET(medium, uint8_t);
 	
 	GET_ID(reliability_number_set_id);
 

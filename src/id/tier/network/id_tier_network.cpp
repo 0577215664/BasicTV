@@ -1,7 +1,6 @@
 #include "id_tier_network.h"
 #include "id_tier_network_meta.h"
 #include "id_tier_network_cache.h"
-#include "id_tier_network_request.h"
 #include "../id_tier.h"
 #include "../../id_transport.h"
 #include "../../id.h"
@@ -15,23 +14,12 @@
 #include "../../../settings.h"
 
 /*
-  All peer to peer ID networking is defined in ID tiers, each instance
-  of the network tier is one peer on the network. Peers with identical
-  sets of information they have (and similar results in producing) are
-  associated with each other. 
-
-  ID tier states for networking can't be networked themselves (interferes
-  with pointer system with the abstract interface). ID tier states are
-  created from net_proto_peer_t information automatically, and flags in
-  the payload data are sent out for any direct peer to peer queries
-  (directory of data to populate the cache automatically).
-
-  There is only one address bound to an ID tier, to help prevent
-  discrepencies with certain addresses not responding with the same
-  data.
-
-  TODO: allow for exportind id_tier_state_t to disk, so we can have a 
-  peer indexes survive reboots.
+  Net interface API allows defining arbitrary length datagrams, so
+  that makes the interface pretty darn nice here
+  First byte is an ID:
+  REQUEST: compact ID set of all IDs to request
+  DATA: response to a request, doesn't need to be tied
+  META: metadata associated with other client
 */
 
 #define TIER_GET_STATE_PTR()				\
@@ -121,8 +109,8 @@ ID_TIER_ADD_DATA(network){
 	TIER_GET_NETWORK_SOFTDEV_PTR();
 	data.insert(
 		data.begin(),
-		ID_TIER_NETWORK_TYPE_ID);
-	print("adding " + id_breakdown(id_api::raw::fetch_id(data)) + " to network queue", P_NOTE);
+		ID_TIER_NETWORK_TYPE_DATA);
+	print("adding " + id_breakdown(id_api::raw::fetch_id(data)) + " to data network queue", P_NOTE);
 	software_dev_ptr->add_outbound_data(
 		data);
 }
@@ -135,147 +123,38 @@ ID_TIER_DEL_ID(network){
   GET_HINT_ID makes a request in the outbound ledger, sends the data out,
   and records the response ID when it comes back (response ID would refer to
   the request ID)
+
+  TODO: care about endian later
  */
 
 ID_TIER_GET_HINT_ID(network){
 	TIER_GET_STATE_PTR();
 	TIER_GET_NETWORK_PTR();
-
-	id_tier_network_ledger_entry_t outbound_entry;
-	id_tier_network_simple_request_t *simple_request_ptr =
-		new id_tier_network_simple_request_t;
-	simple_request_ptr->set_ids(
-		std::vector<id_t_>({id})); // TODO: scale up beyond one ID per request
-	id_tier_network_add_data(
-		state_id,
-		simple_request_ptr->id.export_data(
-			ID_EXTRA_ENCRYPT & ID_EXTRA_COMPRESS));
-	outbound_entry.simple_request_id =
-		simple_request_ptr->id.get_id();
-	outbound_entry.request_time_micro_s =
-		get_time_microseconds();
-	network_state_ptr->outbound_ledger.push_back(
-		outbound_entry);
-}
-
-static std::vector<uint8_t> id_tier_network_write_interface_packet(
-	std::vector<std::vector<uint8_t> > data){
-	id_tier_network_meta_t meta;
-	meta.peer_id = net_proto::peer::get_self_as_peer();
-	meta.ver_major = VERSION_MAJOR;
-	meta.ver_minor = VERSION_MINOR;
-	meta.ver_patch = VERSION_REVISION;
-	meta.macros = 0;
-	meta.unused = 0;
-	std::vector<uint8_t> retval =
- 		id_tier_network_meta_write(
-			meta);
-	for(uint64_t i = 0;i < data.size();i++){
-		export_dynamic_size_payload(
-			&retval,
-			data[i]);
-	}
-	return retval;
-}
-/*
-  The transmission order doesn't actually matter, because the network
-  interface only ensures that data arrives in order inside of a packet
-  returned (an element in the inbound_buffer vector).
-
-  The actual transmission format is something like this:
-  1. The first ID_TIER_NETWORK_META_SIZE bytes are the network metadata.
-  The metadata itself uses a custom exporter so it can easily be
-  interpreted by future versions, so the size is static (as all elements
-  are as well).
-
-  2. The rest of the packet is just an escaped list of ID data that we
-  read in. 
-
-  If this is a id_tier_request_t, then we catalog it inside
-  the outbound ledger as a request, and let another part of the code
-  deal with crafting a response and responding (and cataloging it as
-  well).
-*/
-
-// returns what should be sent back to the peer
-static std::vector<std::vector<uint8_t> > id_tier_network_read_interface_packet_macros(
-	uint8_t macros){
-	std::vector<std::vector<uint8_t> > retval;
-	if(macros & ID_TIER_NETWORK_META_SEND_CACHE){
-		retval.push_back(
-			id_tier_network_cache_create_serialize());
-	}
-	return retval;
-}
-
-static std::vector<std::vector<uint8_t> > id_tier_network_read_interface_packet(
-	std::vector<uint8_t> packet){
-	std::vector<std::vector<uint8_t> > retval;
-	id_tier_network_meta_t meta;
-	id_tier_network_meta_read(
-		std::vector<uint8_t>(
-			packet.begin(),
-			packet.begin()+ID_TIER_NETWORK_META_SIZE),
-		&meta);
-	packet.erase(
-		packet.begin(),
-		packet.begin()+ID_TIER_NETWORK_META_SIZE);
-	while(packet.size() > 0){
-		const std::vector<uint8_t> tmp =
-			import_dynamic_size_payload(
-				&packet);
-		if(tmp.size() != 0){
-			retval.push_back(
-				tmp);
-		}
-	}
-	return retval;
+	TIER_GET_NETWORK_SOFTDEV_PTR();
+	std::vector<uint8_t> data;
+	data.insert(
+		data.begin(),
+		ID_TIER_NETWORK_TYPE_REQUEST);
+	data.insert(
+		data.begin(),
+		reinterpret_cast<uint8_t*>(&(id[0])),
+		reinterpret_cast<uint8_t*>(&(id[0]))+sizeof(id_t_));
+	print("adding " + id_breakdown(id) + " to request network queue", P_NOTE);
+	software_dev_ptr->add_outbound_data(
+		data);
 }
 
 ID_TIER_GET_ID(network){
-	print("requesting " + id_breakdown(id) + " from network tier", P_NOTE);
-	id_tier_state_t *tier_state_ptr =
-		PTR_DATA(state_id,
-			 id_tier_state_t);
-	PRINT_IF_NULL(tier_state_ptr, P_ERR);
-	id_tier_network_t *network_state_ptr =
-		reinterpret_cast<id_tier_network_t*>(
-			tier_state_ptr->get_payload());
-	PRINT_IF_NULL(network_state_ptr, P_ERR);
-
-	net_proto_peer_t *proto_peer_ptr =
-		PTR_DATA(network_state_ptr->get_proto_peer_id(),
-			 net_proto_peer_t);
-	PRINT_IF_NULL(proto_peer_ptr, P_ERR);
-	
-	net_interface_address_t *address_ptr =
-		PTR_DATA(proto_peer_ptr->get_address_id(),
-			 net_interface_address_t);
-	PRINT_IF_NULL(address_ptr, P_ERR);
-	net_interface_software_dev_t *software_dev_ptr =
-		PTR_DATA(network_state_ptr->software_dev_id,
-			 net_interface_software_dev_t);
-	PRINT_IF_NULL(software_dev_ptr, P_ERR);
-	
-	const std::vector<std::vector<uint8_t> > *inbound_buffer =
-		software_dev_ptr->get_const_ptr_inbound_data();
-	for(uint64_t i = 0;i < inbound_buffer->size();i++){
-		id_tier_network_read_interface_packet(
-			(*inbound_buffer)[i]);
-	}
-	for(uint64_t i = 0;i < network_state_ptr->outbound_ledger.size();i++){
-		id_tier_network_simple_response_t *simple_response_ptr =
-			PTR_DATA(network_state_ptr->outbound_ledger[i].simple_response_id,
-				 id_tier_network_simple_response_t);
-		CONTINUE_IF_NULL(simple_response_ptr, P_NOTE);
-		const std::vector<std::vector<uint8_t> > *payload_ptr =
-			simple_response_ptr->get_const_ptr_payload();
-		for(uint64_t c = 0;c < payload_ptr->size();c++){
-			if(id_api::raw::fetch_id((*payload_ptr)[c]) == id){
-				return (*payload_ptr)[c];
-			}
+	TIER_GET_STATE_PTR();
+	TIER_GET_NETWORK_PTR();
+	TIER_GET_NETWORK_SOFTDEV_PTR();
+	for(uint64_t i = 0;i < network_state_ptr->inbound_buffer.size();i++){
+		if(id_api::raw::fetch_id(network_state_ptr->inbound_buffer[i]) == id){
+			return network_state_ptr->inbound_buffer[i];
 		}
 	}
+	id_tier_network_get_hint_id(
+		state_id, id);
 	return std::vector<uint8_t>({});
 }
 
@@ -288,7 +167,8 @@ ID_TIER_UPDATE_CACHE(network){
 	try{
 		id_tier_network_meta_t meta =
 			id_tier_network_meta_gen_standard();
-		meta.macros |= ID_TIER_NETWORK_META_SEND_CACHE;
+		// TODO: fix this
+		meta.macros |= ID_TIER_NETWORK_META_SEND_CACHE_FULL;
 		const net_interface_medium_t medium =
 			interface_medium_lookup(
 				net_interface::medium::from_address(
@@ -303,11 +183,77 @@ ID_TIER_UPDATE_CACHE(network){
 	}catch(...){}
 }
 
+static void id_tier_network_fill_request(
+	id_t_ tier_id,
+	std::vector<uint8_t> id_set){
+	std::vector<id_t_> id_vector =
+		expand_id_set(
+			id_set);
+	std::vector<id_t_> tier_list =
+		id_tier::state_tier::optimal_state_vector_of_tier_vector(
+			all_tiers);
+	for(uint64_t i = 0;i < tier_list.size() && id_vector.size() > 0;i++){
+		id_tier::operation::shift_data_to_state(
+			tier_list[i],
+			tier_id,
+			&id_vector);
+	}
+	// TODO: craft a response for when we don't have an ID
+}
+
+static void id_tier_network_network_to_tier(
+	id_tier_state_t *tier_state_ptr,
+	id_tier_network_state_t *network_state_ptr,
+	net_interface_software_dev_t *software_dev_ptr){
+
+	std::vector<std::vector<uint8_t> > net_inbound_buffer =
+		software_dev_ptr->get_inbound_data();
+	for(uint64_t i = 0;i < net_inbound_buffer.size();i++){
+		const uint8_t type =
+			net_inbound_buffer[i][0];
+		net_inbound_buffer[i].erase(
+			net_inbound_buffer[i].begin());
+		switch(net_inbound_buffer[i][0]){
+		case ID_TIER_NETWORK_TYPE_META:
+			// update our version of the metadata
+			// TODO: possible DoS vector, punish redundancy
+			id_tier_network_meta_read(
+				net_inbound_buffer[i],
+				&(network_state_ptr->meta));
+			break;
+		case ID_TIER_NETWORK_TYPE_DATA:
+			network_state_ptr->inbound_buffer.push_back(
+				net_inbound_buffer[i]);
+			break;
+		case ID_TIER_NETWORK_TYPE_REQUEST:
+			id_tier_network_fill_request(
+				tier_state_ptr->id.get_id(),
+				net_inbound_buffer[i]);
+			break;
+		default:
+			print("invalid type for protocol datagram", P_WARN);
+		}
+	}
+	ASSERT(!((network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_DIFF) &&
+		 (network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_FULL)), P_WARN);
+	
+	if(network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_DIFF){
+		
+	}
+	if(network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_FULL){
+		
+	}
+	software_dev_ptr->set_inbound_data(std::vector<std::vector<uint8_t> >({}));
+}
+
 ID_TIER_LOOP(network){
-	id_tier_state_t *tier_state_ptr =
-		PTR_DATA(state_id,
-			 id_tier_state_t);
-	PRINT_IF_NULL(tier_state_ptr, P_ERR);
+	TIER_GET_STATE_PTR();
+	TIER_GET_NETWORK_PTR();
+	TIER_GET_NETWORK_SOFTDEV_PTR();
+	id_tier_network_network_to_tier(
+		tier_state_ptr,
+		network_state_ptr,
+		software_dev_ptr);
 	ID_TIER_LOOP_STANDARD(
 		id_tier_network_add_data,
 		id_tier_network_get_id);

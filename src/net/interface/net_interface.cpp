@@ -39,7 +39,6 @@ void net_interface_init(){
 	net_interface_create_hardware_dev();
 }
 
-
 void net_interface_loop(){
 	std::vector<id_t_> software_dev_list =
 		ID_TIER_CACHE_GET(
