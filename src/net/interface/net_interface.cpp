@@ -15,7 +15,8 @@ net_interface_medium_t medium_array[NET_INTERFACE_MEDIUM_COUNT] =
 		net_interface_ip_calculate_most_efficient_transfer,
 		net_interface_ip_send,
 		net_interface_ip_recv_all,
-		net_interface_ip_accept)
+		net_interface_ip_accept,
+		net_interface_ip_drop)
 };
 
 net_interface_medium_t interface_medium_lookup(uint8_t medium){
@@ -40,22 +41,8 @@ void net_interface_init(){
 }
 
 void net_interface_loop(){
-	std::vector<id_t_> software_dev_list =
-		ID_TIER_CACHE_GET(
-			TYPE_NET_INTERFACE_SOFTWARE_DEV_T);
-	for(uint64_t i = 0;i < software_dev_list.size();i++){
-		net_interface_software_dev_t *software_dev_ptr =
-			PTR_DATA(software_dev_list[i],
-				 net_interface_software_dev_t);
-		CONTINUE_IF_NULL(software_dev_ptr, P_WARN);
-		net_interface_medium_t medium =
-			interface_medium_lookup(
-				software_dev_ptr->get_medium());
-		// what exactly should we do with new sockets, let them be?
-		medium.accept(
-			software_dev_ptr->get_hardware_dev_id(),
-			software_dev_ptr->id.get_id());
-	}
+	// accepting is done in net_proto for simplicity
+	
 }
 
 void net_interface_close(){

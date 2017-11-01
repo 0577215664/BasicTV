@@ -6,18 +6,15 @@
 #include "net_interface_intermediary.h"
 #include "net_interface_medium.h"
 #include "net_interface_ip_address.h"
-
 #include "net_interface_api.h"
-
 #include "net_interface_helper.h"
+#include "net_interface_ip_thread.h"
 
 // state, so allocated in ADD_ADDRESS
-struct net_interface_medium_ip_ptr_t{
-public:
-	TCPsocket tcp_socket = nullptr;
-	SDLNet_SocketSet socket_set = nullptr;
-};
 
+/*
+  TODO: only works with TCP (but doesn't everything?)
+*/
 
 static void hardware_software_address_sanity_check(
 	net_interface_hardware_dev_t *hardware_dev_ptr,
@@ -146,75 +143,42 @@ INTERFACE_SEND(ip){
 			packets.begin(),
 			packets.end());
 	}
-	software_dev_ptr->set_outbound_data(
-		outbound_data);
-	// TODO: should step through individually, check for errors, and
-	// actually preserve the state of the outbound_data buffer on error
-	for(uint64_t i = 0;i < packetized.size();i++){
-		switch(software_dev_ptr->get_packet_modulation()){
-		case NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP:
-			sent_bytes =
-				SDLNet_TCP_Send(
-					working_state->tcp_socket,
-					packetized[i].data(),
-					packetized[i].size());
-			if(sent_bytes == -1){
-				print("TCP send didn't work", P_WARN);
-				sent_bytes = 0;
-			}else if(sent_bytes < (int64_t)packetized[i].size()){
-				print("not all TCP data was sent", P_WARN);
-			}
-			break;
-		case NET_INTERFACE_MEDIUM_PACKET_MODULATION_UDP:
-			print("udp isn't implemented yet", P_CRIT);
-			break;
-		default:
-			print("unsupported encapsulation scheme for ip", P_ERR);
-		}
-		packetized[i].erase(
-			packetized[i].begin(),
-			packetized[i].begin()+sent_bytes);
-		if(packetized[i].size() == 0){
-			packetized.erase(
-				packetized.begin()+i);
-			i--;
-		}
+	// software_dev_ptr->set_outbound_data(
+	// 	outbound_data);
+	working_state->send_mutex.lock();
+	try{
+		working_state->send_buffer.insert(
+			working_state->send_buffer.end(),
+			packetized.begin(),
+			packetized.end());
+	}catch(...){
+		print("can't add to send buffer in main thread", P_ERR);
 	}
+	working_state->send_mutex.unlock();
 }
 
 INTERFACE_RECV_ALL(ip){
 	INTERFACE_SET_HW_PTR(hardware_dev_id);
 	INTERFACE_SET_SW_PTR(software_dev_id);
 	std::vector<uint8_t> retval;
-	char buffer[65536];
-	int32_t recv_bytes = -1;
-	while(recv_bytes != 0){
-		recv_bytes = 0;
-		switch(software_dev_ptr->get_packet_modulation()){
-		case NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP:
-			recv_bytes =
-				SDLNet_TCP_Recv(
-					(TCPsocket)software_dev_ptr->get_state_ptr(),
-					&(buffer[0]),
-					65536);
-			if(recv_bytes <= 0){
-				print("TCP recv didn't work", P_WARN);
-				recv_bytes = 0;
-			}
-			break;
-		case NET_INTERFACE_MEDIUM_PACKET_MODULATION_UDP:
-			print("udp isn't implemented yet", P_CRIT);
-			break;
-		default:
-			print("unsupported encapsulation scheme for ip", P_ERR);
-		}
-		if(recv_bytes != 0){
+
+	net_interface_medium_ip_ptr_t *working_state =
+		reinterpret_cast<net_interface_medium_ip_ptr_t*>(
+			software_dev_ptr->get_state_ptr());
+	PRINT_IF_NULL(working_state, P_ERR);
+
+	if(working_state->recv_buffer.size() != 0){
+		working_state->recv_mutex.lock();
+		try{
 			software_dev_ptr->add_inbound_data(
-				std::vector<uint8_t>(
-					buffer,
-					buffer+recv_bytes));
+				working_state->recv_buffer);
+			working_state->recv_buffer.clear();
+		}catch(...){
+			print("caught exception in transferring recv buffer", P_WARN);
 		}
+		working_state->recv_mutex.unlock();
 	}
+
 	net_interface_medium_packet_t medium_packet =
 		medium_packet_lookup(
 			software_dev_ptr->get_medium(),
@@ -278,6 +242,12 @@ static void create_client_socket(
 			if(working_state->tcp_socket == nullptr){
 				print("cannot connect to peer: " + SDL_GetError(), P_ERR);
 			}
+			std::thread recv_thread(net_interface_ip_recv_thread, working_state);
+			working_state->recv_thread =
+				std::move(recv_thread);
+			std::thread send_thread(net_interface_ip_send_thread, working_state);
+			working_state->send_thread =
+				std::move(send_thread);
 		}
 		break;
 	default:
@@ -307,21 +277,18 @@ INTERFACE_ADD_ADDRESS(ip){
 		new net_interface_software_dev_t;
 	software_dev_ptr->set_address_id(
 		address_id);
-	software_dev_ptr->set_hardware_dev_id(
-		hardware_dev_id);
 	software_dev_ptr->set_packet_modulation(
 		NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP);
 	software_dev_ptr->set_packet_encapsulation(
 		NET_INTERFACE_MEDIUM_PACKET_ENCAPSULATION_TCP);
-	
 	software_dev_ptr->set_inbound_transport_type(
 		inbound_transport_rules);
 	software_dev_ptr->set_outbound_transport_type(
 		outbound_transport_rules);
-	software_dev_ptr->set_medium(
-		NET_INTERFACE_MEDIUM_IP);
-	hardware_dev_ptr->add_soft_dev_list(
-		software_dev_ptr->id.get_id());
+	
+	net_interface::bind::software_to_hardware(
+		software_dev_ptr->id.get_id(),
+		hardware_dev_id);
 
 	net_interface_medium_ip_ptr_t *working_state =
 		new net_interface_medium_ip_ptr_t;
@@ -356,14 +323,13 @@ INTERFACE_ACCEPT(ip){
 	INTERFACE_SET_SW_PTR(software_dev_id);
 
 	if((software_dev_ptr->get_outbound_transport_type() & 0x01) == NET_INTERFACE_TRANSPORT_ENABLED){
-		return ID_BLANK_ID;
+		print("not configured as a server socket, cannot accept connections", P_ERR);
 	}
 	
 	net_interface_medium_ip_ptr_t *working_state =
 		reinterpret_cast<net_interface_medium_ip_ptr_t*>(
 			software_dev_ptr->get_state_ptr());
 	PRINT_IF_NULL(working_state, P_ERR);
-
 	TCPsocket new_socket = SDLNet_TCP_Accept(working_state->tcp_socket);
 	if(new_socket != nullptr){
 		net_interface_software_dev_t *new_software_dev_ptr =
@@ -373,20 +339,55 @@ INTERFACE_ACCEPT(ip){
 		working_state_new->tcp_socket = new_socket;
 		working_state_new->socket_set = SDLNet_AllocSocketSet(1);
 
-		new_software_dev_ptr->set_hardware_dev_id(
-			hardware_dev_id);
+		std::thread recv_thread(net_interface_ip_recv_thread, working_state_new);
+		working_state_new->recv_thread =
+			std::move(recv_thread);
+		std::thread send_thread(net_interface_ip_send_thread, working_state_new);
+		working_state_new->send_thread =
+			std::move(send_thread);
+
+		// soft_dev_list (hardware), hardware_dev_id, medium (software)
+		net_interface::bind::software_to_hardware(
+			new_software_dev_ptr->id.get_id(),
+			hardware_dev_ptr->id.get_id());
+ 		
 		new_software_dev_ptr->set_inbound_transport_type(
 			NET_INTERFACE_TRANSPORT_ENABLED | NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS);
 		new_software_dev_ptr->set_outbound_transport_type(
 			NET_INTERFACE_TRANSPORT_ENABLED | NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS);
-		new_software_dev_ptr->set_medium(
-			NET_INTERFACE_MEDIUM_IP);
-
+		new_software_dev_ptr->set_packet_modulation(
+			NET_INTERFACE_MEDIUM_PACKET_MODULATION_TCP);
+		new_software_dev_ptr->set_packet_encapsulation(
+			NET_INTERFACE_MEDIUM_PACKET_ENCAPSULATION_TCP);
+		
 		hardware_dev_ptr->add_soft_dev_list(
 			new_software_dev_ptr->id.get_id());
 		
 		new_software_dev_ptr->set_state_ptr(working_state_new);
+		//std::raise(SIGINT);
 		return new_software_dev_ptr->id.get_id();
 	}
 	return ID_BLANK_ID;
+}
+
+INTERFACE_DROP(ip){
+	INTERFACE_SET_HW_PTR(hardware_dev_id);
+	INTERFACE_SET_SW_PTR(software_dev_id);
+
+	net_interface_medium_ip_ptr_t *working_state =
+		reinterpret_cast<net_interface_medium_ip_ptr_t*>(
+			software_dev_ptr->get_state_ptr());
+
+	PRINT_IF_NULL(working_state, P_ERR);
+	working_state->recv_running = false;
+	working_state->recv_thread.join();
+	software_dev_ptr->add_inbound_data(
+		working_state->recv_buffer);
+	working_state->recv_buffer.clear();
+	delete working_state;
+	working_state = nullptr;
+
+	// dropping doesn't mean we delete the software_dev, just delete the
+	// state it is bound to, probably to make sure all queues are flused
+	// to pull more data
 }

@@ -171,8 +171,7 @@ ID_TIER_UPDATE_CACHE(network){
 		meta.macros |= ID_TIER_NETWORK_META_SEND_CACHE_FULL;
 		const net_interface_medium_t medium =
 			interface_medium_lookup(
-				net_interface::medium::from_address(
-					software_dev_ptr->get_address_id()));
+				software_dev_ptr->get_medium());
 		std::vector<uint8_t> out_data =
 			id_tier_network_meta_write(
 				meta);

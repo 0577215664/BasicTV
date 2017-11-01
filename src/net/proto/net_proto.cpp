@@ -28,6 +28,8 @@
 // bind all network peers to a ID network tier state
 // request the 
 
+static id_t_ server_software_dev_id = ID_BLANK_ID;
+
 static id_t_ net_proto_loop_pull_hardware_id(){
 	const std::vector<id_t_> hardware_ids =
 		ID_TIER_CACHE_GET(
@@ -276,14 +278,13 @@ static void net_proto_init_server_socket(){
 		NET_INTERFACE_IP_ADDRESS_NAT_TYPE_FULL_CONE); // NAT type isn't used
 	ip_address_ptr->set_required_intermediary(
 		NET_INTERFACE_INTERMEDIARY_NONE);
-	const id_t_ software_dev_id =
+	server_software_dev_id =
 		net_interface::bind::address_to_hardware(
 			ip_address_ptr->id.get_id(),
 			net_proto_loop_pull_hardware_id(),
 			NET_INTERFACE_TRANSPORT_ENABLED | NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS,
 			NET_INTERFACE_TRANSPORT_DISABLED);
-		
-	ASSERT(software_dev_id != ID_BLANK_ID, P_ERR);
+	ASSERT(server_software_dev_id != ID_BLANK_ID, P_ERR);
 }
 
 void net_proto_init(){
@@ -355,6 +356,7 @@ static void net_proto_loop_bind_peers(){
 			}
 		}
 	}
+
 	id_tier_medium_t network_medium =
 		id_tier::get_medium(
 			ID_TIER_MEDIUM_NETWORK);
@@ -408,7 +410,42 @@ static void net_proto_loop_bind_peers(){
 	}
 }
 
+static void net_proto_loop_accept_connection(){
+	net_interface_software_dev_t *server_software_dev_ptr =
+		PTR_DATA(server_software_dev_id,
+			 net_interface_software_dev_t);
+	ASSERT(server_software_dev_ptr != nullptr, P_ERR);
+	net_interface_medium_t interface_medium =
+		interface_medium_lookup(
+			server_software_dev_ptr->get_medium());
+	const id_t_ incoming_software_dev_id =
+		interface_medium.accept(
+			server_software_dev_ptr->get_hardware_dev_id(),
+			server_software_dev_ptr->id.get_id());
+	if(incoming_software_dev_id != ID_BLANK_ID){
+		id_tier_medium_t tier_medium =
+			id_tier::get_medium(
+				ID_TIER_MEDIUM_NETWORK);
+		const id_t_ tier_state_id =
+			tier_medium.init_state();
+		id_tier_state_t *new_tier_state_ptr =
+			PTR_DATA(tier_state_id,
+				 id_tier_state_t);
+		ASSERT(new_tier_state_ptr != nullptr, P_ERR);
+		id_tier_network_t *network_state_ptr =
+			reinterpret_cast<id_tier_network_t*>(
+				new_tier_state_ptr->get_payload());
+		ASSERT(network_state_ptr != nullptr, P_ERR);
+
+		new_tier_state_ptr->storage.cache.update_freq.init(
+			5*1000*1000, 0);
+		network_state_ptr->set_software_dev_id(
+			incoming_software_dev_id);
+	}
+}
+
 void net_proto_loop(){
+	net_proto_loop_accept_connection();
 	net_proto_loop_bind_peers();
 	// net_proto_loop_routine_requests();
 }

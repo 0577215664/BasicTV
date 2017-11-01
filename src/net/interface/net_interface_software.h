@@ -6,7 +6,6 @@
 
 #include "mutex"
 #include "thread"
-
 struct net_interface_software_dev_t{
 private:
 	std::vector<uint8_t> raw_inbound_buffer;

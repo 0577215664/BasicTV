@@ -44,7 +44,33 @@ id_t_ net_interface::bind::address_to_hardware(
 	if(software_dev_id == ID_BLANK_ID){
 		print("couldn't bind address to software device", P_ERR);
 	}
+	net_interface_software_dev_t *software_dev_ptr =
+		PTR_DATA(software_dev_id,
+			 net_interface_software_dev_t);
+	PRINT_IF_NULL(software_dev_ptr, P_ERR);
 	return software_dev_id;
+}
+
+void net_interface::bind::software_to_hardware(
+	id_t_ software_dev_id,
+	id_t_ hardware_dev_id){
+	net_interface_software_dev_t *software_dev_ptr =
+		PTR_DATA(software_dev_id,
+			 net_interface_software_dev_t);
+	net_interface_hardware_dev_t *hardware_dev_ptr =
+		PTR_DATA(hardware_dev_id,
+			 net_interface_hardware_dev_t);
+	PRINT_IF_NULL(software_dev_ptr, P_ERR);
+	PRINT_IF_NULL(hardware_dev_ptr, P_ERR);
+
+	ASSERT(hardware_dev_ptr->get_medium() != NET_INTERFACE_MEDIUM_UNDEFINED, P_ERR);
+	
+	hardware_dev_ptr->add_soft_dev_list(
+		software_dev_id);
+	software_dev_ptr->set_hardware_dev_id(
+		hardware_dev_id);
+	software_dev_ptr->set_medium(
+		hardware_dev_ptr->get_medium());
 }
 
 void net_interface::unbind::software_to_hardware(
@@ -62,9 +88,7 @@ void net_interface::unbind::software_to_hardware(
 
 uint8_t net_interface::medium::from_address(id_t_ address_id){
 	// more efficient for sure
-	if(address_id == ID_BLANK_ID){
-		return NET_INTERFACE_MEDIUM_UNDEFINED; // a.k.a. 0
-	}
+	ASSERT(address_id != ID_BLANK_ID, P_ERR);
 	switch(get_id_type(address_id)){
 	case TYPE_NET_INTERFACE_IP_ADDRESS_T:
 		return NET_INTERFACE_MEDIUM_IP;
