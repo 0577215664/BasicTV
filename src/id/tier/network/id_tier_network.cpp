@@ -13,6 +13,10 @@
 #include "../../../escape.h"
 #include "../../../settings.h"
 
+#include "id_tier_network_cache_diff_full.h"
+#include "id_tier_network_cache_diff_diff.h"
+
+
 /*
   Net interface API allows defining arbitrary length datagrams, so
   that makes the interface pretty darn nice here
@@ -207,12 +211,17 @@ static void id_tier_network_network_to_tier(
 
 	std::vector<std::vector<uint8_t> > net_inbound_buffer =
 		software_dev_ptr->get_inbound_data();
+	
 	for(uint64_t i = 0;i < net_inbound_buffer.size();i++){
+		if(net_inbound_buffer[i].size() == 0){
+			continue;
+		}
 		const uint8_t type =
 			net_inbound_buffer[i][0];
+		print("read network datagram with type " + std::to_string(static_cast<int>(type)), P_NOTE);
 		net_inbound_buffer[i].erase(
 			net_inbound_buffer[i].begin());
-		switch(net_inbound_buffer[i][0]){
+		switch(type){
 		case ID_TIER_NETWORK_TYPE_META:
 			// update our version of the metadata
 			// TODO: possible DoS vector, punish redundancy
@@ -229,6 +238,10 @@ static void id_tier_network_network_to_tier(
 				tier_state_ptr->id.get_id(),
 				net_inbound_buffer[i]);
 			break;
+		case ID_TIER_NETWORK_TYPE_CACHE:
+			id_tier_network_cache_apply_diff(
+				&(network_state_ptr->cache),
+				net_inbound_buffer[i]);
 		default:
 			print("invalid type for protocol datagram", P_WARN);
 		}
@@ -237,10 +250,33 @@ static void id_tier_network_network_to_tier(
 		 (network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_FULL)), P_WARN);
 	
 	if(network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_DIFF){
-		
+		// id_tier_network_cache_compute_diff(
+		// 	ID_TIER_NETWORK_CACHE_DIFF_TYPE_DIFF);
+		print("yeah actually go about making the diff", P_CRIT);
+		network_state_ptr->meta.macros &= ~ID_TIER_NETWORK_META_SEND_CACHE_DIFF;
 	}
 	if(network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_FULL){
-		
+		// id_tier_network_cache_compute_diff(
+		// 	ID_TIER_NETWORK_CACHE_DIFF_TYPE_FULL);
+		std::vector<std::pair<id_t_, mod_inc_t_> > tmp_id = 
+			id_tier::lookup::id_mod_inc::from_tier(
+				all_tiers);
+		std::vector<id_t_> ids;
+		std::vector<mod_inc_t_> mod_inc;
+		for(uint64_t i = 0;i < tmp_id.size();i++){
+			ids.push_back(tmp_id[i].first);
+			mod_inc.push_back(tmp_id[i].second);
+		}
+		std::vector<uint8_t> ids_set =
+			compact_id_set(
+				ids, true);
+		id_tier_network_add_data(
+			tier_state_ptr->id.get_id(),
+			id_tier_network_cache_compute_diff_full(
+				nullptr,
+				&ids_set,
+				&mod_inc));
+		network_state_ptr->meta.macros &= ~ID_TIER_NETWORK_META_SEND_CACHE_FULL;
 	}
 	software_dev_ptr->set_inbound_data(std::vector<std::vector<uint8_t> >({}));
 }

@@ -177,6 +177,7 @@ INTERFACE_RECV_ALL(ip){
 			print("caught exception in transferring recv buffer", P_WARN);
 		}
 		working_state->recv_mutex.unlock();
+		print("inbound buffer is now at " + std::to_string(software_dev_ptr->get_size_inbound_data()), P_WARN);
 	}
 
 	net_interface_medium_packet_t medium_packet =
@@ -191,8 +192,6 @@ INTERFACE_RECV_ALL(ip){
 			hardware_dev_id,
 			software_dev_id,
 			&inbound_data_);
-	software_dev_ptr->set_inbound_data(
-		inbound_data_);
 	software_dev_ptr->add_inbound_data(
 		unpacketized);
 }

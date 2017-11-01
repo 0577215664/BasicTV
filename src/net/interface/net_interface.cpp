@@ -42,7 +42,21 @@ void net_interface_init(){
 
 void net_interface_loop(){
 	// accepting is done in net_proto for simplicity
-	
+	std::vector<id_t_> software_dev_list =
+		ID_TIER_CACHE_GET(
+			TYPE_NET_INTERFACE_SOFTWARE_DEV_T);
+	for(uint64_t i = 0;i < software_dev_list.size();i++){
+		net_interface_software_dev_t *software_dev_ptr =
+			PTR_DATA(software_dev_list[i],
+				 net_interface_software_dev_t);
+		CONTINUE_IF_NULL(software_dev_ptr, P_WARN);
+		net_interface_medium_t medium =
+			interface_medium_lookup(
+				software_dev_ptr->get_medium());
+		medium.recv_all(
+			software_dev_ptr->get_hardware_dev_id(),
+			software_dev_ptr->id.get_id());
+	}
 }
 
 void net_interface_close(){
