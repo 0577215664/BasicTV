@@ -115,8 +115,14 @@ ID_TIER_ADD_DATA(network){
 		data.begin(),
 		ID_TIER_NETWORK_TYPE_DATA);
 	print("adding " + id_breakdown(id_api::raw::fetch_id(data)) + " to data network queue", P_NOTE);
-	software_dev_ptr->add_outbound_data(
-		data);
+	net_interface_medium_t medium =
+		interface_medium_lookup(
+			software_dev_ptr->get_medium());
+	medium.send(
+		software_dev_ptr->get_hardware_dev_id(),
+		software_dev_ptr->id.get_id(),
+		&data);
+	ASSERT(data.size() == 0, P_ERR);
 }
 
 ID_TIER_DEL_ID(network){
@@ -144,8 +150,14 @@ ID_TIER_GET_HINT_ID(network){
 		reinterpret_cast<uint8_t*>(&(id[0])),
 		reinterpret_cast<uint8_t*>(&(id[0]))+sizeof(id_t_));
 	print("adding " + id_breakdown(id) + " to request network queue", P_NOTE);
-	software_dev_ptr->add_outbound_data(
-		data);
+	net_interface_medium_t medium =
+		interface_medium_lookup(
+			software_dev_ptr->get_medium());
+	medium.send(
+		software_dev_ptr->get_hardware_dev_id(),
+		software_dev_ptr->id.get_id(),
+		&data);
+	ASSERT(data.size() == 0, P_ERR);
 }
 
 ID_TIER_GET_ID(network){
@@ -223,27 +235,28 @@ static void id_tier_network_network_to_tier(
 			net_inbound_buffer[i].begin());
 		switch(type){
 		case ID_TIER_NETWORK_TYPE_META:
+		default:
 			// update our version of the metadata
 			// TODO: possible DoS vector, punish redundancy
 			id_tier_network_meta_read(
 				net_inbound_buffer[i],
 				&(network_state_ptr->meta));
 			break;
-		case ID_TIER_NETWORK_TYPE_DATA:
-			network_state_ptr->inbound_buffer.push_back(
-				net_inbound_buffer[i]);
-			break;
-		case ID_TIER_NETWORK_TYPE_REQUEST:
-			id_tier_network_fill_request(
-				tier_state_ptr->id.get_id(),
-				net_inbound_buffer[i]);
-			break;
-		case ID_TIER_NETWORK_TYPE_CACHE:
-			id_tier_network_cache_apply_diff(
-				&(network_state_ptr->cache),
-				net_inbound_buffer[i]);
-		default:
-			print("invalid type for protocol datagram", P_WARN);
+		// case ID_TIER_NETWORK_TYPE_DATA:
+		// 	network_state_ptr->inbound_buffer.push_back(
+		// 		net_inbound_buffer[i]);
+		// 	break;
+		// case ID_TIER_NETWORK_TYPE_REQUEST:
+		// 	id_tier_network_fill_request(
+		// 		tier_state_ptr->id.get_id(),
+		// 		net_inbound_buffer[i]);
+		// 	break;
+		// case ID_TIER_NETWORK_TYPE_CACHE:
+		// 	id_tier_network_cache_apply_diff(
+		// 		&(network_state_ptr->cache),
+		// 		net_inbound_buffer[i]);
+		// default:
+		// 	print("invalid type for protocol datagram: " + std::to_string(static_cast<int>(type)), P_ERR);
 		}
 	}
 	ASSERT(!((network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_DIFF) &&
@@ -256,26 +269,21 @@ static void id_tier_network_network_to_tier(
 		network_state_ptr->meta.macros &= ~ID_TIER_NETWORK_META_SEND_CACHE_DIFF;
 	}
 	if(network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_FULL){
-		// id_tier_network_cache_compute_diff(
-		// 	ID_TIER_NETWORK_CACHE_DIFF_TYPE_FULL);
-		std::vector<std::pair<id_t_, mod_inc_t_> > tmp_id = 
-			id_tier::lookup::id_mod_inc::from_tier(
-				all_tiers);
-		std::vector<id_t_> ids;
-		std::vector<mod_inc_t_> mod_inc;
-		for(uint64_t i = 0;i < tmp_id.size();i++){
-			ids.push_back(tmp_id[i].first);
-			mod_inc.push_back(tmp_id[i].second);
-		}
-		std::vector<uint8_t> ids_set =
-			compact_id_set(
-				ids, true);
-		id_tier_network_add_data(
-			tier_state_ptr->id.get_id(),
-			id_tier_network_cache_compute_diff_full(
+		net_interface_medium_t medium =
+			interface_medium_lookup(
+				software_dev_ptr->get_medium());
+		id_tier_network_cache_t local_cache;
+		id_tier_network_compute_local_cache(
+			&local_cache);
+		std::vector<uint8_t> payload =
+			id_tier_network_cache_compute_diff(
+				&local_cache,
 				nullptr,
-				&ids_set,
-				&mod_inc));
+				ID_TIER_NETWORK_CACHE_DIFF_TYPE_FULL);
+		medium.send(
+			software_dev_ptr->get_hardware_dev_id(),
+			software_dev_ptr->id.get_id(),
+			&payload);
 		network_state_ptr->meta.macros &= ~ID_TIER_NETWORK_META_SEND_CACHE_FULL;
 	}
 	software_dev_ptr->set_inbound_data(std::vector<std::vector<uint8_t> >({}));

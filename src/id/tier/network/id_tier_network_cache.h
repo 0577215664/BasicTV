@@ -54,4 +54,7 @@ extern std::vector<uint8_t> id_tier_network_cache_compute_diff(
 	id_tier_network_cache_t *old_cache_ptr,
 	uint8_t diff_type);
 
+extern void id_tier_network_compute_local_cache(
+	id_tier_network_cache_t *cache_ptr);
+
 #endif

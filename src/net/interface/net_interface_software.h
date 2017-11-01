@@ -8,13 +8,8 @@
 #include "thread"
 struct net_interface_software_dev_t{
 private:
-	std::vector<uint8_t> raw_inbound_buffer;
-	std::mutex raw_inbound_mutex;
-	std::thread raw_inbound_thread;
-	
-	std::vector<uint8_t> raw_outbound_buffer;
-	std::mutex raw_outbound_mutex;
-	std::thread raw_outbound_thread;
+	std::vector<std::vector<uint8_t> > raw_inbound_data;
+	std::vector<uint8_t> raw_outbound_data;
 	
 	std::vector<std::vector<uint8_t> > inbound_data;
 	uint64_t last_good_inbound_micro_s = 0;
@@ -71,6 +66,11 @@ public:
 	GET_SET(outbound_data, std::vector<std::vector<uint8_t> >);
 	ADD_DEL_VECTOR(outbound_data, std::vector<uint8_t>);
 
+	GET_SET(raw_inbound_data, std::vector<std::vector<uint8_t>>);
+	FULL_VECTOR_CONTROL(raw_inbound_data, std::vector<uint8_t>);
+	GET_SET(raw_outbound_data, std::vector<uint8_t>);
+	FULL_VECTOR_CONTROL(raw_outbound_data, uint8_t);
+	
 	GET_SET(inbound_transport_type, uint8_t);
 	GET_SET(outbound_transport_type, uint8_t);
 };

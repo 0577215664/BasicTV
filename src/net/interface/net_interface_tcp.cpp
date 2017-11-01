@@ -49,6 +49,7 @@ INTERFACE_PACKETIZE(ip, tcp){
 			*packet,
 			NET_INTERFACE_PACKET_TCP_ESCAPE);
 	packet->clear();
+	print("packetized protocol datagram of length " + std::to_string(retval.size()), P_WARN);
 	return std::vector<std::vector<uint8_t> >({retval});;
 }
 
@@ -64,5 +65,8 @@ INTERFACE_DEPACKETIZE(ip, tcp){
 			NET_INTERFACE_PACKET_TCP_ESCAPE);
 	packet->clear();
 	packet->push_back(tmp.second);
+	if(tmp.first.size() > 0){
+		print("depacketized protocol datagram of length " + std::to_string(tmp.first.size()), P_WARN);
+	}
 	return tmp.first;
 }

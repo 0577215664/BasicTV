@@ -121,12 +121,13 @@ INTERFACE_SEND(ip){
 			software_dev_ptr->get_packet_modulation(),
 			software_dev_ptr->get_packet_encapsulation());
 
+	software_dev_ptr->add_outbound_data(
+		*payload);
+	payload->clear();
+
 	std::vector<std::vector<uint8_t> > outbound_data =
 		software_dev_ptr->get_outbound_data();
 	
-	outbound_data.push_back(
-		*payload);
-	payload->clear();
 	std::vector<std::vector<uint8_t> > packetized;
 	for(uint64_t i = 0;i < outbound_data.size();i++){
 		const std::vector<std::vector<uint8_t> > packets =
@@ -143,8 +144,8 @@ INTERFACE_SEND(ip){
 			packets.begin(),
 			packets.end());
 	}
-	// software_dev_ptr->set_outbound_data(
-	// 	outbound_data);
+	software_dev_ptr->set_outbound_data(
+        	std::vector<std::vector<uint8_t> >({}));
 	working_state->send_mutex.lock();
 	try{
 		working_state->send_buffer.insert(
@@ -170,7 +171,7 @@ INTERFACE_RECV_ALL(ip){
 	if(working_state->recv_buffer.size() != 0){
 		working_state->recv_mutex.lock();
 		try{
-			software_dev_ptr->add_inbound_data(
+			software_dev_ptr->add_raw_inbound_data(
 				working_state->recv_buffer);
 			working_state->recv_buffer.clear();
 		}catch(...){
@@ -186,14 +187,18 @@ INTERFACE_RECV_ALL(ip){
 			software_dev_ptr->get_packet_modulation(),
 			software_dev_ptr->get_packet_encapsulation());
 	std::vector<std::vector<uint8_t> > inbound_data_ =
-		software_dev_ptr->get_inbound_data();
+		software_dev_ptr->get_raw_inbound_data();
 	std::vector<uint8_t> unpacketized =
 		medium_packet.depacketize(
 			hardware_dev_id,
 			software_dev_id,
 			&inbound_data_);
-	software_dev_ptr->add_inbound_data(
-		unpacketized);
+	software_dev_ptr->set_raw_inbound_data(
+		inbound_data_);
+	if(unpacketized.size() > 0){
+		software_dev_ptr->add_inbound_data(
+			unpacketized);
+	}
 }
 
 INTERFACE_ADD_ADDRESS_COST(ip){
