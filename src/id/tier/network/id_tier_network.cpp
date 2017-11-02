@@ -235,28 +235,28 @@ static void id_tier_network_network_to_tier(
 			net_inbound_buffer[i].begin());
 		switch(type){
 		case ID_TIER_NETWORK_TYPE_META:
-		default:
 			// update our version of the metadata
 			// TODO: possible DoS vector, punish redundancy
 			id_tier_network_meta_read(
 				net_inbound_buffer[i],
 				&(network_state_ptr->meta));
 			break;
-		// case ID_TIER_NETWORK_TYPE_DATA:
-		// 	network_state_ptr->inbound_buffer.push_back(
-		// 		net_inbound_buffer[i]);
-		// 	break;
-		// case ID_TIER_NETWORK_TYPE_REQUEST:
-		// 	id_tier_network_fill_request(
-		// 		tier_state_ptr->id.get_id(),
-		// 		net_inbound_buffer[i]);
-		// 	break;
-		// case ID_TIER_NETWORK_TYPE_CACHE:
-		// 	id_tier_network_cache_apply_diff(
-		// 		&(network_state_ptr->cache),
-		// 		net_inbound_buffer[i]);
-		// default:
-		// 	print("invalid type for protocol datagram: " + std::to_string(static_cast<int>(type)), P_ERR);
+		case ID_TIER_NETWORK_TYPE_DATA:
+			network_state_ptr->inbound_buffer.push_back(
+				net_inbound_buffer[i]);
+			break;
+		case ID_TIER_NETWORK_TYPE_REQUEST:
+			id_tier_network_fill_request(
+				tier_state_ptr->id.get_id(),
+				net_inbound_buffer[i]);
+			break;
+		case ID_TIER_NETWORK_TYPE_CACHE:
+			id_tier_network_cache_apply_diff(
+				&(network_state_ptr->cache),
+				net_inbound_buffer[i]);
+			break;
+		default:
+			print("invalid type for protocol datagram: " + std::to_string(static_cast<int>(type)), P_ERR);
 		}
 	}
 	ASSERT(!((network_state_ptr->meta.macros & ID_TIER_NETWORK_META_SEND_CACHE_DIFF) &&

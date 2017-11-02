@@ -55,6 +55,9 @@ namespace test{
 		void opus_file();
 
 	};
+	namespace net{
+		void loopback();
+	};
 	namespace video{
 		// void vp9(); // so close, but yet so far...
 	};
