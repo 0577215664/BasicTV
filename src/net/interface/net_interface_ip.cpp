@@ -188,7 +188,7 @@ INTERFACE_RECV_ALL(ip){
 			software_dev_ptr->get_packet_encapsulation());
 	std::vector<std::vector<uint8_t> > inbound_data_ =
 		software_dev_ptr->get_raw_inbound_data();
-	std::vector<uint8_t> unpacketized =
+	std::vector<std::vector<uint8_t> > unpacketized =
 		medium_packet.depacketize(
 			hardware_dev_id,
 			software_dev_id,
@@ -196,7 +196,7 @@ INTERFACE_RECV_ALL(ip){
 	software_dev_ptr->set_raw_inbound_data(
 		inbound_data_);
 	if(unpacketized.size() > 0){
-		software_dev_ptr->add_inbound_data(
+		software_dev_ptr->append_inbound_data(
 			unpacketized);
 	}
 }

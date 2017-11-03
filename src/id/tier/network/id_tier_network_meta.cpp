@@ -45,6 +45,8 @@ std::vector<uint8_t> id_tier_network_meta_write(
 
 void id_tier_network_meta_read(std::vector<uint8_t> data,
 			       id_tier_network_meta_t *standard_data){
+	ASSERT(data[0] == ID_TIER_NETWORK_TYPE_META, P_ERR);
+	data.erase(data.begin());
 	READ_DATA_META(&(standard_data->peer_id));
 	convert::nbo::to(
 		&(standard_data->peer_id[0]), sizeof(standard_data->peer_id));

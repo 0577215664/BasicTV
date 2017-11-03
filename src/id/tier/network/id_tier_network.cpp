@@ -118,10 +118,10 @@ ID_TIER_ADD_DATA(network){
 	net_interface_medium_t medium =
 		interface_medium_lookup(
 			software_dev_ptr->get_medium());
-	medium.send(
-		software_dev_ptr->get_hardware_dev_id(),
-		software_dev_ptr->id.get_id(),
-		&data);
+	// medium.send(
+	// 	software_dev_ptr->get_hardware_dev_id(),
+	// 	software_dev_ptr->id.get_id(),
+	// 	&data);
 	ASSERT(data.size() == 0, P_ERR);
 }
 
@@ -153,10 +153,10 @@ ID_TIER_GET_HINT_ID(network){
 	net_interface_medium_t medium =
 		interface_medium_lookup(
 			software_dev_ptr->get_medium());
-	medium.send(
-		software_dev_ptr->get_hardware_dev_id(),
-		software_dev_ptr->id.get_id(),
-		&data);
+	// medium.send(
+	// 	software_dev_ptr->get_hardware_dev_id(),
+	// 	software_dev_ptr->id.get_id(),
+	// 	&data);
 	ASSERT(data.size() == 0, P_ERR);
 }
 
@@ -201,6 +201,8 @@ ID_TIER_UPDATE_CACHE(network){
 static void id_tier_network_fill_request(
 	id_t_ tier_id,
 	std::vector<uint8_t> id_set){
+	ASSERT(id_set[0] == ID_TIER_NETWORK_TYPE_REQUEST, P_ERR);
+	id_set.erase(id_set.begin());
 	std::vector<id_t_> id_vector =
 		expand_id_set(
 			id_set);
@@ -231,8 +233,6 @@ static void id_tier_network_network_to_tier(
 		const uint8_t type =
 			net_inbound_buffer[i][0];
 		print("read network datagram with type " + std::to_string(static_cast<int>(type)), P_NOTE);
-		net_inbound_buffer[i].erase(
-			net_inbound_buffer[i].begin());
 		switch(type){
 		case ID_TIER_NETWORK_TYPE_META:
 			// update our version of the metadata
@@ -242,6 +242,7 @@ static void id_tier_network_network_to_tier(
 				&(network_state_ptr->meta));
 			break;
 		case ID_TIER_NETWORK_TYPE_DATA:
+			net_inbound_buffer[i].erase(net_inbound_buffer[i].begin());
 			network_state_ptr->inbound_buffer.push_back(
 				net_inbound_buffer[i]);
 			break;
@@ -282,8 +283,8 @@ static void id_tier_network_network_to_tier(
 				ID_TIER_NETWORK_CACHE_DIFF_TYPE_FULL);
 		medium.send(
 			software_dev_ptr->get_hardware_dev_id(),
-			software_dev_ptr->id.get_id(),
-			&payload);
+		 	software_dev_ptr->id.get_id(),
+		 	&payload);
 		network_state_ptr->meta.macros &= ~ID_TIER_NETWORK_META_SEND_CACHE_FULL;
 	}
 	software_dev_ptr->set_inbound_data(std::vector<std::vector<uint8_t> >({}));

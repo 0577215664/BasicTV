@@ -23,7 +23,7 @@
 
 
 #define INTERFACE_PACKETIZE(medium, packet_) std::vector<std::vector<uint8_t> > net_interface_##medium##_##packet_##_packetize(id_t_ hardware_dev_id, id_t_ software_dev_id, std::vector<uint8_t> *packet)
-#define INTERFACE_DEPACKETIZE(medium, packet_) std::vector<uint8_t> net_interface_##medium##_##packet_##_depacketize(id_t_ hardware_dev_id, id_t_ software_dev_id, std::vector<std::vector<uint8_t> > *packet)
+#define INTERFACE_DEPACKETIZE(medium, packet_) std::vector<std::vector<uint8_t> > net_interface_##medium##_##packet_##_depacketize(id_t_ hardware_dev_id, id_t_ software_dev_id, std::vector<std::vector<uint8_t> > *packet)
 
 struct net_interface_medium_packet_t{
 private:
@@ -44,7 +44,7 @@ public:
 		id_t_ software_dev_id,
 		std::vector<uint8_t> *packet);
 
-	std::vector<uint8_t> (*depacketize)(
+	std::vector<std::vector<uint8_t> > (*depacketize)(
 		id_t_ hardware_dev_id,
 		id_t_ software_dev_id,
 		std::vector<std::vector<uint8_t> > *packet);
@@ -57,7 +57,7 @@ public:
 			id_t_ hardware_dev_id,
 			id_t_ software_dev_id,
 			std::vector<uint8_t> *packet),
-		std::vector<uint8_t> (*depacketize_)(
+		std::vector<std::vector<uint8_t> > (*depacketize_)(
 			id_t_ hardware_dev_id,
 			id_t_ software_dev_id,
 			std::vector<std::vector<uint8_t> > *packet),

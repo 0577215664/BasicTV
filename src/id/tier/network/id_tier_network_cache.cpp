@@ -27,11 +27,12 @@ id_tier_network_cache_t::~id_tier_network_cache_t(){
 void id_tier_network_cache_apply_diff(
 	id_tier_network_cache_t *cache_ptr,
 	std::vector<uint8_t> diff){
-	ASSERT(diff.size() > 0, P_ERR);
-	const uint8_t diff_type =
-		diff[0];
+	ASSERT(diff.size() > 1, P_ERR);
+
+	ASSERT(diff[0] == ID_TIER_NETWORK_TYPE_CACHE, P_ERR);
 	diff.erase(diff.begin());
-	switch(diff_type){
+
+	switch(diff[0]){
 	case ID_TIER_NETWORK_CACHE_DIFF_TYPE_FULL:
 		id_tier_network_cache_apply_diff_full(
 			cache_ptr,
@@ -52,21 +53,24 @@ std::vector<uint8_t> id_tier_network_cache_compute_diff(
 	id_tier_network_cache_t *old_cache_ptr,
 	uint8_t diff_type){
 	std::vector<uint8_t> retval({diff_type});
+
 	const std::vector<uint8_t> * const ids =
 		cache_ptr->get_const_ptr_ids();
 	const std::vector<mod_inc_t_> * const mod_inc =
 		cache_ptr->get_const_ptr_mod_inc();
 	switch(diff_type){
 	case ID_TIER_NETWORK_CACHE_DIFF_TYPE_FULL:
-		return id_tier_network_cache_compute_diff_full(
+		retval = id_tier_network_cache_compute_diff_full(
 			old_cache_ptr,
 			ids,
 			mod_inc);
+		break;
 	case ID_TIER_NETWORK_CACHE_DIFF_TYPE_DIFF:
-		return id_tier_network_cache_compute_diff_diff(
+		retval = id_tier_network_cache_compute_diff_diff(
 			old_cache_ptr,
 			ids,
 			mod_inc);
+		break;
 	default:
 		print("invalid diff_type", P_ERR);
 	}
@@ -77,7 +81,9 @@ std::vector<uint8_t> id_tier_network_cache_compute_diff(
 		old_cache_ptr->set_mod_inc(
 			cache_ptr->get_mod_inc());
 	}
-	std::raise(SIGINT);
+	retval.insert(
+		retval.begin(),
+		ID_TIER_NETWORK_TYPE_CACHE);
 	return retval;
 }
 

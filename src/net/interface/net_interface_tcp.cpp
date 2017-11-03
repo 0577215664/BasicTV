@@ -59,8 +59,8 @@ INTERFACE_DEPACKETIZE(ip, tcp){
 	const std::vector<uint8_t> real_packet =
 		convert::vector::collapse_2d_vector(
 			*packet);
-	const std::pair<std::vector<uint8_t>, std::vector<uint8_t> > tmp =
-		unescape_vector(
+	const std::pair<std::vector<std::vector<uint8_t> >, std::vector<uint8_t> > tmp =
+		unescape_all_vectors(
 			real_packet,
 			NET_INTERFACE_PACKET_TCP_ESCAPE);
 	packet->clear();
