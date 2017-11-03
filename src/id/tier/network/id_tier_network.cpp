@@ -118,10 +118,10 @@ ID_TIER_ADD_DATA(network){
 	net_interface_medium_t medium =
 		interface_medium_lookup(
 			software_dev_ptr->get_medium());
-	// medium.send(
-	// 	software_dev_ptr->get_hardware_dev_id(),
-	// 	software_dev_ptr->id.get_id(),
-	// 	&data);
+	medium.send(
+		software_dev_ptr->get_hardware_dev_id(),
+		software_dev_ptr->id.get_id(),
+		&data);
 	ASSERT(data.size() == 0, P_ERR);
 }
 
@@ -153,10 +153,10 @@ ID_TIER_GET_HINT_ID(network){
 	net_interface_medium_t medium =
 		interface_medium_lookup(
 			software_dev_ptr->get_medium());
-	// medium.send(
-	// 	software_dev_ptr->get_hardware_dev_id(),
-	// 	software_dev_ptr->id.get_id(),
-	// 	&data);
+	medium.send(
+        	software_dev_ptr->get_hardware_dev_id(),
+	 	software_dev_ptr->id.get_id(),
+	 	&data);
 	ASSERT(data.size() == 0, P_ERR);
 }
 
