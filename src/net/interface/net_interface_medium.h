@@ -7,12 +7,15 @@
 
 // some macros for standard naming
 #define INTERFACE_ADD_ADDRESS_COST(interface) uint8_t net_interface_##interface##_add_address_cost(id_t_ hardware_dev_id, id_t_ address_id)
-#define INTERFACE_ADD_ADDRESS(interface) id_t_ net_interface_##interface##_add_address(id_t_ hardware_dev_id, id_t_ address_id)
+#define INTERFACE_ADD_ADDRESS(interface) id_t_ net_interface_##interface##_add_address(id_t_ hardware_dev_id, id_t_ address_id, uint8_t inbound_transport_rules, uint8_t outbound_transport_rules)
 #define INTERFACE_CALCULATE_MOST_EFFICIENT_DROP(interface) std::vector<id_t_> net_interface_##interface##_calculate_most_efficient_drop(id_t_ hardware_dev_id, id_t_ address_id)
 #define INTERFACE_CALCULATE_MOST_EFFICIENT_TRANSFER(interface) std::vector<std::pair<id_t_, id_t_> > net_interface_##interface##_calculate_most_efficient_transfer(id_t_ hardware_dev_id, id_t_ address_id)
 
 #define INTERFACE_SEND(interface) void net_interface_##interface##_send(id_t_ hardware_dev_id, id_t_ software_dev_id, std::vector<uint8_t> *payload)
 #define INTERFACE_RECV_ALL(interface) void net_interface_##interface##_recv_all(id_t_ hardware_dev_id, id_t_ software_dev_id)
+
+#define INTERFACE_ACCEPT(interface) id_t_ net_interface_##interface##_accept(id_t_ hardware_dev_id, id_t_ software_dev_id)
+#define INTERFACE_DROP(interface) void net_interface_##interface##_drop(id_t_ hardware_dev_id, id_t_ software_dev_id)
 
 #include "../../util.h"
 #include "../../id/id_api.h"
@@ -25,7 +28,9 @@ public:
 
 	id_t_ (*add_address)(
 		id_t_ hardware_dev_id,
-		id_t_ address_id) = nullptr;
+		id_t_ address_id,
+		uint8_t inbound_transport_rules,
+		uint8_t outbound_transport_rules) = nullptr;
 
 	// calls to _drop and _transfer are based on some flags that
 	// tell if we can transfer the information
@@ -68,14 +73,21 @@ public:
 	void (*recv_all)(
 		id_t_ hardware_dev_id,
 		id_t_ software_dev_id) = nullptr;
-	
+
+	id_t_ (*accept)(id_t_ hardware_dev_id,
+			id_t_ software_dev_id) = nullptr;
+
+	void (*drop)(id_t_ hardware_dev_id,
+		     id_t_ software_dev_id) = nullptr;
 	net_interface_medium_t(
 		uint8_t (*add_address_cost_)(id_t_ hardware_dev_id, id_t_ address_id),
-		id_t_ (*add_address_)(id_t_ hardware_dev_id, id_t_ addres_id),
+		id_t_ (*add_address_)(id_t_ hardware_dev_id, id_t_ address_id, uint8_t inbound_transport_rules, uint8_t outbound_transport_rules),
 		std::vector<id_t_> (*calculate_most_efficient_drop_)(id_t_ hardware_dev_id, id_t_ address_id),
 		std::vector<std::pair<id_t_, id_t_> > (*calculate_most_efficient_transfer_)(id_t_ hardware_dev_id, id_t_ address_id),
 		void (*send_)(id_t_, id_t_, std::vector<uint8_t> *payload),
-		void (*recv_all_)(id_t_ hardware_dev_id, id_t_ software_dev_id)){
+		void (*recv_all_)(id_t_ hardware_dev_id, id_t_ software_dev_id),
+		id_t_ (*accept_)(id_t_ hardware_dev_id, id_t_ software_dev_id),
+		void (*drop_)(id_t_ hardware_dev_id, id_t_ software_dev_id)){
 
 		add_address_cost = add_address_cost_;
 		add_address = add_address_;
@@ -83,6 +95,8 @@ public:
 		calculate_most_efficient_transfer = calculate_most_efficient_transfer_;
 		send = send_;
 		recv_all = recv_all_;
+		accept = accept_;
+		drop = drop_;
 	}
 };
 

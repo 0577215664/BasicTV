@@ -9,6 +9,7 @@
 #include "console/console.h"
 #include "id/id_api.h"
 #include "settings.h"
+#include "net/interface/net_interface.h"
 
 #include "id/tier/memory/id_tier_memory_helper.h"
 #include "id/tier/memory/id_tier_memory_special.h"

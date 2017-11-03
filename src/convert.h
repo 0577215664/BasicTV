@@ -66,14 +66,27 @@
 
 #define CROP_LSB(data, bits_out) (data & ~((~0) << bits_out))
 
+// optimized NBO that allows specifying the type for iterating
+template<typename T>
+void fast_nbo(uint8_t *data, T size){
+	const T iter_size = size/2;
+	for(T i = 0;i < iter_size;i++){
+		const T first = i;
+		const T second = size-i-1;
+		data[first] ^= data[second];
+		data[second] ^= data[first];
+		data[first] ^= data[second];
+	}
+}
+
 namespace convert{
 	namespace nbo{
 		std::vector<uint8_t> to(std::vector<uint8_t>);
 		std::vector<uint8_t> to(std::string);
-		void to(uint8_t *, uint64_t);
+		void to(uint8_t *, uint32_t);
 		std::vector<uint8_t> from(std::vector<uint8_t>);
 		std::vector<uint8_t> from(std::string);
-		void from(uint8_t *, uint64_t);
+		void from(uint8_t *, uint32_t);
 	}
 	namespace net{
 		namespace ip_port{

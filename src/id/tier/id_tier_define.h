@@ -14,7 +14,7 @@
 
 
 #define ID_TIER_LOOP_STANDARD(add_func, get_func)			\
-	for(uint64_t i = 0;i < tier_state_ptr->inbound_transport.size();i++){		\
+	for(uint64_t i = 0;i < tier_state_ptr->inbound_transport.size();i++){ \
 		if(tier_state_ptr->inbound_transport[i].get_payload().size() == 0){ \
 			bool complete = false;				\
 			try{						\
@@ -30,7 +30,7 @@
 			}						\
 		}							\
 	}								\
-	for(uint64_t i = 0;i < tier_state_ptr->outbound_transport.size();i++){		\
+	for(uint64_t i = 0;i < tier_state_ptr->outbound_transport.size();i++){ \
 		if(tier_state_ptr->outbound_transport[i].get_payload().size() != 0){ \
 			bool complete = false;				\
 			try{						\

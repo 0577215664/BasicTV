@@ -487,7 +487,7 @@ static void id_tier_init_cache(){
 
 void id_tier_init(){
 	// memory is handled in-line in init() for private key loading
-	id_tier_init_cache();
+	// id_tier_init_cache();
 	id_tier_init_disk();
 }
 
@@ -531,7 +531,7 @@ void id_tier_loop(){
 					// completely normal behavior, since we
 					// let shift_data_to_state handle a lot
 					// of the rules
-					print("couldn't shift data over", P_SPAM);
+					// print("couldn't shift data over", P_SPAM);
 				}else{
 					// update this if we have bulk transfers
 					// refer to tiers as tier major and tier minor

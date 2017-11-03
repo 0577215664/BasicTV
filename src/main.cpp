@@ -26,6 +26,8 @@
 #include "id/set/id_set.h"
 #include "id/id_api.h"
 
+#include "net/interface/net_interface.h"
+
 #include "test/test.h" // includes benchmarking code too
 #include "init.h"
 #include "loop.h"
@@ -47,6 +49,8 @@ int main(int argc_, char **argv_){
 	argv = argv_;
 	init();
 	if(settings::get_setting("run_tests") == "true"){
+		print("tests are being ran, please do not run this in your main data_folder, change with --data_folder or --df, sleeping for 5 seconds", P_WARN);
+		sleep_ms(5000);
 		const uint64_t test_run_count =
 			settings::get_setting_unsigned_def(
 				"test_run_count", 1);

@@ -13,8 +13,6 @@ void id_tier_state_storage_t::list_virtual_data(data_id_t *id_){
 	ADD_DATA_PTR(flags, public_ruleset);
 	ADD_DATA_PTR(total_bytes, public_ruleset);
 	ADD_DATA_PTR(used_bytes, public_ruleset);
-	ADD_DATA_PTR(last_refresh_micro_s, public_ruleset);
-	ADD_DATA_PTR(refresh_interval_micro_s, public_ruleset);
 	id->add_data_one_byte_vector(&ids, ~0, public_ruleset);
 	id->add_data_eight_byte_vector(&mod_incs, ~0, public_ruleset);
 	id->add_data_one_byte_vector(&extras, ~0, public_ruleset);

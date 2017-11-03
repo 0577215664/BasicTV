@@ -9,6 +9,8 @@
 
 #include "net_interface_helper.h"
 
+#include "../../escape.h"
+
 /*
   The best way to think about how this packetizer works is thinking of
   this as an intermediate between the information coming in and going
@@ -30,23 +32,41 @@
 
   This is where packet radio starts to get pretty hairy, since this would be
   where software modems and modulation schemes start to come into play
+
+  TODO: actuall bother with proper encapsulation at some time, for now we
+  merge the two together (this isn't packet radio, we can do that now), and
+  just escape and unescape vectors
 */
+
+#define NET_INTERFACE_PACKET_TCP_ESCAPE 0xAB
 
 INTERFACE_PACKETIZE(ip, tcp){
 	INTERFACE_SET_HW_PTR(hardware_dev_id);
 	INTERFACE_SET_SW_PTR(software_dev_id);
-	std::vector<std::vector<uint8_t> > retval(
-		{*packet});
+
+	const std::vector<uint8_t> retval =
+		escape_vector(
+			*packet,
+			NET_INTERFACE_PACKET_TCP_ESCAPE);
 	packet->clear();
-	return retval;
+	print("packetized protocol datagram of length " + std::to_string(retval.size()), P_WARN);
+	return std::vector<std::vector<uint8_t> >({retval});;
 }
 
 INTERFACE_DEPACKETIZE(ip, tcp){
 	INTERFACE_SET_HW_PTR(hardware_dev_id);
 	INTERFACE_SET_SW_PTR(software_dev_id);
-	std::vector<uint8_t> retval =
+	const std::vector<uint8_t> real_packet =
 		convert::vector::collapse_2d_vector(
 			*packet);
+	const std::pair<std::vector<std::vector<uint8_t> >, std::vector<uint8_t> > tmp =
+		unescape_all_vectors(
+			real_packet,
+			NET_INTERFACE_PACKET_TCP_ESCAPE);
 	packet->clear();
-	return retval;
+	packet->push_back(tmp.second);
+	if(tmp.first.size() > 0){
+		print("depacketized protocol datagram of length " + std::to_string(tmp.first.size()), P_WARN);
+	}
+	return tmp.first;
 }

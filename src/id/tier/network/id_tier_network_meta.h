@@ -3,7 +3,8 @@
 #define ID_TIER_NETWORK_META_H
 
 // also send an updated version of id_tier_network_cache_t
-#define ID_TIER_NETWORK_META_SEND_CACHE (1 << 0)
+#define ID_TIER_NETWORK_META_SEND_CACHE_FULL (1 << 0)
+#define ID_TIER_NETWORK_META_SEND_CACHE_DIFF (1 << 1)
 
 typedef id_t_ id_tier_network_meta_id_t;
 typedef uint32_t id_tier_network_meta_size_t;

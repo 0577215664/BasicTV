@@ -89,7 +89,7 @@ public:
 	GET_V(medium, uint8_t);
 	GET_V(packet_modulation, uint8_t);
 	GET_V(packet_encapsulation, uint8_t);
-	GET_V(required_intermediary, uint8_t);
+	GET_SET_V(required_intermediary, uint8_t);
 };
 
 #endif

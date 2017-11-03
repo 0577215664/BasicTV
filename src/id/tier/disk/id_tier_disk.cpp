@@ -191,8 +191,6 @@ ID_TIER_UPDATE_CACHE(disk){
 	tier_state_ptr->storage.set_id_buffer(
 		gen_id_buffer(
 			disk_state_ptr->path));
-	tier_state_ptr->storage.set_last_refresh_micro_s(
-		get_time_microseconds());
 }
 
 ID_TIER_LOOP(disk){

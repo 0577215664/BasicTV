@@ -79,7 +79,6 @@ static int tv_sink_audio_hardware_callback(
 							playback_vector.begin()+start_playback_iter);
 						// automatically put us at the next one
 					}
-						
 				}
 			}
 			memcpy(output,

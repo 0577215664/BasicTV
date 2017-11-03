@@ -6,6 +6,7 @@
 #include "net_interface_medium.h"
 #include "net_interface_packet.h"
 
+#include "net_interface.h"
 #define NET_INTERFACE_HARDWARE_ADD_ADDRESS_UNDEFINED 0
 /*
   If we add an address to a hardware device, there is no cost associated with
@@ -18,11 +19,6 @@
 */
 #define NET_INTERFACE_HARDWARE_ADD_ADDRESS_DROP 2
 
-#define NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS (1 << 0)
-#define NET_INTERFACE_TRANSPORT_FLAG_LOSSY (1 << 1)
-#define NET_INTERFACE_TRANSPORT_FLAG_GUARANTEED (1 << 3)
-
-
 struct net_interface_hardware_dev_t{
 private:
 	/*
@@ -33,9 +29,7 @@ private:
 	*/
 	uint64_t max_soft_dev = 0;
 	uint8_t outbound_transport_type = 0;
-	uint8_t outbound_transport_flags = 0;
 	uint8_t inbound_transport_type = 0;
-	uint8_t inbound_transport_flags = 0;
 	uint8_t medium = 0;
 	
 	std::vector<uint8_t> soft_dev_list;
@@ -47,9 +41,7 @@ public:
 	~net_interface_hardware_dev_t();
 	GET_SET(max_soft_dev, uint64_t);
 	GET_SET(outbound_transport_type, uint8_t);
-	GET_SET(outbound_transport_flags, uint8_t);
 	GET_SET(inbound_transport_type, uint8_t);
-	GET_SET(inbound_transport_flags, uint8_t);
 	GET_SET(medium, uint8_t);
 	
 	/* ADD_DEL_VECTOR(soft_dev_list, id_t_); */

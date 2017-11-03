@@ -21,8 +21,10 @@ namespace net_interface{
 		// or a transfer first)
 		id_t_ address_to_hardware(
 			id_t_ address_id,
-			id_t_ hardware_dev_id);
-		id_t_ software_to_hardware(
+			id_t_ hardware_dev_id,
+			uint8_t inbound_transport_flags,
+			uint8_t outbound_transport_flags);
+		void software_to_hardware(
 			id_t_ software_dev_id,
 			id_t_ hardware_dev_id);
 	};

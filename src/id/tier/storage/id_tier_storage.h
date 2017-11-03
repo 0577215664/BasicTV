@@ -29,8 +29,6 @@ private:
 	uint64_t total_bytes = 0;
 	uint64_t used_bytes = 0;
 
-	uint64_t last_refresh_micro_s = 0;
-	uint64_t refresh_interval_micro_s = 0;
 	data_id_t *id = nullptr;
 
 	std::vector<uint8_t> ids;
@@ -47,9 +45,6 @@ public:
 	GET_SET_V(flags, uint8_t);
 	GET_SET_V(total_bytes, uint64_t);
 	GET_SET_V(used_bytes, uint64_t);
-
-	GET_SET_V(last_refresh_micro_s, uint64_t);
-	GET_SET_V(refresh_interval_micro_s, uint64_t);
 
 	ADD_DEL_VECTOR_V(mod_incs, mod_inc_t_);
 

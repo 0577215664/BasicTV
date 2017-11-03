@@ -9,6 +9,7 @@
 #include "console/console.h"
 #include "id/id_api.h"
 #include "settings.h"
+#include "net/interface/net_interface.h"
 
 void close(){
 	closing = true;
@@ -16,7 +17,8 @@ void close(){
 	input_close();
 	net_close();
 	console_close();
-	// id_tier_close();
+	net_interface_close();
+	id_tier_close();
 	id_tier::operation::del_id_from_state(
 		{id_tier::state_tier::only_state_of_tier(
 				0, 0)},

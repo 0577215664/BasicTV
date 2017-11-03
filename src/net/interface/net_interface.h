@@ -79,6 +79,19 @@
   be defined as one layer up in net_interface_software_dev_t. 
 */
 
+#define NET_INTERFACE_TRANSPORT_ENABLED 0
+#define NET_INTERFACE_TRANSPORT_DISABLED 1
+
+
+#define NET_INTERFACE_TRANSPORT_FLAG_LOSSLESS (1 << 1)
+#define NET_INTERFACE_TRANSPORT_FLAG_LOSSY (1 << 2)
+#define NET_INTERFACE_TRANSPORT_FLAG_GUARANTEED (1 << 3)
+
+
+#define NET_INTERFACE_SWITCH_UNDEFINED 0
+#define NET_INTERFACE_SWITCH_FREE 1
+#define NET_INTERFACE_SWITCH_OVERHEAD 2
+
 /*
   The mediums shouldn't include information about the encoding scheme at all,
   since we are on a lower level here
@@ -166,5 +179,10 @@
 #define NET_INTERFACE_MEDIUM_PACKET_COUNT 1
 
 extern net_interface_medium_t interface_medium_lookup(uint8_t medium);
+
+extern void net_interface_init();
+extern void net_interface_loop();
+extern void net_interface_close();
+
 #endif
 		

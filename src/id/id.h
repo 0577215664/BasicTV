@@ -13,7 +13,7 @@
 /*
   id_t: ID and pointer system for the networking system
  */
-#define GET_CONST_PTR_RAW(data_to_get, type, id_str) type const * get_const_ptr_##data_to_get(){return (type const *)&data_to_get;}
+#define GET_CONST_PTR_RAW(data_to_get, type, id_str) type const * get_const_ptr_##data_to_get() const {return (type const *)&data_to_get;}
 
 #define GET_RAW(data_to_get, type, id_str) type get_##data_to_get() const {return data_to_get;}GET_CONST_PTR_RAW(data_to_get, type, id_str);
 
